@@ -1,0 +1,309 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<!-- base href="https://demo.phppointofsale.com/" -->
+	<title>PHP Point Of Sale, Inc -- Powered by PHP Point Of Sale</title>
+	<link rel="stylesheet" rev="stylesheet" href="change_mode_files/phppos.css">
+	<link rel="stylesheet" rev="stylesheet" href="change_mode_files/phppos_print.css" media="print">
+	<script>BASE_URL = 'https://demo.phppointofsale.com/index.php';</script>
+	<script src="change_mode_files/jquery-1.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_004.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_008.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_005.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_007.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_006.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_002.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_003.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/jquery_009.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/thickbox.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/common.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/manage_tables.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/swfobject.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/date.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="change_mode_files/datepicker.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	
+<style type="text/css">
+html {
+    overflow: auto;
+}
+</style>
+
+</head>
+<body>
+<div id="menubar">
+	<div id="menubar_container">
+		<div id="menubar_company_info">
+		<span id="company_title">PHP Point Of Sale, Inc</span><br>
+		<span style="font-size:8pt;">Powered by PHP Point Of Sale</span>
+	</div>
+
+		<div id="menubar_navigation">
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/customers">
+				<img src="change_mode_files/customers.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/customers">Customers</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/items">
+				<img src="change_mode_files/items.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/items">Items</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/item_kits">
+				<img src="change_mode_files/item_kits.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/item_kits">Item Kits</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/suppliers">
+				<img src="change_mode_files/suppliers.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/suppliers">Suppliers</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/reports">
+				<img src="change_mode_files/reports.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/reports">Reports</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/receivings">
+				<img src="change_mode_files/receivings.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/receivings">Receivings</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/sales">
+				<img src="change_mode_files/sales.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/sales">Sales</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/employees">
+				<img src="change_mode_files/employees.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/employees">Employees</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/giftcards">
+				<img src="change_mode_files/giftcards.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/giftcards">Gift Cards</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/config">
+				<img src="change_mode_files/config.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/config">Store Config</a>
+			</div>
+					</div>
+
+		<div id="menubar_footer">
+		Welcome John Doe! | 		<a href="https://demo.phppointofsale.com/index.php/home/logout">Logout</a>		</div>
+
+		<div id="menubar_date">
+		April 23, 2011 12:39 am		</div>
+
+	</div>
+</div>
+<div id="content_area_wrapper">
+<div id="content_area">
+
+<div id="page_title" style="margin-bottom:8px;">Items Receiving</div>
+
+
+
+
+<div id="register_wrapper">
+	<form action="https://demo.phppointofsale.com/index.php/receivings/change_mode" method="post" id="mode_form">		<span>Receiving Mode</span>
+	<select name="mode" onchange="$('#mode_form').submit();">
+<option value="receive">Receive</option>
+<option value="return" selected="selected">Return</option>
+</select>	</form>
+	<form action="https://demo.phppointofsale.com/index.php/receivings/add" method="post" id="add_item_form">	<label id="item_label" for="item">
+
+	Find/Scan Item OR Receipt	</label>
+<input class="ac_input" autocomplete="off" name="item" id="item" size="40" type="text"><div id="new_item_button_register">
+		<a href="https://demo.phppointofsale.com/index.php/items/view/-1/width:360" class="thickbox none" title="New Item"><div class="small_button"><span>New Item</span></div></a>	</div>
+
+</form>
+
+<!-- Receiving Items List -->
+
+<table id="register">
+<thead>
+<tr>
+<th style="width: 11%;">Delete</th>
+
+<th style="width: 30%;">Item Name</th>
+<th style="width: 11%;">Cost</th>
+<th style="width: 11%;">Qty.</th>
+<th style="width: 11%;">Disc %</th>
+<th style="width: 15%;">Total</th>
+<th style="width: 11%;">Edit</th>
+</tr>
+</thead>
+<tbody id="cart_contents">
+<form action="https://demo.phppointofsale.com/index.php/receivings/edit_item/1" method="post"></form>		<tr>
+		<td><a href="https://demo.phppointofsale.com/index.php/receivings/delete_item/1">[Delete]</a></td>
+
+		<td style="">flowers<br>
+
+		
+<input name="description" value="" type="hidden">
+		<br>
+
+
+					</td><td><input name="price" value="24.00" size="6" type="text"></td>
+				<td>
+		<input name="quantity" value="1" size="2" type="text">		</td>
+
+
+		<td><input name="discount" value="0" size="3" type="text"></td>
+		<td>$24.00</td>
+		<td><input name="edit_item" value="Edit Item" type="submit"></td>
+		</tr>
+		
+	</tbody>
+</table>
+</div>
+
+<!-- Overall Receiving -->
+
+<div id="overall_sale">
+	<form action="https://demo.phppointofsale.com/index.php/receivings/select_supplier" method="post" id="select_supplier_form">		<label id="supplier_label" for="supplier">Select Supplier (Optional)</label>
+		<input class="ac_input" autocomplete="off" name="supplier" value="Start Typing supplier's name..." id="supplier" size="30" type="text">		</form>
+		<div style="margin-top:5px;text-align:center;">
+		<h3 style="margin: 5px 0 5px 0">OR</h3>
+		<a href="https://demo.phppointofsale.com/index.php/suppliers/view/-1/width:350" class="thickbox none" title="New Supplier"><div class="small_button" style="margin:0 auto;"><span>New Supplier</span></div></a>		</div>
+		<div class="clearfix">&nbsp;</div>
+		
+	<div id="sale_details">
+		<div class="float_left" style="width:55%;">Total:</div>
+		<div class="float_left" style="width:45%;font-weight:bold;">$24.00</div>
+	</div>
+		<div id="finish_sale">
+		<form action="https://demo.phppointofsale.com/index.php/receivings/complete" method="post" id="finish_sale_form">		<br>
+		<label id="comment_label" for="comment">Comments:</label>
+		<textarea name="comment" cols="23" rows="4"></textarea>		<br><br>
+		<table width="100%"><tbody><tr><td>
+		Payment Type:   		</td><td>
+		<select name="payment_type">
+<option selected="selected" value="Cash">Cash</option>
+<option value="Check">Check</option>
+<option value="Debit Card">Debit Card</option>
+<option value="Credit Card">Credit Card</option>
+</select>        </td>
+        </tr>
+
+        <tr>
+        <td>
+        Amount Tendered:   		</td><td>
+		<input name="amount_tendered" size="10" type="text">        </td>
+        </tr>
+
+        </tbody></table>
+        <br>
+		<div class="small_button" id="finish_sale_button" style="float:right;margin-top:5px;"><span>Finish</span></div>		</form></div>
+
+		
+
+	    <form action="https://demo.phppointofsale.com/index.php/receivings/cancel_receiving" method="post" id="cancel_sale_form">			    <div class="small_button" id="cancel_sale_button" style="float:left;margin-top:5px;">
+					<span>Cancel </span>
+				</div>
+        </form>
+	</div>
+	
+</div>
+<div class="clearfix" style="margin-bottom:30px;">&nbsp;</div>
+
+
+</div>
+
+<div id="footer"> You are using PHP Point Of Sale Version 11.4.
+Please visit my <a href="http://www.phppointofsale.com/" target="_blank">website</a> to learn the lastest information about the project.</div>
+
+
+
+<script type="text/javascript" language="javascript">
+$(document).ready(function()
+{
+    $("#item").autocomplete('https://demo.phppointofsale.com/index.php/receivings/item_search',
+    {
+    	minChars:0,
+    	max:100,
+       	delay:10,
+       	selectFirst: false,
+    	formatItem: function(row) {
+			return row[1];
+		}
+    });
+
+    $("#item").result(function(event, data, formatted)
+    {
+		$("#add_item_form").submit();
+    });
+
+	$('#item').focus();
+
+	$('#item').blur(function()
+    {
+    	$(this).attr('value',"Start Typing item's name or scan barcode...");
+    });
+
+	$('#item,#supplier').click(function()
+    {
+    	$(this).attr('value','');
+    });
+
+    $("#supplier").autocomplete('https://demo.phppointofsale.com/index.php/receivings/supplier_search',
+    {
+    	minChars:0,
+    	delay:10,
+    	max:100,
+    	formatItem: function(row) {
+			return row[1];
+		}
+    });
+
+    $("#supplier").result(function(event, data, formatted)
+    {
+		$("#select_supplier_form").submit();
+    });
+
+    $('#supplier').blur(function()
+    {
+    	$(this).attr('value',"Start Typing supplier's name...");
+    });
+
+    $("#finish_sale_button").click(function()
+    {
+    	if (confirm('Are you sure you want to submit this receiving? This cannot be undone.'))
+    	{
+    		$('#finish_sale_form').submit();
+    	}
+    });
+
+    $("#cancel_sale_button").click(function()
+    {
+    	if (confirm('Are you sure you want to clear this receiving? All items will cleared.'))
+    	{
+    		$('#cancel_sale_form').submit();
+    	}
+    });
+
+
+});
+
+function post_item_form_submit(response)
+{
+	if(response.success)
+	{
+		$("#item").attr("value",response.item_id);
+		$("#add_item_form").submit();
+	}
+}
+
+function post_person_form_submit(response)
+{
+	if(response.success)
+	{
+		$("#supplier").attr("value",response.person_id);
+		$("#select_supplier_form").submit();
+	}
+}
+
+</script></body></html>

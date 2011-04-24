@@ -1,0 +1,256 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+"http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+    <meta name="generator" content="HTML Tidy for Linux/x86 (vers 25 March 2009), see www.w3.org">
+    <meta http-equiv="content-type" content="text/html; charset=us-ascii">
+
+    <title>HANDPHONE CMS</title>
+    <meta name="Generator" content="EditPlus">
+    <meta name="Author" content="">
+    <meta name="Keywords" content="">
+    <meta name="Description" content=""><!-- Framework CSS -->
+    <link rel="stylesheet" href="/static/css/screen.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/static/css/print.css" type="text/css" media="print"><!--[if lt IE 8]><link rel="stylesheet" href="../../blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+    <!-- Import fancy-type plugin for the sample page. -->
+    <link rel="stylesheet" href="/static/css/screen_002.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" type="text/css" href="/static/css/style.css">
+    <link type="text/css" href="/static/css/jquery-ui-1.css" rel="Stylesheet">
+    <script type="text/javascript" src="/static/js/jquery-1.js">
+</script>
+    <script type="text/javascript" src="/static/js/jquery-ui-1.js">
+</script>
+    <script type="text/javascript">
+
+    $(document).ready(function() {  
+
+    //select all the a tag with name equal to modal
+    $('a[name=modal]').click(function(e) {
+        //Cancel the link behavior
+        e.preventDefault();
+        //Get the A tag
+        var id = $(this).attr('href');
+     
+        //Get the screen height and width
+        //var maskHeight = $(document).height();
+        var maskHeight =1000;
+                var maskWidth = $(window).width();
+     
+        //Set height and width to mask to fill up the whole screen
+        $('#mask').css({'width':maskWidth,'height':maskHeight});
+         
+        //transition effect     
+        $('#mask').fadeIn(1000);    
+        $('#mask').fadeTo("slow",0.8);  
+     
+        //Get the window height and width
+        var winH = $(window).height();
+        var winW = $(window).width();
+               
+        //Set the popup window to center
+       // $(id).css('top',  winH/2-$(id).height()/2);
+       // $(id).css('left', winW/2-$(id).width()/2);
+                        $(id).css('top');
+                        $(id).css('left');
+        //transition effect
+        $(id).fadeIn(2000); 
+     
+    });
+     
+    //if close button is clicked
+    $('.window .close').click(function (e) {
+        //Cancel the link behavior
+        e.preventDefault();
+        $('#mask, .window').hide();
+    });     
+     
+    //if mask is clicked
+    $('#mask').click(function () {
+        $(this).hide();
+        $('.window').hide();
+    });         
+
+    // Click All and Un-Click All
+    $("#clickAll").click(function(){
+        if($("#clickAll").attr("checked")){
+            $("input[name='delete_product[]']").each(function(){
+                $(this).attr("checked", true);
+            })
+        }else{
+            $("input[name='delete_product[]']").each(function(){
+                $(this).attr("checked", false);
+            })        
+        }
+    });
+
+    $("#button_style").click(function(){
+        if($("input:checked[name='delete_product[]']").length==0){
+            alert("Please click at lease one item.");
+            return;
+        }
+        agree = confirm("Are you sure you wish to continue?");
+        if(agree){
+            $('#deleteForm').submit();
+        }
+    });
+    
+    });  // end of  $(document).ready()
+    </script>
+</head>
+
+<body>
+    <div id="mask"></div>
+
+    <div class="span-30" id="lineshadow" style="width:100%;height:70px;">
+        <div class="prepend-2 span-24" id="staffmenu" align="center">
+            <div class="span-4" style="color:black;font-family:arial;font-size:12px;">
+                Handphone Shop<br>
+                Powered by Valuesys
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/customer.php"><img src="/static/images/customer.png" width="45" height="45"><br>
+                Customers</a>
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/product.php"><img src="/static/images/iphone.png" width="45" height="45"><br>
+                Items</a>
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/report.php"><img src="/static/images/financial.png" width="45" height="45"><br>
+                Report</a>
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/supplier.php"><img src="/static/images/supplier.png" width="45" height="45"><br>
+                Supplier</a>
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/receivings.php"><img src="/static/images/box.png" width="45" height="45"><br>
+                Receivings</a>
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/sales.php"><img src="/static/images/credit.png" width="45" height="45"><br>
+                Sales</a>
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/employees.php"><img src="/static/images/role.png" width="45" height="45"><br>
+                Employees</a>
+            </div>
+
+            <div class="span-2">
+                <a href="http://localhost/hpbranch/store_config.php"><img src="/static/images/setting.png" width="45" height="45"><br>
+                Store Config</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container" style="margin-top:10px;">
+        <div id="boxes">
+            <!-- #customize your modal window here -->
+
+            <div id="dialog" class="window">
+                <div class="span-20" style="background-color:white; padding:15px;border:2px double black;">
+                {% block overlap %}                
+                    Overlap Content Not Implements yet !!
+                {% endblock %}                
+                </div>
+                <div class="span-2">
+                    <a href="#" class="close" style="margin-left: -15px;"><img src="/static/images/close.png"></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="span-24" style="background-color:#4D8FAC;">
+            Welcome Admin <a href="http://localhost/hpbranch/branch_logout.php">Logout</a>
+        </div>
+
+        <div class="span-24">
+            <div class="span-20">
+                Product List
+            </div>
+
+            <div class="span-4 last">
+                <a href="#dialog" name="modal" id="modal">New Product</a>
+            </div>
+        <form id="deleteForm" action="/product/delete/" method="get">
+            <div class="span-24" style="border-top:1px solid gray">
+                    <div class="prepend-1 span-3">
+                        <div id="button_style">
+                            Delete
+                        </div>
+                    </div>
+
+                    <div class="prepend-11 span-3 last">
+                        <input type="text">
+                    </div>
+            </div>
+            
+            <div class="span-24" id="updown">
+                <div class="span-4">
+                    <input type="checkbox" id="clickAll">Product Name
+                </div>
+
+                <div class="span-3">
+                    Category
+                </div>
+
+                <div class="span-3">
+                    Brand
+                </div>
+
+                <div class="span-3">
+                    Type
+                </div>
+
+                <div class="span-3">
+                    Product Code
+                </div>
+
+                <div class="span-3">
+                    Bar Code
+                </div>
+
+                <div class="span-2">
+                    Action
+                </div>
+            </div>
+
+    {% block content %}            
+                <div class="span-24" style="border-bottom:1px solid gray;">
+                    <div class="span-4">
+                        <input name="a[]" value="2" type="checkbox">Xperia
+                    </div>
+
+                    <div class="span-3">
+                        Handphone
+                    </div>
+
+                    <div class="span-3">
+                        Sony Ericsson
+                    </div>
+
+                    <div class="span-3">
+                        Earphone
+                    </div>
+
+                    <div class="span-3">barcode</div>
+
+                    <div class="span-3">action</div>
+
+                    <div class="span-2">
+                        <a href="#">Edit</a>
+                    </div>
+                </div>
+    {% endblock %}            
+            </form>
+            </div>
+    </div>
+</body>
+</html>
