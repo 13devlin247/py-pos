@@ -103,6 +103,9 @@ urlpatterns = patterns('',
     url(r'^out_stock_record/create/$', create_update.create_object, out_stock_record_crud_view), 
     url(r'^out_stock_record/search/$', list_detail.object_list,  out_stock_record_list_view), 
     url(r'^out_stock_record/save/$', OutStockRecordSave), 
+    url(r'^sales/order/$', direct_to_template,  {'template': 'pos.html'}),
+    url(r'^sales/list/$', direct_to_template,  {'template': 'sales_form.html'}),
+    
 
     url(r'^profit/create/$', create_update.create_object, profit_crud_view), 
     url(r'^profit/search/$', list_detail.object_list,  profit_list_view), 
