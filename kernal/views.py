@@ -2,6 +2,7 @@ from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Profit, P
 from django.http import HttpResponseRedirect
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
+
 import logging
 logging.basicConfig(level=logging.DEBUG)
 """
@@ -17,15 +18,25 @@ def ProductDetail(request, barcode):
 """ 
 below function for save form object to databases
 """
-def ProductSave(request):
+def ProductSave(request, productID=None):
+    product = None
+    if productID is not None:
+        product = Product.objects.get(pk=productID)
     if request.method == 'GET':
-        form = ProductForm(request.GET)
+        form = ProductForm(request.GET, instance=product)
+            
         if form.is_valid():
             product = form.save(commit = True)
             product.save()
             return HttpResponseRedirect('/product/search/')
         else:
             return HttpResponseRedirect('/product/create/')
+
+def ProductUpdateView(request, productID):
+    product = Product.objects.get(pk=productID)
+    form = ProductForm(instance=product)
+    return render_to_response('product_form.html',{'form': form, 'submit_form':'/product/save/'+productID, 'form_title': 'Update Product'})
+
 
 def ProductDelete(request):
     if request.method == 'GET':

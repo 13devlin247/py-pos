@@ -30,8 +30,17 @@
         //Cancel the link behavior
         e.preventDefault();
         //Get the A tag
-        var id = $(this).attr('href');
-     
+        var id = "#dialog";
+        var link = $(this).attr('href');
+        
+        $.ajax({
+            url: link,
+            success: function(html){
+                $("#dialog").html(html);
+            },
+        });
+
+        
         //Get the screen height and width
         //var maskHeight = $(document).height();
         var maskHeight =1000;
@@ -41,7 +50,7 @@
         $('#mask').css({'width':maskWidth,'height':maskHeight});
          
         //transition effect     
-        $('#mask').fadeIn(1000);    
+        $('#mask').fadeIn(100);    
         $('#mask').fadeTo("slow",0.8);  
      
         //Get the window height and width
@@ -54,7 +63,7 @@
                         $(id).css('top');
                         $(id).css('left');
         //transition effect
-        $(id).fadeIn(2000); 
+        $(id).fadeIn(200); 
      
     });
      
@@ -156,14 +165,7 @@
             <!-- #customize your modal window here -->
 
             <div id="dialog" class="window">
-                <div class="span-20" style="background-color:white; padding:15px;border:2px double black;">
-                {% block overlap %}                
-                    Overlap Content Not Implements yet !!
-                {% endblock %}                
-                </div>
-                <div class="span-2">
-                    <a href="#" class="close" style="margin-left: -15px;"><img src="/static/images/close.png"></a>
-                </div>
+				<!-- put overlap content here -->
             </div>
         </div>
 
@@ -171,86 +173,13 @@
             Welcome Admin <a href="http://localhost/hpbranch/branch_logout.php">Logout</a>
         </div>
 
-        <div class="span-24">
-            <div class="span-20">
-                Product List
-            </div>
 
-            <div class="span-4 last">
-                <a href="#dialog" name="modal" id="modal">New Product</a>
-            </div>
-        <form id="deleteForm" action="/product/delete/" method="get">
-            <div class="span-24" style="border-top:1px solid gray">
-                    <div class="prepend-1 span-3">
-                        <div id="button_style">
-                            Delete
-                        </div>
-                    </div>
 
-                    <div class="prepend-11 span-3 last">
-                        <input type="text">
-                    </div>
-            </div>
-            
-            <div class="span-24" id="updown">
-                <div class="span-4">
-                    <input type="checkbox" id="clickAll">Product Name
-                </div>
 
-                <div class="span-3">
-                    Category
-                </div>
-
-                <div class="span-3">
-                    Brand
-                </div>
-
-                <div class="span-3">
-                    Type
-                </div>
-
-                <div class="span-3">
-                    Product Code
-                </div>
-
-                <div class="span-3">
-                    Bar Code
-                </div>
-
-                <div class="span-2">
-                    Action
-                </div>
-            </div>
-
-    {% block content %}            
-                <div class="span-24" style="border-bottom:1px solid gray;">
-                    <div class="span-4">
-                        <input name="a[]" value="2" type="checkbox">Xperia
-                    </div>
-
-                    <div class="span-3">
-                        Handphone
-                    </div>
-
-                    <div class="span-3">
-                        Sony Ericsson
-                    </div>
-
-                    <div class="span-3">
-                        Earphone
-                    </div>
-
-                    <div class="span-3">barcode</div>
-
-                    <div class="span-3">action</div>
-
-                    <div class="span-2">
-                        <a href="#">Edit</a>
-                    </div>
-                </div>
+    {% block content %}      
     {% endblock %}            
-            </form>
-            </div>
+
+
     </div>
 </body>
 </html>
