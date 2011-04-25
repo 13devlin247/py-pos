@@ -1,0 +1,93 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}
+        <div class="span-24">
+            <div class="span-20">
+                Product List
+            </div>
+
+            <div class="span-4 last">
+                <a href="/product/create/" name="modal" id="modal">New Product</a>
+            </div>
+        <form id="deleteForm" action="/product/delete/" method="get">
+            <div class="span-24" style="border-top:1px solid gray">
+                    <div class="prepend-1 span-3">
+                        <div id="button_style">
+                            Delete
+                        </div>
+                    </div>
+
+                    <div class="prepend-11 span-3 last">
+                        <input type="text">
+                    </div>
+            </div>
+            
+            <div class="span-24" id="updown">
+                <div class="span-4">
+                    <input type="checkbox" id="clickAll">Product Name
+                </div>
+
+                <div class="span-3">
+                    Category
+                </div>
+
+                <div class="span-3">
+                    Brand
+                </div>
+
+                <div class="span-3">
+                    Type
+                </div>
+
+                <div class="span-3">
+                    Price
+                </div>
+
+                <div class="span-3">
+                    Bar Code
+                </div>
+
+                <div class="span-2">
+                    Action
+                </div>
+            </div>
+
+    {% for product in object_list %}
+            <div class="span-24" style="border-bottom:1px solid gray;">
+                <div class="span-4">
+                    <input name="delete_product[]" value="{{product.barcode}}" type="checkbox"/>{{product.name}}
+                </div>
+
+                <div class="span-3">
+                    {{product.category}}
+                </div>
+
+                <div class="span-3">
+                    {{product.brand}}
+                </div>
+
+                <div class="span-3">
+                    {{product.type}}
+                </div>
+
+                <div class="span-3">$ {{product.price}}</div>
+
+                <div class="span-3">{{product.barcode}}</div>
+
+                <div class="span-2">
+                    <a name="modal" href="/product/update/{{product.pk}}">Edit</a>
+                </div>
+            </div>
+    {% endfor %}
+	            </form>
+            </div>				
+{% endblock %}
+
+
+

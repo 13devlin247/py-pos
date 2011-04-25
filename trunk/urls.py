@@ -2,7 +2,7 @@ from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Profit, ProductForm, InStockRecordForm, OutStockRecordForm, ProfitForm
-from pos.kernal.views import ProductSave, ProductDelete,OutStockRecordSave, InStockRecordSave, ProfitSave
+from pos.kernal.views import ProductSave, ProductDelete,OutStockRecordSave, InStockRecordSave, ProfitSave, ProductUpdateView
 from pos.kernal.views import ProductDetail
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -15,27 +15,34 @@ main_link = {
     'product': '/product/create/',                      
     'in stock record': '/in_stock_record/create/',                      
     'out stock record': '/out_stock_record/create/', 
-	'profit record': '/profit/create/',
+    'profit record': '/profit/create/',
 }
 
+"""
+show product list
+"""
 product_list_view = {
     'queryset': Product.objects.filter(disable=False),                      
     'allow_empty': True,                      
-    'template_name': 'product_view.html', 
-	'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link,  'form_title': 'New Product'},    
+    'template_name': 'product_list.html', 
+    'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link},    
 }
 
-product_crud_view = {
+
+"""
+response AJAX method for create product
+"""
+product_form = {
     'model': Product, 
-    'extra_context': {'form': ProductForm, 'submit_form':'/product/save', 'main_link': main_link},    
-    'template_name': 'CRUDForm.html', 
+    'extra_context': {'form': ProductForm, 'submit_form':'/product/save', 'form_title': 'New Product'},    
+    'template_name': 'product_form.html', 
 }
 
 in_stock_record_list_view = {
     'queryset': InStockRecord.objects.all(),                      
     'allow_empty': True,                      
     'template_name': 'product_list.html', 
-	'extra_context': {'main_link': main_link}, 
+    'extra_context': {'main_link': main_link}, 
 }
 
 in_stock_record_crud_view  = {
@@ -48,7 +55,7 @@ out_stock_record_list_view = {
     'queryset': OutStockRecord.objects.all(),                      
     'allow_empty': True,                      
     'template_name': 'product_list.html', 
-	'extra_context': {'main_link': main_link},
+    'extra_context': {'main_link': main_link},
 }
 out_stock_record_crud_view  = {
     'model': OutStockRecord, 
@@ -60,7 +67,7 @@ profit_list_view = {
     'queryset': Profit.objects.all(),                      
     'allow_empty': True,                      
     'template_name': 'product_list.html', 
-	'extra_context': {'main_link': main_link},
+    'extra_context': {'main_link': main_link},
 }
 
 profit_crud_view  = {
@@ -83,14 +90,12 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', direct_to_template,  {'template': 'product.php.html'}),
     
-    url(r'^product/create/$', create_update.create_object, product_crud_view), 
-    url(r'^product/search/$', list_detail.object_list,  product_list_view), 
-    url(r'^product/delete/$', ProductDelete), 
-    # url(r'^product/search/(?P<barcode>\w+)$', 'pos.kernal.views.ProductDetail'), 
+    url(r'^product/create/$', create_update.create_object, product_form), 
+    url(r'^product/search/$', list_detail.object_list, product_list_view),
+    url(r'^product/update/(?P<productID>\w+)', ProductUpdateView), 
+    url(r'^product/delete/$', ProductDelete),    
+    url(r'^product/save/(?P<productID>\w+)*', ProductSave), # controller
     
- #   url(r'^product/search/\w+$', ajaxProductDetailView), 
-    url(r'^product/save/$', ProductSave), 
-
     url(r'^in_stock_record/create/$', create_update.create_object, in_stock_record_crud_view), 
     url(r'^in_stock_record/search/$', list_detail.object_list,  in_stock_record_list_view), 
     url(r'^in_stock_record/save/$', InStockRecordSave), 
