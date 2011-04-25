@@ -9,11 +9,11 @@ CHOICES_ITEM = (
 
 class Product(models.Model):
     barcode = models.CharField(max_length=100)
-    barcode = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     brand = models.CharField(max_length=100,  choices=CHOICES_ITEM)
     category = models.CharField(max_length=100,  choices=CHOICES_ITEM)
     type = models.CharField(max_length=100,  choices=CHOICES_ITEM)
+    price = models.DecimalField(max_digits=100,  decimal_places=2)
     disable = models.BooleanField(False)
     
     def __unicode__(self):
