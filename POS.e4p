@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE Project SYSTEM "Project-4.6.dtd">
 <!-- eric4 project file for project POS -->
-<!-- Saved: 2011-04-25, 06:41:31 -->
+<!-- Saved: 2011-04-26, 07:22:30 -->
 <!-- Copyright (C) 2011 ,  -->
 <Project version="4.6">
   <Language>en</Language>
@@ -32,7 +32,7 @@
   <Others>
   </Others>
   <Vcs>
-    <VcsType>None</VcsType>
+    <VcsType>Subversion</VcsType>
     <VcsOptions>
       <dict>
         <key>
