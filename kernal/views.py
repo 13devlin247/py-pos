@@ -1,10 +1,9 @@
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Profit, ProductForm, InStockRecordForm, OutStockRecordForm, ProfitForm
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
+from django.contrib import messages
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
 """
 Below function for ajax use
 """
@@ -14,6 +13,26 @@ Below function for ajax use
 def ProductDetail(request, barcode):
     queryset = Product.objects.filter(barcode=barcode)
     return list_detail.object_list(request,  queryset=queryset)
+
+def ProductCheck(request, barcode):
+    profit = None;
+    messages.info(request, "check product: " + barcode + "  stock")
+    productSet = Product.objects.filter(barcode=barcode)
+    inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
+    
+    profitset = Profit.objects.all()
+    if profitset is not None:
+        profit = profitset.order_by('create_at')[0]
+        
+    if inStockRecordSet is None:
+        messages.debug(request, "inStockRecordSet not found")
+        return HttpResponse(0, mimetype="text/plain")    
+    if profit is None:
+        messages.debug(request, "profit not found")        
+        
+    inventoryCount = countInventory(inStockRecordSet, profit)
+    
+    return HttpResponse(inventoryCount, mimetype="text/plain")
 
 """ 
 below function for save form object to databases
@@ -81,4 +100,20 @@ def ProfitSave(request):
         else:
             form = ProductForm()
             return HttpResponseRedirect('/profit/create/')
+
+def countInventory(inStockRecordSet, profit):
+    count = 0;
+    sellCount = 0
+    if inStockRecordSet is None:
+        messages.info(request,)
+        return 0;
+        
+    if profit is not None:
+        if profit.sell_index is not None:
+            sellCount = profit.sell_index
+        
+    for inStockRecord in inStockRecordSet:
+        count = count + inStockRecord.quantity
+    count = count - sellCount
+    return count
 
