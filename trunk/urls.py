@@ -2,7 +2,7 @@ from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Profit, ProductForm, InStockRecordForm, OutStockRecordForm, ProfitForm
-from pos.kernal.views import ProductSave, ProductDelete,OutStockRecordSave, InStockRecordSave, ProfitSave, ProductUpdateView
+from pos.kernal.views import ProductSave, ProductCheck, ProductDelete,OutStockRecordSave, InStockRecordSave, ProfitSave, ProductUpdateView
 from pos.kernal.views import ProductDetail
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -95,7 +95,9 @@ urlpatterns = patterns('',
     url(r'^product/update/(?P<productID>\w+)', ProductUpdateView), 
     url(r'^product/delete/$', ProductDelete),    
     url(r'^product/save/(?P<productID>\w+)*', ProductSave), # controller
+	url(r'^product/check/(?P<barcode>\w+)*', ProductCheck), # controller
     
+	
     url(r'^in_stock_record/create/$', create_update.create_object, in_stock_record_crud_view), 
     url(r'^in_stock_record/search/$', list_detail.object_list,  in_stock_record_list_view), 
     url(r'^in_stock_record/save/$', InStockRecordSave), 
