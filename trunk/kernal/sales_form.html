@@ -1,0 +1,217 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}
+<style type="text/css">
+#stockCount{
+    font-weight: bold;
+}
+
+
+#register_wrapper div{
+    text-align: center;
+}
+    
+table{
+    padding: 1em;
+    
+}
+
+th{
+    text-align:center;
+}
+tfoot td{
+    text-align:right;
+    font-weight:bold;
+}
+
+td{
+    text-align: left;
+}
+
+.totalPrice{
+   text-align: right;
+}
+
+td input[type="text"] {
+
+    text-align:center;
+    padding: 0;
+    margin:0;
+}
+
+
+</style>
+
+
+    <div id="content_area_wrapper">
+        <div id="content_area">
+            <div id="page_title" style="margin-bottom:8px;">
+                Sales Register
+            </div>
+
+            
+            <div id="register_wrapper">
+                
+                <div>
+                    <span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40" autocomplete="off" class="ac_input" /></span>
+                    <span style="text-align:right"><label id="customer_label" for="customer">Select Customer (Optional)</label> <input type="text" name="customer" value="Start Typing customer's name..." id="customer" size="30" autocomplete="off" class="ac_input" /></span>
+<form action="/sales/confirm" method="get">
+                    <table id="register">
+                        <thead>
+                            <tr>
+                                <th style="width:20%;">Item #</th>
+
+                                <th style="width:45%;">Item Name</th>
+
+                                <th style="width:10%;">Price</th>
+
+                                <th style="width:10%;">Qty.</th>
+
+                                <th style="width:15%;">Total</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="sell_detail">
+                        </tbody>
+                        
+                        <tfoot>
+                            <tr>
+                                <td style="text-align:right;" colspan="4">Sub Total</td>
+                                <td class="amount_due" style="text-align:right;font-weight:bold;" id="subTotal">$0.00</td>
+
+                            </tr>                        
+                            <tr>
+                                <td colspan=4><span id="amount_tendered_label">Amount Tendered</span></td>
+
+                                <td class="amount_due">
+                                                    $<input type="text" name="amount_tendered" value="0.00" id="amount_tendered" size="10" />
+                                </td>
+                            </tr>      
+                        </tfoot>
+                    </table>                
+                    <input type=submit value="Confirm">
+</form>                                                
+                </div>
+            </div>
+
+
+
+                <div class="clearfix">
+                    &nbsp;
+                </div>
+
+                <div class="clearfix" style="margin-bottom:1px;">
+                    &nbsp;
+                </div>
+            </div>
+
+            <div class="clearfix" style="margin-bottom:30px;">
+                &nbsp;
+            </div>
+        </div>
+    </div>
+    
+  
+  <script type="text/javascript">
+    var productTable = new Array();
+    
+    $("#item").keydown(function(event){
+        if(event.keyCode != '13'){
+            return;
+        }
+        if ( productTable[$("#item").val()] == undefined){
+            row = $('#sell_detail').html();
+            
+            /**
+                query product infor by ajax
+            **/
+            $.ajax({
+                url: "/product/info/"+$("#item").val(),
+                type: "JSON",
+                success: function(data){  
+                    for (var i = 0; i < data.length; i++){
+                        var barcode = data[i].fields.barcode;
+                        productTable[barcode] = data;       
+                            
+                        row += ""+
+                                "<tr id=\""+barcode+"_tr\">"+
+                                "<td><a href='#' id='removeItem' onclick=removeItem('"+barcode+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
+                                "<td id=\""+barcode+"_productName\">"+data[i].fields.name+"</td>"+
+                                "<td>$<input type=\"text\" name=\""+barcode+"_price\" id=\""+barcode+"_price\" value=\""+data[i].fields.price+" \" size=\"6\" onkeypress=recalcAll('"+barcode+"') /></td>"+
+                                "<td><input type=\"text\" name=\""+barcode+"_quantity\" id=\""+barcode+"_quantity\" value=\"1\" size=\"2\"  onkeypress=recalcAll('"+barcode+"') /> / (<span id=\""+barcode+"_stockCount\"></span>)</td>"+
+                                "<td id=\""+barcode+"_totalPrice\" class='totalPrice'>"+data[i].fields.price+"</td>"+
+                                "</tr>"
+                        ;                        
+                    }
+
+                    $('#sell_detail').html(row);
+                    
+                },
+                error: function(data){ alert("Product Not found! please check your barcode: " + $("#item").val()) },
+                complete: function(data){ 
+                    calcSubTotalPrice();
+                },
+            });            
+            /**
+                query product inventory by ajax
+            **/
+            $.ajax({
+                url: "/product/inventory/"+$("#item").val(),
+                type: "JSON",
+                success: function(data){  
+                    $("#"+$("#item").val()+"_stockCount").html(data[0].inventory);
+                },
+                error: function(data){ alert("Product Not found! please check your barcode: " + $("#item").val()) },
+                complete: function(data){},
+            });            
+            
+        }else{
+            var barcode = $("#item").val();
+            quantityPlugOne(barcode)
+            calcTotalPrice(barcode);
+            calcSubTotalPrice();
+        }
+
+
+    });
+    
+    function quantityPlugOne(barcode){
+            var quantityField = $("#"+barcode+"_quantity");
+            var currentQuantity = parseInt(quantityField.val());
+            quantityField.attr("value", currentQuantity+1);
+    }
+    function calcTotalPrice(barcode){
+        var currentQuantity = parseInt($("#"+barcode+"_quantity").val());
+        var price = $("#"+barcode+"_price").val();
+        $("#"+barcode+"_totalPrice").html(currentQuantity* price);
+    }
+    function calcSubTotalPrice(){
+        var total = 0;
+        for (var key in productTable){
+            total += parseInt($("#"+key+"_totalPrice").html());
+        }
+        $("#subTotal").html(total);
+    }
+    function recalcAll(barcode){
+        calcTotalPrice(barcode);
+        calcSubTotalPrice();
+    }
+    function removeItem(barcode){
+        delete productTable[barcode];
+        $("#"+barcode+"_tr").remove();
+        calcSubTotalPrice();
+    }
+    
+    
+  </script>
+  
+{% endblock %}
+
+
+
