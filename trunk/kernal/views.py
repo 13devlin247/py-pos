@@ -41,8 +41,33 @@ def printData(request):
             
         return HttpResponse("sales index: "+str(sales_index)+" , outStockRecord.quantity: " + salesDict[barcode]['quantity'] [0] + ", new saleIndex: " + str((sales_index+int(salesDict[barcode]['quantity'] [0]))), mimetype="text/plain")     
 
+def InventoryConfirm(request):
+    inventoryDict = {}
+    if request.method == 'GET':
+        # process Request parameter
+        sales_item = request.GET.lists()
+        for key,  value in sales_item:
+            if key == "po_no":
+                continue
+            barcode = key.split("_")[0]
+            attr = key.split("_")[1]
+            if barcode not in inventoryDict :
+                inventoryDict [barcode] ={}
+            inventoryDict [barcode] [attr]= value
+        
+        po_no = request.GET['po_no']
+        
+        # build OutStockRecord to save data
+        for barcode in inventoryDict :
+            inStockRecord = InStockRecord()
+            inStockRecord.barcode = barcode
+            inStockRecord.po_no = po_no
+            inStockRecord.cost = inventoryDict [barcode]['cost'][0]
+            inStockRecord.quantity = inventoryDict [barcode]['quantity'] [0]
+            inStockRecord.save()
+        return HttpResponseRedirect('/inventory/result/')
+
 def SalesConfirm(request):
-    txt = ""
     salesDict = {}
     if request.method == 'GET':
         # process Request parameter
