@@ -1,8 +1,9 @@
 from django.contrib import admin
-from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Profit, ProductForm, InStockRecordForm, OutStockRecordForm, ProfitForm
+from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Invoice,  ProductForm, InStockRecordForm, OutStockRecordForm,  InvoiceForm
 
 admin.site.register(Product)
 admin.site.register(InStockRecord)
 admin.site.register(OutStockRecord)
-admin.site.register(Profit)
+admin.site.register(Invoice)
+
 

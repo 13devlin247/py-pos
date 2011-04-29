@@ -1,38 +1,119 @@
-from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Profit, ProductForm, InStockRecordForm, OutStockRecordForm, ProfitForm
+from pos.kernal.models import Product, Invoice,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
 from django.contrib import messages
-
+from django.core import serializers
+from django.db.models import Count
 """
 Below function for ajax use
 """
 #def ajaxProductDetailView(request):
    # if request.method == 'GET':
-        
-def ProductDetail(request, barcode):
-    queryset = Product.objects.filter(barcode=barcode)
-    return list_detail.object_list(request,  queryset=queryset)
 
-def ProductCheck(request, barcode):
-    profit = None;
-    messages.info(request, "check product: " + barcode + "  stock")
+def printData(request):
+    txt = ""
+    salesDict = {}
+    if request.method == 'GET':
+        # process Request parameter
+        sales_item = request.GET.lists()
+        for key,  value in sales_item:
+            if key == "amount_tendered":
+                continue
+            if key == "subTotal":
+                continue            
+            barcode = key.split("_")[0]
+            attr = key.split("_")[1]
+            if barcode not in salesDict:
+                salesDict[barcode] ={}
+            salesDict[barcode] [attr]= value
+        
+       
+        # build OutStockRecord to save data
+        for barcode in salesDict:
+            sales_index = 0
+            #find last time sell record
+            lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
+            if lastOutStockRecordSet.count() != 0:
+                lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
+                sales_index = lastOutStockRecord.sell_index
+            
+            
+        return HttpResponse("sales index: "+str(sales_index)+" , outStockRecord.quantity: " + salesDict[barcode]['quantity'] [0] + ", new saleIndex: " + str((sales_index+int(salesDict[barcode]['quantity'] [0]))), mimetype="text/plain")     
+
+def SalesConfirm(request):
+    txt = ""
+    salesDict = {}
+    if request.method == 'GET':
+        # process Request parameter
+        sales_item = request.GET.lists()
+        for key,  value in sales_item:
+            if key == "amount_tendered":
+                continue
+            if key == "subTotal":
+                continue            
+            barcode = key.split("_")[0]
+            attr = key.split("_")[1]
+            if barcode not in salesDict:
+                salesDict[barcode] ={}
+            salesDict[barcode] [attr]= value
+        
+        invoice = Invoice()
+        invoice.total_price = request.GET['subTotal']
+        invoice.tendered_amount = request.GET['amount_tendered']
+        invoice.fulfill_payment = False
+        invoice.save()
+        
+        # build OutStockRecord to save data
+        for barcode in salesDict:
+            outStockRecord = OutStockRecord()
+            outStockRecord.invoice = invoice
+            outStockRecord.barcode = barcode
+            outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
+            outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
+
+            sales_index = 0
+            #find last time sell record
+            lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
+            if lastOutStockRecordSet.count() != 0:
+                lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
+                sales_index = lastOutStockRecord.sell_index
+            
+            sales_index = sales_index + int(outStockRecord.quantity) 
+            outStockRecord.sell_index = sales_index
+            outStockRecord.profit = 50
+            outStockRecord.save()
+        return HttpResponseRedirect('/sales/invoice/')
+
+def ProductInfo(request, barcode):
+    messages.info(request, "check product: " + `barcode` + " info")
+   
     productSet = Product.objects.filter(barcode=barcode)
+    if not productSet:
+        return HttpResponse("[{\"error\":true}]", mimetype="text/plain")    
+    json = serializers.serialize("json",  productSet)
+    #json =                                                                               "[{\"inventoryCount\":"+str(inventoryCount)+"}]"
+    return HttpResponse(json, mimetype="application/json")
+    
+def ProductInventory(request, barcode):
+    outStockRecord = None
+    messages.info(request, "check product: " + `barcode` + "  inventory")
+   
     inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
-    
-    profitset = Profit.objects.all()
-    if profitset is not None:
-        profit = profitset.order_by('create_at')[0]
-        
-    if inStockRecordSet is None:
+    if inStockRecordSet.count() == 0:
         messages.debug(request, "inStockRecordSet not found")
-        return HttpResponse(0, mimetype="text/plain")    
-    if profit is None:
-        messages.debug(request, "profit not found")        
-        
-    inventoryCount = countInventory(inStockRecordSet, profit)
+        return HttpResponse(0, mimetype="application/json")    
+
+    outStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
     
-    return HttpResponse(inventoryCount, mimetype="text/plain")
+    if outStockRecordSet.count() != 0:
+        outStockRecord = outStockRecordSet.order_by('-create_at')[0]
+        if outStockRecord is None:
+            messages.debug(request, "outStockRecord not found")        
+        
+    inventoryCount = countInventory(inStockRecordSet, outStockRecord)
+    json = "[{\"inventory\":"+str(inventoryCount)+"}]"
+    return HttpResponse(json, mimetype="application/json")    
 
 """ 
 below function for save form object to databases
@@ -90,27 +171,15 @@ def OutStockRecordSave(request):
         else:
             return HttpResponseRedirect('/out_stock_record/create/')
 
-def ProfitSave(request):
-    if request.method == 'GET':
-        form = ProfitForm(request.GET)
-        if form.is_valid():
-            profit = form.save(commit = True)
-            profit.save()
-            return HttpResponseRedirect('/profit/search/')
-        else:
-            form = ProductForm()
-            return HttpResponseRedirect('/profit/create/')
-
-def countInventory(inStockRecordSet, profit):
+def countInventory(inStockRecordSet, outStockRecord):
     count = 0;
     sellCount = 0
     if inStockRecordSet is None:
-        messages.info(request,)
+        messages.info(request,"")
         return 0;
         
-    if profit is not None:
-        if profit.sell_index is not None:
-            sellCount = profit.sell_index
+    if outStockRecord is not None:
+        sellCount = outStockRecord.sell_index
         
     for inStockRecord in inStockRecordSet:
         count = count + inStockRecord.quantity

@@ -67,11 +67,11 @@ td input[type="text"] {
                             <tr>
                                 <th style="width:20%;">Item #</th>
 
-                                <th style="width:45%;">Item Name</th>
+                                <th style="width:41%;">Item Name</th>
 
-                                <th style="width:10%;">Price</th>
+                                <th style="width:12%;">Price</th>
 
-                                <th style="width:10%;">Qty.</th>
+                                <th style="width:12%;">Qty.</th>
 
                                 <th style="width:15%;">Total</th>
                             </tr>
@@ -83,7 +83,7 @@ td input[type="text"] {
                         <tfoot>
                             <tr>
                                 <td style="text-align:right;" colspan="4">Sub Total</td>
-                                <td class="amount_due" style="text-align:right;font-weight:bold;" id="subTotal">$0.00</td>
+                                <td class="amount_due" style="text-align:right;font-weight:bold;">$<input type="text" style="border: none;" name="subTotal" value="0.00" id="subTotal" size="10" /></td>
 
                             </tr>                        
                             <tr>
@@ -196,7 +196,7 @@ td input[type="text"] {
         for (var key in productTable){
             total += parseInt($("#"+key+"_totalPrice").html());
         }
-        $("#subTotal").html(total);
+        $("#subTotal").attr("value",total);
     }
     function recalcAll(barcode){
         calcTotalPrice(barcode);

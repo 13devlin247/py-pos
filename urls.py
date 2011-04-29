@@ -1,9 +1,9 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
-from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Profit, ProductForm, InStockRecordForm, OutStockRecordForm, ProfitForm
-from pos.kernal.views import ProductSave, ProductCheck, ProductDelete,OutStockRecordSave, InStockRecordSave, ProfitSave, ProductUpdateView
-from pos.kernal.views import ProductDetail
+from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm
+from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
+from pos.kernal.views import SalesConfirm, printData
 #from pos.kernal.views import ajaxProductDetailView
 
 
@@ -63,19 +63,6 @@ out_stock_record_crud_view  = {
     'template_name': 'CRUDForm.html', 
 }
 
-profit_list_view = {
-    'queryset': Profit.objects.all(),                      
-    'allow_empty': True,                      
-    'template_name': 'product_list.html', 
-    'extra_context': {'main_link': main_link},
-}
-
-profit_crud_view  = {
-    'model': Profit, 
-    'extra_context': {'form': ProfitForm, 'submit_form':'/profit/save', 'main_link': main_link},
-    'template_name': 'CRUDForm.html', 
-}
-
 
 
 urlpatterns = patterns('',
@@ -88,14 +75,17 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^$', direct_to_template,  {'template': 'product.php.html'}),
+    url(r'^$', list_detail.object_list, product_list_view),
     
     url(r'^product/create/$', create_update.create_object, product_form), 
     url(r'^product/search/$', list_detail.object_list, product_list_view),
     url(r'^product/update/(?P<productID>\w+)', ProductUpdateView), 
     url(r'^product/delete/$', ProductDelete),    
     url(r'^product/save/(?P<productID>\w+)*', ProductSave), # controller
-	url(r'^product/check/(?P<barcode>\w+)*', ProductCheck), # controller
+	url(r'^product/info/(?P<barcode>\w+)*', ProductInfo), # controller
+    url(r'^product/inventory/(?P<barcode>\w+)*', ProductInventory), # controller
+    
+    
     
 	
     url(r'^in_stock_record/create/$', create_update.create_object, in_stock_record_crud_view), 
@@ -107,9 +97,17 @@ urlpatterns = patterns('',
     url(r'^out_stock_record/save/$', OutStockRecordSave), 
     url(r'^sales/order/$', direct_to_template,  {'template': 'pos.html'}),
     url(r'^sales/list/$', direct_to_template,  {'template': 'sales_form.html'}),
+    url(r'^sales/confirm/$', SalesConfirm),
+    url(r'^sales/invoice/$', direct_to_template,  {
+                            'template': 'under_constructor.html', 
+                            'extra_context':{ 'msg':'Data insert success !! but invoice page is under constructor !!'}
+                            }),
+    url(r'^underconstructor/$', direct_to_template,  {
+                            'template': 'under_constructor.html', 
+                            'extra_context':{ 'msg':'this page is under constructor !!'}
+                            }),                            
+    #url(r'^sales/confirm/$', printData),
+    
     
 
-    url(r'^profit/create/$', create_update.create_object, profit_crud_view), 
-    url(r'^profit/search/$', list_detail.object_list,  profit_list_view), 
-    url(r'^profit/save/$', ProfitSave), 
 )
