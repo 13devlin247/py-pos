@@ -24,19 +24,31 @@ class InStockRecord(models.Model):
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     create_at = models.DateTimeField(auto_now_add = True)
-
+    
+    def __unicode__(self):
+        return self.barcode + " " +str(self.cost) + " " + str(self.quantity)
+        
+class Invoice(models.Model):
+    total_price = models.DecimalField(max_digits=100,  decimal_places=2)
+    tendered_amount = models.DecimalField(max_digits=100,  decimal_places=2)
+    fulfill_payment = models.BooleanField(False)
+    customerID = models.CharField(max_length=100,  blank=True)
+    create_at = models.DateTimeField(auto_now_add = True)
+    def __unicode__(self):
+        return " $" + str(self.total_price) + " "+str(self.create_at) 
+        
 class OutStockRecord(models.Model):
+    invoice = models.ForeignKey(Invoice)
     barcode = models.CharField(max_length=100)
     unit_sell_price = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
-    create_at = models.DateTimeField(auto_now_add = True)
-
-class Profit(models.Model):
-    out_stock_record = models.OneToOneField(OutStockRecord)
     sell_index = models.IntegerField()
     profit = models.DecimalField(max_digits=100,  decimal_places=2)
     create_at = models.DateTimeField(auto_now_add = True)
-    
+
+    def __unicode__(self):
+        return self.barcode + " " + str(self.sell_index)
+
 class ProductForm(ModelForm):
     class Meta:
         model = Product
@@ -50,8 +62,7 @@ class OutStockRecordForm(ModelForm):
     class Meta:
         model = OutStockRecord
 
-class ProfitForm(ModelForm):
+class InvoiceForm(ModelForm):
     class Meta:
-        model = Profit
-        
+        model = Invoice
 
