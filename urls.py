@@ -3,7 +3,7 @@ from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
-from pos.kernal.views import SalesConfirm, printData
+from pos.kernal.views import SalesConfirm, InventoryConfirm
 #from pos.kernal.views import ajaxProductDetailView
 
 
@@ -87,7 +87,12 @@ urlpatterns = patterns('',
     
     
     
-	
+	url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form.html'}),
+    url(r'^inventory/confirm/$', InventoryConfirm),    
+    url(r'^^inventory/result/$', direct_to_template,  {
+                            'template': 'under_constructor.html', 
+                            'extra_context':{ 'msg':'Inventory insert success, but this result page is under constructor !!'}
+                            }),                                
     url(r'^in_stock_record/create/$', create_update.create_object, in_stock_record_crud_view), 
     url(r'^in_stock_record/search/$', list_detail.object_list,  in_stock_record_list_view), 
     url(r'^in_stock_record/save/$', InStockRecordSave), 

@@ -20,6 +20,7 @@ class Product(models.Model):
         return self.name
         
 class InStockRecord(models.Model):
+    po_no = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100)
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
