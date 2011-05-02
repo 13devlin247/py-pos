@@ -62,18 +62,20 @@ td input[type="text"] {
 <form action="/inventory/confirm" method="get">            
                     <table id="register">
                         <thead>
-                            <tr><th colspan=5 style="border-bottom: 1px gray solid;text-align: left;"><span style="text-align:right"><label id="po_no" for="customer">PO ID: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
+                            <tr><th colspan=6 style="border-bottom: 1px gray solid;text-align: left;"><span style="text-align:right"><label id="po_no" for="customer">PO ID: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
 </th></tr>
                             <tr>
                                 <th style="width:20%;">Item #</th>
 
-                                <th style="width:41%;">Item Name</th>
+                                <th style="width:31%;">Item Name</th>
 
                                 <th style="width:12%;">Cost</th>
 
                                 <th style="width:12%;">Qty.</th>
 
                                 <th style="width:15%;">Inventory</th>
+                                
+                                <th style="width:10%;">Serials no.</th>                                
                             </tr>
                         </thead>
 
@@ -105,14 +107,13 @@ td input[type="text"] {
   
   <script type="text/javascript">
     var productTable = new Array();
-    
+    var quantityTable = new Array();
     $("#item").keydown(function(event){
         if(event.keyCode != '13'){
             return;
         }
         if ( productTable[$("#item").val()] == undefined){
             row = $('#sell_detail').html();
-            
             /**
                 query product infor by ajax
             **/
@@ -123,7 +124,7 @@ td input[type="text"] {
                     for (var i = 0; i < data.length; i++){
                         var barcode = data[i].fields.barcode;
                         productTable[barcode] = data;       
-                            
+                        quantityTable[barcode] = 1;       
                         row += ""+
                                 "<tr id=\""+barcode+"_tr\">"+
                                 "<td><a href='#' id='removeItem' onclick=removeItem('"+barcode+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
@@ -131,11 +132,16 @@ td input[type="text"] {
                                 "<td>$<input type=\"text\" name=\""+barcode+"_cost\" id=\""+barcode+"_cost\" value=\""+data[i].fields.price+" \" size=\"6\" /></td>"+
                                 "<td style='text-align: center'><input type=\"text\" name=\""+barcode+"_quantity\" id=\""+barcode+"_quantity\" value=\"1\" size=\"2\"  /> </td>"+
                                 "<td id=\""+barcode+"_Inventory\" class='Inventory'>0</td>"+
+                                "<td id=\""+barcode+"_serialno\" class='SerialNo'><a href='#'>optional</a></td>"+
                                 "</tr>"
                         ;                        
                     }
 
                     $('#sell_detail').html(row);
+                    
+                    for (var key in productTable){
+                        $("#"+key+"_quantity").attr("value", quantityTable[key]);
+                    }
                     
                 },
                 error: function(data){ alert("Product Not found! please check your barcode: " + $("#item").val()) },
@@ -158,20 +164,22 @@ td input[type="text"] {
             
         }else{
             var barcode = $("#item").val();
-            quantityPlugOne(barcode)
+            quantityPlusOne(barcode)
         }
 
 
     });
     
-    function quantityPlugOne(barcode){
+    function quantityPlusOne(barcode){
             var quantityField = $("#"+barcode+"_quantity");
             var currentQuantity = parseInt(quantityField.val());
             quantityField.attr("value", currentQuantity+1);
+            quantityTable[barcode] = currentQuantity+1;
     }
 
     function removeItem(barcode){
         delete productTable[barcode];
+        delete quantityTable[barcode];
         $("#"+barcode+"_tr").remove();
     }
     
