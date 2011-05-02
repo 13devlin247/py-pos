@@ -111,6 +111,7 @@ urlpatterns = patterns('',
                             'template': 'under_constructor.html', 
                             'extra_context':{ 'msg':'this page is under constructor !!'}
                             }),                            
+    url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
     #url(r'^sales/confirm/$', printData),
     
     
