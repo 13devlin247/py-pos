@@ -116,7 +116,7 @@ urlpatterns = patterns('',
     url(r'^sales/bill/(?P<invoiceID>\w+)*', QueryBill),
     #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
     #url(r'^sales/confirm/$', printData),
-    
+    (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     
 
 )
