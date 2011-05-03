@@ -48,7 +48,7 @@ class OutStockRecord(models.Model):
     create_at = models.DateTimeField(auto_now_add = True)
 
     def __unicode__(self):
-        return self.barcode + " " + str(self.sell_index)
+        return "barcode: "+self.barcode + " index: " + str(self.sell_index) + " profit: " + str(self.profit)
 
 class ProductForm(ModelForm):
     class Meta:

@@ -3,7 +3,7 @@ from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
-from pos.kernal.views import SalesConfirm, InventoryConfirm
+from pos.kernal.views import SalesConfirm, InventoryConfirm, ReportDaily, QueryBill
 #from pos.kernal.views import ajaxProductDetailView
 
 
@@ -82,12 +82,12 @@ urlpatterns = patterns('',
     url(r'^product/update/(?P<productID>\w+)', ProductUpdateView), 
     url(r'^product/delete/$', ProductDelete),    
     url(r'^product/save/(?P<productID>\w+)*', ProductSave), # controller
-	url(r'^product/info/(?P<barcode>\w+)*', ProductInfo), # controller
+    url(r'^product/info/(?P<barcode>\w+)*', ProductInfo), # controller
     url(r'^product/inventory/(?P<barcode>\w+)*', ProductInventory), # controller
     
     
     
-	url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form.html'}),
+    url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form.html'}),
     url(r'^inventory/confirm/$', InventoryConfirm),    
     url(r'^^inventory/result/$', direct_to_template,  {
                             'template': 'under_constructor.html', 
@@ -111,7 +111,10 @@ urlpatterns = patterns('',
                             'template': 'under_constructor.html', 
                             'extra_context':{ 'msg':'this page is under constructor !!'}
                             }),                            
-    url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
+    url(r'^report/daily/$', ReportDaily),                        
+    #url(r'^sales/bill/$', direct_to_template,  {'template': 'bill.html'}),
+    url(r'^sales/bill/(?P<invoiceID>\w+)*', QueryBill),
+    #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
     #url(r'^sales/confirm/$', printData),
     
     
