@@ -11,6 +11,18 @@ Below function for ajax use
 #def ajaxProductDetailView(request):
    # if request.method == 'GET':
 
+def ReportDaily(request):
+    invoices = Invoice.objects.all()
+    profitTable = {}
+    
+    for invoice in invoices:
+        outStockRecords = OutStockRecord.objects.filter(invoice=invoice)
+        total_proift = 0
+        for outStockRecord in outStockRecords:
+            total_proift = total_proift + outStockRecord.profit
+        profitTable[invoice.pk] = total_proift
+    return render_to_response('report_dailySales.html',{'invoices': invoices, 'profitTable':profitTable })
+        
 def printData(request):
     txt = ""
     salesDict = {}
@@ -104,12 +116,19 @@ def SalesConfirm(request):
                 lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
                 sales_index = lastOutStockRecord.sell_index
             
+            inStockObject = InStockRecord.objects.filter(barcode=barcode)[0]
+            outStockRecord.profit = int(outStockRecord.unit_sell_price) - inStockObject.cost
             sales_index = sales_index + int(outStockRecord.quantity) 
             outStockRecord.sell_index = sales_index
-            outStockRecord.profit = 50
+            
             outStockRecord.save()
-        return HttpResponseRedirect('/sales/invoice/')
+        return HttpResponseRedirect('/sales/bill/'+str(invoice.pk))        
 
+def QueryBill(request, invoiceID):    
+    invoice = Invoice.objects.get(pk=invoiceID)
+    outStockRecordset = OutStockRecord.objects.filter(invoice=invoice)
+    return render_to_response('bill.html',{'invoice': invoice, 'outStockRecordset':outStockRecordset })
+        
 def ProductInfo(request, barcode):
     messages.info(request, "check product: " + `barcode` + " info")
    

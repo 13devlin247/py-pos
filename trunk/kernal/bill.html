@@ -1,0 +1,132 @@
+{% extends "product.php.html" %}
+
+{% block content %}
+<style type="text/css">
+#SubTotal tr td{
+	text-align: right;
+}
+td {
+text-align: right;
+border: none;
+}
+
+tfoot td {
+	font-weight:bold
+}
+
+.Receipt{
+	text-align: left;
+}
+</style>
+{{outStockRecordset}}
+<table width="100%" cellpadding="0" cellspacing="0" height="100%">    
+  <tbody>
+    <tr>                 
+      <td valign="center">            
+        <form method="post" name="frmDataEntry">
+          <input id="idId" name="Id" value="00067" type="hidden">
+          <input id="idAttendant" name="Attendant" value="0" type="hidden">
+          <input id="idDId" name="DId" value="" type="hidden">
+          <input id="idEmployeePurchase" name="EmployeePurchase" value="" type="hidden">
+          <table width="100%">    
+            <tbody>
+              <tr>        
+                <td colspan="4">            
+                  <p align="center">
+                    <font color="black"><b>RECEIPT</b>
+                    </font>
+                  </p>
+                  <font color="black"><b>        </b>
+                  </font></td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt">            Bill No:         </td>        
+                <td class="Receipt">            <b>{{invoice.pk}}        </b></td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt">            Cashier         </td>        
+                <td class="Receipt">            <b>{{invoice.employee}}        </b></td>        
+                <!---->        
+                <td class="Receipt">            Date :         </td>        
+                <td class="Receipt">            {{invoice.create_at}}        </td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt">            Customer         </td>        
+                <td class="Receipt">            <b>{{invoice.customerID}}                    </b></td>        
+                <td class="Receipt">                   </td>        
+                <td class="Receipt">                    </td>    
+              </tr>    
+              <tr>        
+                <td colspan="5">            
+                  <hr>        </td>    
+              </tr>
+            </tbody>
+          </table>
+          <table width="100%">    
+            <tbody>
+              <tr>        
+				<td class="Receipt">            QTY         </td>        
+				<td class="Receipt">            Item -- Serve         </td>        
+                <td align="right">            U. P.         </td>        
+                <td align="right">            Disc.         </td>        
+                <td align="right">            Sub Total         </td>    
+              </tr>    
+              <tr>        
+                <td colspan="5">            
+                  <hr>        </td>    
+              </tr>    
+			{% for outStockRecord in outStockRecordset%}
+				{{record}}
+				<tr>
+                <td class="Receipt">{{outStockRecord.quantity}}</td>
+                <td class="Receipt">{{outStockRecord.barcode}}</td>
+                <td align="right">{{outStockRecord.unit_sell_price}}</td>
+                <td align="right">{{outStockRecord.discount}}</td>
+                <td align="right">100.00</td>
+				</tr>
+			{% endfor %}			  
+            </tbody>
+            <tfoot>
+              <tr>        
+                <td width="70%" align="right" colspan=3>            Sub Total         </td>        
+                <td align="right" colspan=2>            {{invoice.total_price}}       </td>    
+              </tr>            
+              <tr>        
+                <td width="70%" align="right" colspan=3>            Received Amount         </td>        
+                <td align="right" colspan=2>                        {{invoice.tendered_amount}}        </td>    
+              </tr>        
+              <tr>        
+                <td width="70%" align="right" colspan=3>            Change         </td>        
+                <td align="right" colspan=2>            50.00        </td>    
+              </tr>        
+              <tr>        
+                <td align="right" colspan=3>            Paid By         </td>        
+                <td align="right" colspan=2>             Cash        </td>    
+              </tr>             
+              <tr>        
+                <td colspan="10">            
+                  <hr>        </td>    
+              </tr>        
+            </tfoot>
+          </table>
+          <table width="100%">    
+            <tbody>
+              <tr>        
+                <td width="30%" align="center">                 
+                  <br>
+                  <br>
+                  <br>____________________         </td>        
+                <td width="30%" align="center">                          </td>        
+                <td width="30%" align="center">                 
+                  <br>
+                  <br>
+                  <br>_____________________         </td>    
+              </tr>    
+              <tr>        
+                <td width="30%" align="center">                 Customer Signature         </td>        
+                <td width="30%" align="center">                          </td>        
+                <td width="30%" align="center">                 Authorised By         </td>    
+              </tr>
+            </tbody>
+          </table>
+{% endblock %}

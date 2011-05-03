@@ -12,33 +12,34 @@
 <div id="page_title" style="margin-bottom:8px;">Sales Summary Report</div> 
 <div id="page_subtitle" style="margin-bottom:8px;">05/02/2011-05/02/2011</div> 
 <div id="table_holder"> 
-	<table class="tablesorter report" id="sortable_table"> 
-		<thead> 
-			<tr> 
-								<th>Date</th> 
-								<th>Subtotal</th> 
-								<th>Total</th> 
-								<th>Tax</th> 
-								<th>Profit</th> 
-							</tr> 
-		</thead> 
-		<tbody> 
-						<tr> 
-								<td>2011-05-02</td> 
-								<td>$19956548.42</td> 
-								<td>$20354330.98</td> 
-								<td>$397782.56</td> 
-								<td>$1740258.80</td> 
-							</tr> 
-					</tbody> 
-	</table> 
-</div> 
-<div id="report_summary"> 
-	<div class="summary_row">Subtotal: $19956548.42</div> 
-	<div class="summary_row">Total: $20354330.98</div> 
-	<div class="summary_row">Tax: $397782.56</div> 
-	<div class="summary_row">Profit: $1740258.80</div> 
-</div> 
+    <table class="tablesorter report" id="sortable_table"> 
+        <thead> 
+            <tr> 
+                                <th>Date</th> 
+                                <th>Invoice no</th> 
+                                <th>Total</th> 
+                                <th>Profit</th> 
+                            </tr> 
+        </thead> 
+        <tbody> 
+	{% for key,value in profitTable.items %}
+	<div id='data_{{key}}' style="display: none">{{value}}</div>		
+	{% endfor %}
+	
+        {% for invoice in invoices %}
+                        <tr> 
+                                <td>{{invoice.create_at}}</td> 
+                                <td>{{invoice.pk}}</td> 
+                                <td>{{invoice.total_price}}</td> 
+                                <td><script>document.write($("#data_{{invoice.pk}}").html())</script></td> 
+                        </tr> 
+		{%endfor%}                        
+                    </tbody> 
+
+    </table> 
 </div> 
 </div> 
+</div> 
+
+
 {% endblock %}
