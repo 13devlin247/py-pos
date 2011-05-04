@@ -1,10 +1,16 @@
-from pos.kernal.models import Product, Invoice,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm
+from pos.kernal.models import Product, ProductForm 
+from pos.kernal.models import Invoice
+from pos.kernal.models import InStockBatch, InStockRecord, InStockRecordForm
+from pos.kernal.models import OutStockRecord, OutStockRecordForm
+from pos.kernal.models import Supplier, SupplierForm
+from pos.kernal.models import Customer, CustomerForm 
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
 from django.contrib import messages
 from django.core import serializers
 from django.db.models import Count
+
 """
 Below function for ajax use
 """
@@ -68,10 +74,12 @@ def InventoryConfirm(request):
             inventoryDict [barcode] [attr]= value
         
         po_no = request.GET['po_no']
+        inStockBatch = InStockBatch()
         
         # build OutStockRecord to save data
         for barcode in inventoryDict :
             inStockRecord = InStockRecord()
+            inStockRecord.inStockBatch = inStockBatch
             inStockRecord.barcode = barcode
             inStockRecord.po_no = po_no
             inStockRecord.cost = inventoryDict [barcode]['cost'][0]
@@ -89,15 +97,20 @@ def SalesConfirm(request):
                 continue
             if key == "subTotal":
                 continue            
+            if key == "customer":
+                continue                            
             barcode = key.split("_")[0]
             attr = key.split("_")[1]
             if barcode not in salesDict:
                 salesDict[barcode] ={}
             salesDict[barcode] [attr]= value
         
+        customerName = request.GET['customer']
+        customer = Customer.objects.filter(name=customerName)[0]
         invoice = Invoice()
         invoice.total_price = request.GET['subTotal']
         invoice.tendered_amount = request.GET['amount_tendered']
+        invoice.customer = customer
         invoice.fulfill_payment = False
         invoice.save()
         
@@ -117,7 +130,7 @@ def SalesConfirm(request):
                 sales_index = lastOutStockRecord.sell_index
             
             inStockObject = InStockRecord.objects.filter(barcode=barcode)[0]
-            outStockRecord.profit = int(outStockRecord.unit_sell_price) - inStockObject.cost
+            outStockRecord.profit = float(outStockRecord.unit_sell_price) - float(inStockObject.cost)
             sales_index = sales_index + int(outStockRecord.quantity) 
             outStockRecord.sell_index = sales_index
             
@@ -162,6 +175,35 @@ def ProductInventory(request, barcode):
 """ 
 below function for save form object to databases
 """
+def CustomerSave(request, customerID=None):
+    customer = None
+    if customerID is not None:
+        customer = Customer.objects.get(pk=customerID)
+    if request.method == 'GET':
+        form = CustomerForm(request.GET, instance=customer)
+            
+        if form.is_valid():
+            customer = form.save(commit = True)
+            customer.save()
+            return HttpResponseRedirect('/customer/search/')
+        else:
+            return HttpResponseRedirect('/customer/create/')
+            
+def SupplierSave(request, supplierID=None):
+    supplier = None
+    if supplierID is not None:
+        supplier = Supplier.objects.get(pk=supplierID)
+    if request.method == 'GET':
+        form = SupplierForm(request.GET, instance=supplier)
+            
+        if form.is_valid():
+            supplier = form.save(commit = True)
+            supplier.save()
+            return HttpResponseRedirect('/supplier/search/')
+        else:
+            return HttpResponseRedirect('/supplier/create/')
+
+
 def ProductSave(request, productID=None):
     product = None
     if productID is not None:

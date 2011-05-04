@@ -7,6 +7,27 @@ CHOICES_ITEM = (
     ('Iphone', 'Iphone'),            
 )
 
+class Category(models.Model):
+    category_name = models.CharField(max_length=100)
+    
+    def __unicode__(self):
+        return self.category_name
+        
+class Brand(models.Model):
+    category = models.ForeignKey(Category)
+    brand_name = models.CharField(max_length=100)
+    
+    def __unicode__(self):
+        return self.brand_name
+
+class Type(models.Model):
+    brand = models.ForeignKey(Brand)
+    type_name = models.CharField(max_length=100)
+    
+    def __unicode__(self):
+        return self.type_name
+
+
 class Product(models.Model):
     barcode = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
@@ -19,7 +40,33 @@ class Product(models.Model):
     
     def __unicode__(self):
         return self.name
-
+        
+class Supplier(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=500, blank=True)
+    email = models.EmailField(max_length=100, blank=True)
+    phone = models.CharField(max_length=100, blank=True)
+        
+    def __unicode__(self):
+        return self.name + " phone: "+ self.phone
+        
+class Customer(models.Model):
+    name = models.CharField(max_length=100)
+    address = models.CharField(max_length=500, blank=True)
+    email = models.EmailField(max_length=100, blank=True)
+    phone = models.CharField(max_length=100, blank=True)
+ 
+    def __unicode__(self):
+        return self.name 
+    
+class InStockBatch(models.Model):
+    supplier = models.ForeignKey(Supplier)
+    do_date = models.DateTimeField(auto_now_add = False)
+    invoice_no = models.CharField(max_length=100)
+    do_no = models.CharField(max_length=100)
+    create_at = models.DateTimeField(auto_now_add = True)
+        
+        
 class InStockRecord(models.Model):
     po_no = models.CharField(max_length=100)
     barcode = models.CharField(max_length=100)
@@ -34,7 +81,7 @@ class Invoice(models.Model):
     total_price = models.DecimalField(max_digits=100,  decimal_places=2)
     tendered_amount = models.DecimalField(max_digits=100,  decimal_places=2)
     fulfill_payment = models.BooleanField(False)
-    customerID = models.CharField(max_length=100,  blank=True)
+    customer = models.ForeignKey(Customer)
     create_at = models.DateTimeField(auto_now_add = True)
     def __unicode__(self):
         return " $" + str(self.total_price) + " "+str(self.create_at) 
@@ -68,3 +115,22 @@ class InvoiceForm(ModelForm):
     class Meta:
         model = Invoice
 
+class SupplierForm(ModelForm):
+    class Meta:
+        model = Supplier
+
+class CustomerForm(ModelForm):
+    class Meta:
+        model = Customer
+        
+class CategoryForm(ModelForm):
+    class Meta:
+        model = Category        
+
+class BrandForm(ModelForm):
+    class Meta:
+        model = Brand
+
+class TypeForm(ModelForm):
+    class Meta:
+        model = Type
