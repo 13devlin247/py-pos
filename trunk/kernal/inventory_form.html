@@ -44,7 +44,13 @@ td input[type="text"] {
     padding: 0;
     margin:0;
 }
-
+#inventoryDetail {
+  border: solid red 1px;
+  
+}
+#inventoryBatch span{
+  display: block;
+}
 
 </style>
 
@@ -54,16 +60,23 @@ td input[type="text"] {
             <div id="page_title" style="margin-bottom:8px;">
                 Sales Register
             </div>
+<div>
+<span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40" autocomplete="off" class="ac_input" onclick=false/></span>
+</div>
 
 
-            <div id="register_wrapper">
+<form action="/inventory/confirm" method="get">
+            <div id="inventoryDetail">
                 <div>
-                    <span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40" autocomplete="off" class="ac_input" /></span>
-<form action="/inventory/confirm" method="get">            
                     <table id="register">
                         <thead>
-                            <tr><th colspan=6 style="border-bottom: 1px gray solid;text-align: left;"><span style="text-align:right"><label id="po_no" for="customer">PO ID: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
-</th></tr>
+                            <tr>
+                                <th colspan=6 style="border-bottom: 1px gray solid;text-align: left;" id="inventoryBatch">
+                                  <span style="text-align:right"><label id="po_no" for="customer">Supplier: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
+                                  <span style="text-align:right"><label id="po_no" for="customer">DO no: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
+                                  <span style="text-align:right"><label id="po_no" for="customer">Invoice no: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
+                                </th>
+                            </tr>
                             <tr>
                                 <th style="width:20%;">Item #</th>
 
@@ -83,10 +96,9 @@ td input[type="text"] {
                         </tbody>
                     </table>                
                     <input type=submit value="Confirm">
-</form>                                                
                 </div>
             </div>
-
+</form>                                        
 
 
                 <div class="clearfix">

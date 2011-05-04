@@ -4,6 +4,9 @@ from django.views.generic import list_detail, date_based, create_update
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
 from pos.kernal.views import SalesConfirm, InventoryConfirm, ReportDaily, QueryBill
+from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm
+from pos.kernal.views import SupplierSave, CustomerSave
+
 #from pos.kernal.views import ajaxProductDetailView
 
 
@@ -35,6 +38,18 @@ response AJAX method for create product
 product_form = {
     'model': Product, 
     'extra_context': {'form': ProductForm, 'submit_form':'/product/save', 'form_title': 'New Product'},    
+    'template_name': 'product_form.html', 
+}
+
+supplier_form = {
+    'model': Supplier, 
+    'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save', 'form_title': 'New Supplier'},    
+    'template_name': 'product_form.html', 
+}
+
+customer_form = {
+    'model': Customer, 
+    'extra_context': {'form': CustomerForm, 'submit_form':'/customer/save', 'form_title': 'New Customer'},    
     'template_name': 'product_form.html', 
 }
 
@@ -84,6 +99,19 @@ urlpatterns = patterns('',
     url(r'^product/save/(?P<productID>\w+)*', ProductSave), # controller
     url(r'^product/info/(?P<barcode>\w+)*', ProductInfo), # controller
     url(r'^product/inventory/(?P<barcode>\w+)*', ProductInventory), # controller
+
+    url(r'^supplier/create/$', create_update.create_object, supplier_form), 
+    url(r'^supplier/search/$', list_detail.object_list, product_list_view),
+    url(r'^supplier/update/(?P<productID>\w+)', ProductUpdateView), 
+    url(r'^supplier/delete/$', ProductDelete),    
+    url(r'^supplier/save/(?P<supplierID>\w+)*', SupplierSave), # controller
+
+    url(r'^customer/create/$', create_update.create_object, customer_form), 
+    url(r'^customer/search/$', list_detail.object_list, product_list_view),
+    url(r'^customer/update/(?P<productID>\w+)', ProductUpdateView), 
+    url(r'^customer/delete/$', ProductDelete),    
+    url(r'^customer/save/(?P<customerID>\w+)*', CustomerSave), # controller    
+
     
     
     
