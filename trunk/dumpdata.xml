@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="kernal.category">
+    <field type="CharField" name="category_name">HP</field>
+  </object>
+  <object pk="2" model="kernal.category">
+    <field type="CharField" name="category_name">Earphone</field>
+  </object>
+  <object pk="3" model="kernal.category">
+    <field type="CharField" name="category_name">Battery</field>
+  </object>
+  <object pk="1" model="kernal.brand">
+    <field to="kernal.category" name="category" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="brand_name">Nokia</field>
+  </object>
+  <object pk="2" model="kernal.brand">
+    <field to="kernal.category" name="category" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="brand_name">Sonic</field>
+  </object>
+  <object pk="3" model="kernal.brand">
+    <field to="kernal.category" name="category" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="brand_name">HTC</field>
+  </object>
+  <object pk="1" model="kernal.type">
+    <field to="kernal.brand" name="brand" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="type_name">3310</field>
+  </object>
+  <object pk="2" model="kernal.type">
+    <field to="kernal.brand" name="brand" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="type_name">8250</field>
+  </object>
+  <object pk="3" model="kernal.type">
+    <field to="kernal.brand" name="brand" rel="ManyToOneRel">3</field>
+    <field type="CharField" name="type_name">HTC Desire S</field>
+  </object>
+  <object pk="1" model="kernal.product">
+    <field type="CharField" name="barcode">BR00545650001</field>
+    <field type="CharField" name="name">IPhone 3GS</field>
+    <field type="CharField" name="brand">Motorola</field>
+    <field type="CharField" name="category">Motorola</field>
+    <field type="CharField" name="type">Motorola</field>
+    <field type="DecimalField" name="cost">1700</field>
+    <field type="DecimalField" name="price">55.55</field>
+    <field type="BooleanField" name="disable">False</field>
+  </object>
+  <object pk="2" model="kernal.product">
+    <field type="CharField" name="barcode">BR00545650002</field>
+    <field type="CharField" name="name">IPad2</field>
+    <field type="CharField" name="brand">Motorola</field>
+    <field type="CharField" name="category">Nokia</field>
+    <field type="CharField" name="type">Nokia</field>
+    <field type="DecimalField" name="cost">1700</field>
+    <field type="DecimalField" name="price">10035</field>
+    <field type="BooleanField" name="disable">False</field>
+  </object>
+</django-objects>
