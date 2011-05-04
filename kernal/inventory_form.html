@@ -45,36 +45,55 @@ td input[type="text"] {
     margin:0;
 }
 #inventoryDetail {
-  border: solid red 1px;
+  border: solid red 0.1px;
   
 }
-#inventoryBatch span{
-  display: block;
+#inventoryBatch{
+    #float: right;
 }
 
+#inventoryBatch table{
+  border: double black 1px;
+  width: 50%;
+  margin: 0 0 0 1em;
+  background-color: #C3D9FF;  
+}
+
+#inventoryBatch table tr td{
+  border: none;
+}
+
+#register{
+    visibility: hidden;
+}
+  
 </style>
 
 
     <div id="content_area_wrapper">
         <div id="content_area">
             <div id="page_title" style="margin-bottom:8px;">
-                Sales Register
+                Receiving
             </div>
-<div>
-<span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40" autocomplete="off" class="ac_input" onclick=false/></span>
-</div>
 
 
 <form action="/inventory/confirm" method="get">
+            <div id="inventoryBatch">
+                <table>
+                    <th colspan=2 style="border-bottom: black 1.5px solid;"> Receivings Record</th>
+                    {{form}}             
+                    <tr><th></th><td><input type="submit" value="Fulfill Detail" onClick="$('#register').attr('style','visibility: visible;'); return false;" /><td></tr>
+                </table>
+            </div>
             <div id="inventoryDetail">
                 <div>
                     <table id="register">
                         <thead>
                             <tr>
-                                <th colspan=6 style="border-bottom: 1px gray solid;text-align: left;" id="inventoryBatch">
-                                  <span style="text-align:right"><label id="po_no" for="customer">Supplier: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
-                                  <span style="text-align:right"><label id="po_no" for="customer">DO no: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
-                                  <span style="text-align:right"><label id="po_no" for="customer">Invoice no: </label> <input type="text" name="po_no" value="" id="po_no" size="30" autocomplete="off" class="ac_input" /> </span>
+                                <th colspan=6 style="text-align:left;border-bottom:solid 1px black">
+                                    <div>
+                                        <span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40" autocomplete="off" class="ac_input" onclick="return false;"/></span>
+                                    </div>
                                 </th>
                             </tr>
                             <tr>
@@ -94,8 +113,11 @@ td input[type="text"] {
 
                         <tbody id="sell_detail">
                         </tbody>
+                        <tfoot>
+                        <tr><td colspan=6><input type=submit value="Confirm"></td></tr>
+                        </tfoot>
                     </table>                
-                    <input type=submit value="Confirm">
+                    
                 </div>
             </div>
 </form>                                        
@@ -179,7 +201,7 @@ td input[type="text"] {
             quantityPlusOne(barcode)
         }
 
-
+        return false;
     });
     
     function quantityPlusOne(barcode){
@@ -194,6 +216,7 @@ td input[type="text"] {
         delete quantityTable[barcode];
         $("#"+barcode+"_tr").remove();
     }
+    
     
     
   </script>
