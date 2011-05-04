@@ -1,5 +1,9 @@
 from django.db import models
 from django.forms import ModelForm
+from django import forms
+from django.forms.extras.widgets import SelectDateWidget
+import datetime
+
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),  
@@ -9,7 +13,7 @@ CHOICES_ITEM = (
 
 class Category(models.Model):
     category_name = models.CharField(max_length=100)
-    
+
     def __unicode__(self):
         return self.category_name
         
@@ -46,7 +50,8 @@ class Supplier(models.Model):
     address = models.CharField(max_length=500, blank=True)
     email = models.EmailField(max_length=100, blank=True)
     phone = models.CharField(max_length=100, blank=True)
-        
+    disable = models.BooleanField(False)
+    
     def __unicode__(self):
         return self.name + " phone: "+ self.phone
         
@@ -55,7 +60,8 @@ class Customer(models.Model):
     address = models.CharField(max_length=500, blank=True)
     email = models.EmailField(max_length=100, blank=True)
     phone = models.CharField(max_length=100, blank=True)
- 
+    disable = models.BooleanField(False)
+
     def __unicode__(self):
         return self.name 
     
@@ -65,7 +71,7 @@ class InStockBatch(models.Model):
     invoice_no = models.CharField(max_length=100)
     do_no = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)
-        
+    
         
 class InStockRecord(models.Model):
     po_no = models.CharField(max_length=100)
@@ -134,3 +140,9 @@ class BrandForm(ModelForm):
 class TypeForm(ModelForm):
     class Meta:
         model = Type
+        
+class InStockBatchForm(forms.Form):        
+    supplier = forms.CharField(max_length=150)
+    do_date =  forms.DateField(widget=SelectDateWidget)
+    do_no =  forms.CharField(max_length=150)
+    inv_no =  forms.CharField(max_length=150)

@@ -105,11 +105,11 @@ def SalesConfirm(request):
                 salesDict[barcode] ={}
             salesDict[barcode] [attr]= value
         
-        customerName = request.GET['customer']
+        customerName = request.GET.get('customer', 'Cash')
         customer = Customer.objects.filter(name=customerName)[0]
         invoice = Invoice()
-        invoice.total_price = request.GET['subTotal']
-        invoice.tendered_amount = request.GET['amount_tendered']
+        invoice.total_price = request.GET.get('subTotal', '0')
+        invoice.tendered_amount = request.GET.get('amount_tendered', '0')
         invoice.customer = customer
         invoice.fulfill_payment = False
         invoice.save()
@@ -129,11 +129,17 @@ def SalesConfirm(request):
                 lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
                 sales_index = lastOutStockRecord.sell_index
             
-            inStockObject = InStockRecord.objects.filter(barcode=barcode)[0]
-            outStockRecord.profit = float(outStockRecord.unit_sell_price) - float(inStockObject.cost)
-            sales_index = sales_index + int(outStockRecord.quantity) 
-            outStockRecord.sell_index = sales_index
+            inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
+            inStockObject = None
+            if inStockRecordSet.count() != 0:
+                inStockObject = InStockRecord.objects.filter(barcode=barcode)[0]
+            if inStockObject:
+                outStockRecord.profit = float(outStockRecord.unit_sell_price) - float(inStockObject.cost)
+                sales_index = sales_index + int(outStockRecord.quantity) 
+            else:
+                outStockRecord.profit = '0.0'
             
+            outStockRecord.sell_index = sales_index
             outStockRecord.save()
         return HttpResponseRedirect('/sales/bill/'+str(invoice.pk))        
 

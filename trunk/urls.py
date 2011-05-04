@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
-from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm
+from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm, InStockBatchForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
 from pos.kernal.views import SalesConfirm, InventoryConfirm, ReportDaily, QueryBill
 from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm
@@ -115,7 +115,7 @@ urlpatterns = patterns('',
     
     
     
-    url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form.html'}),
+    url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/confirm/$', InventoryConfirm),    
     url(r'^^inventory/result/$', direct_to_template,  {
                             'template': 'under_constructor.html', 
