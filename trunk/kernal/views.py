@@ -38,7 +38,7 @@ def ReportDaily(request):
         for outStockRecord in outStockRecords:
             total_proift = total_proift + outStockRecord.profit
         profitTable[bill.pk] = total_proift
-    return render_to_response('report_dailySales.html',{'invoices': invoices, 'profitTable':profitTable })
+    return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable })
         
 def printData(request):
     txt = ""
@@ -139,17 +139,17 @@ def SalesConfirm(request):
         
         customerName = request.GET.get('customer', 'Cash')
         customer = Customer.objects.filter(name=customerName)[0]
-        invoice = Invoice()
-        invoice.total_price = request.GET.get('subTotal', '0')
-        invoice.tendered_amount = request.GET.get('amount_tendered', '0')
-        invoice.customer = customer
-        invoice.fulfill_payment = False
-        invoice.save()
+        bill = Bill()
+        bill.total_price = request.GET.get('subTotal', '0')
+        bill.tendered_amount = request.GET.get('amount_tendered', '0')
+        bill.customer = customer
+        bill.fulfill_payment = False
+        bill.save()
         
         # build OutStockRecord to save data
         for barcode in salesDict:
             outStockRecord = OutStockRecord()
-            outStockRecord.invoice = invoice
+            outStockRecord.bill = bill
             outStockRecord.barcode = barcode
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
@@ -166,19 +166,19 @@ def SalesConfirm(request):
             if inStockRecordSet.count() != 0:
                 inStockObject = InStockRecord.objects.filter(barcode=barcode)[0]
             if inStockObject:
-                outStockRecord.profit = float(outStockRecord.unit_sell_price) - float(inStockObject.cost)
+                outStockRecord.profit = str(float(outStockRecord.unit_sell_price) - float(inStockObject.cost)) # str() for convert to decimal prepare
                 sales_index = sales_index + int(outStockRecord.quantity) 
             else:
                 outStockRecord.profit = '0.0'
             
             outStockRecord.sell_index = sales_index
             outStockRecord.save()
-        return HttpResponseRedirect('/sales/bill/'+str(invoice.pk))        
+        return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
 
-def QueryBill(request, invoiceID):    
-    invoice = Invoice.objects.get(pk=invoiceID)
-    outStockRecordset = OutStockRecord.objects.filter(invoice=invoice)
-    return render_to_response('bill.html',{'invoice': invoice, 'outStockRecordset':outStockRecordset })
+def QueryBill(request, billID):    
+    bill = Bill.objects.get(pk=billID)
+    outStockRecordset = OutStockRecord.objects.filter(bill=bill)
+    return render_to_response('bill.html',{'bill': bill, 'outStockRecordset':outStockRecordset })
         
 def ProductInfo(request, barcode):
     messages.info(request, "check product: " + `barcode` + " info")
@@ -192,11 +192,11 @@ def ProductInfo(request, barcode):
     
 def ProductInventory(request, barcode):
     outStockRecord = None
-    messages.info(request, "check product: " + `barcode` + "  inventory")
+    logging.info(request, "check product: " + `barcode` + "  inventory")
    
     inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
     if inStockRecordSet.count() == 0:
-        messages.debug(request, "inStockRecordSet not found")
+        logging.debug(request, "inStockRecordSet not found")
         return HttpResponse(0, mimetype="application/json")    
 
     outStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
@@ -204,7 +204,7 @@ def ProductInventory(request, barcode):
     if outStockRecordSet.count() != 0:
         outStockRecord = outStockRecordSet.order_by('-create_at')[0]
         if outStockRecord is None:
-            messages.debug(request, "outStockRecord not found")        
+            logging.debug(request, "outStockRecord not found")        
         
     inventoryCount = countInventory(inStockRecordSet, outStockRecord)
     json = "[{\"inventory\":"+str(inventoryCount)+"}]"

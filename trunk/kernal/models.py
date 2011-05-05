@@ -133,9 +133,9 @@ class OutStockRecordForm(ModelForm):
     class Meta:
         model = OutStockRecord
 
-class InvoiceForm(ModelForm):
+class BillForm(ModelForm):
     class Meta:
-        model = Invoice
+        model = Bill
 
 class SupplierForm(ModelForm):
     class Meta:
