@@ -1,5 +1,5 @@
 from pos.kernal.models import Product, ProductForm 
-from pos.kernal.models import Invoice
+from pos.kernal.models import Bill
 from pos.kernal.models import InStockBatch, InStockRecord, InStockRecordForm
 from pos.kernal.models import OutStockRecord, OutStockRecordForm
 from pos.kernal.models import Supplier, SupplierForm
@@ -10,6 +10,17 @@ from django.views.generic import list_detail, date_based, create_update
 from django.contrib import messages
 from django.core import serializers
 from django.db.models import Count
+from datetime import date
+
+# import the logging library
+import logging
+
+logging.basicConfig(
+    level = logging.DEBUG,
+    format = '%(asctime)s %(levelname)s %(message)s',
+)
+# Get an instance of a logger
+logger = logging.getLogger(__name__)
 
 """
 Below function for ajax use
@@ -18,15 +29,15 @@ Below function for ajax use
    # if request.method == 'GET':
 
 def ReportDaily(request):
-    invoices = Invoice.objects.all()
+    bills = Bill.objects.all()
     profitTable = {}
     
-    for invoice in invoices:
-        outStockRecords = OutStockRecord.objects.filter(invoice=invoice)
+    for bill in bills:
+        outStockRecords = OutStockRecord.objects.filter(bill=bill)
         total_proift = 0
         for outStockRecord in outStockRecords:
             total_proift = total_proift + outStockRecord.profit
-        profitTable[invoice.pk] = total_proift
+        profitTable[bill.pk] = total_proift
     return render_to_response('report_dailySales.html',{'invoices': invoices, 'profitTable':profitTable })
         
 def printData(request):
@@ -63,25 +74,46 @@ def InventoryConfirm(request):
     inventoryDict = {}
     if request.method == 'GET':
         # process Request parameter
+        
         sales_item = request.GET.lists()
+        
         for key,  value in sales_item:
-            if key == "po_no":
+            if key == "do_no":
+                continue
+            if key == "inv_no":
+                continue            
+            if key == "do_date":
+                continue
+            if key == "supplier":
+                continue                
+            if key.find("_") == -1:
                 continue
             barcode = key.split("_")[0]
             attr = key.split("_")[1]
+            logger.error('barcode: ' + key)
             if barcode not in inventoryDict :
                 inventoryDict [barcode] ={}
             inventoryDict [barcode] [attr]= value
-        
-        po_no = request.GET['po_no']
+        supplier_name = request.GET.get('supplier', "")
+        supplier = None
+        try:
+            supplier = Supplier.objects.filter(name=supplier_name)[0:1].get()
+        except Supplier.DoesNotExist:
+            supplier = None # supplier not found
+            
         inStockBatch = InStockBatch()
+        inStockBatch.supplier = supplier
+        today = date.today()
+        inStockBatch.do_date = request.GET.get('do_date', today.strftime("%d/%m/%y"))
+        inStockBatch.invoice_no = request.GET.get('inv_no', "-")
+        inStockBatch.do_no = request.GET.get('do_no', "-")
+        inStockBatch.save();
         
         # build OutStockRecord to save data
         for barcode in inventoryDict :
             inStockRecord = InStockRecord()
             inStockRecord.inStockBatch = inStockBatch
             inStockRecord.barcode = barcode
-            inStockRecord.po_no = po_no
             inStockRecord.cost = inventoryDict [barcode]['cost'][0]
             inStockRecord.quantity = inventoryDict [barcode]['quantity'] [0]
             inStockRecord.save()
@@ -237,7 +269,7 @@ def ProductDelete(request):
         for barcode in delete_products:
             products = Product.objects.filter(barcode=barcode)
             for product in products:
-                product.disable = True
+                product.active = False
                 product.save()
     return HttpResponseRedirect('/product/search/')        
 

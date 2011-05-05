@@ -2,8 +2,9 @@ from django.db import models
 from django.forms import ModelForm
 from django import forms
 from django.forms.extras.widgets import SelectDateWidget
+from django.contrib.admin.widgets import AdminDateWidget 
 import datetime
-
+from django.contrib.localflavor.us.models import PhoneNumberField
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),  
@@ -31,50 +32,65 @@ class Type(models.Model):
     def __unicode__(self):
         return self.type_name
 
+class UOM(models.Model):        
+    name = models.CharField(max_length=100) 
+
+    def __unicode__(self):
+        return self.name    
 
 class Product(models.Model):
     barcode = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
-    brand = models.CharField(max_length=100,  choices=CHOICES_ITEM)
+    description = models.TextField(blank=True)
     category = models.CharField(max_length=100,  choices=CHOICES_ITEM)
+    brand = models.CharField(max_length=100,  choices=CHOICES_ITEM)
     type = models.CharField(max_length=100,  choices=CHOICES_ITEM)
+    retail_price = models.DecimalField(max_digits=100,  decimal_places=2)
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
-    price = models.DecimalField(max_digits=100,  decimal_places=2)
-    disable = models.BooleanField(False)
+    uom = models.ForeignKey(UOM)
+    active = models.BooleanField(True)
     
     def __unicode__(self):
         return self.name
         
 class Supplier(models.Model):
+    supplier_code = models.CharField(max_length=100, primary_key=True)
     name = models.CharField(max_length=100)
-    address = models.CharField(max_length=500, blank=True)
+    contact_person = models.CharField(max_length=100)
+    phone_office = models.CharField(max_length=100, blank=True)
+    phone_mobile = models.CharField(max_length=100, blank=True)
+    fax = models.CharField(max_length=100, blank=True)
     email = models.EmailField(max_length=100, blank=True)
-    phone = models.CharField(max_length=100, blank=True)
-    disable = models.BooleanField(False)
+    address = models.TextField(blank=True)
+    active = models.BooleanField(True)
     
     def __unicode__(self):
-        return self.name + " phone: "+ self.phone
+        return self.name
         
 class Customer(models.Model):
+    customer_code = models.CharField(max_length=100, primary_key=True)
     name = models.CharField(max_length=100)
-    address = models.CharField(max_length=500, blank=True)
+    address = models.TextField(blank=True)
+    contact_person = models.CharField(max_length=100)
+    phone = models.CharField(max_length=100, blank=True) 
+    fax = models.CharField(max_length=100, blank=True) 
     email = models.EmailField(max_length=100, blank=True)
-    phone = models.CharField(max_length=100, blank=True)
-    disable = models.BooleanField(False)
+    term = models.CharField(max_length=100)
+    active = models.BooleanField(True)
 
     def __unicode__(self):
         return self.name 
     
 class InStockBatch(models.Model):
     supplier = models.ForeignKey(Supplier)
-    do_date = models.DateTimeField(auto_now_add = False)
+    do_date = models.DateField(auto_now_add = False)
     invoice_no = models.CharField(max_length=100)
     do_no = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)
     
         
 class InStockRecord(models.Model):
-    po_no = models.CharField(max_length=100)
+    inStockBatch = models.ForeignKey(InStockBatch)
     barcode = models.CharField(max_length=100)
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
@@ -83,7 +99,7 @@ class InStockRecord(models.Model):
     def __unicode__(self):
         return self.barcode + " " +str(self.cost) + " " + str(self.quantity)
         
-class Invoice(models.Model):
+class Bill(models.Model):
     total_price = models.DecimalField(max_digits=100,  decimal_places=2)
     tendered_amount = models.DecimalField(max_digits=100,  decimal_places=2)
     fulfill_payment = models.BooleanField(False)
@@ -93,7 +109,7 @@ class Invoice(models.Model):
         return " $" + str(self.total_price) + " "+str(self.create_at) 
         
 class OutStockRecord(models.Model):
-    invoice = models.ForeignKey(Invoice)
+    bill = models.ForeignKey(Bill)
     barcode = models.CharField(max_length=100)
     unit_sell_price = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
@@ -107,7 +123,7 @@ class OutStockRecord(models.Model):
 class ProductForm(ModelForm):
     class Meta:
         model = Product
-        exclude = ('disable', )
+        exclude = ('active', )
         
 class InStockRecordForm(ModelForm):
     class Meta:
@@ -128,6 +144,7 @@ class SupplierForm(ModelForm):
 class CustomerForm(ModelForm):
     class Meta:
         model = Customer
+
         
 class CategoryForm(ModelForm):
     class Meta:
@@ -143,6 +160,6 @@ class TypeForm(ModelForm):
         
 class InStockBatchForm(forms.Form):        
     supplier = forms.CharField(max_length=150)
-    do_date =  forms.DateField(widget=SelectDateWidget)
+    do_date =  forms.DateField(widget=AdminDateWidget)
     do_no =  forms.CharField(max_length=150)
     inv_no =  forms.CharField(max_length=150)
