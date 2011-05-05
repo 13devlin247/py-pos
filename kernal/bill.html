@@ -41,18 +41,18 @@ tfoot td {
               </tr>    
               <tr>        
                 <td class="Receipt">            Bill No:         </td>        
-                <td class="Receipt">            <b>{{invoice.pk}}        </b></td>    
+                <td class="Receipt">            <b>{{bill.pk}}        </b></td>    
               </tr>    
               <tr>        
                 <td class="Receipt">            Cashier         </td>        
-                <td class="Receipt">            <b>{{invoice.employee}}        </b></td>        
+                <td class="Receipt">            <b>{{bill.employee}}        </b></td>        
                 <!---->        
                 <td class="Receipt">            Date :         </td>        
-                <td class="Receipt">            {{invoice.create_at}}        </td>    
+                <td class="Receipt">            {{bill.create_at}}        </td>    
               </tr>    
               <tr>        
                 <td class="Receipt">            Customer         </td>        
-                <td class="Receipt">            <b>{{invoice.customer}}                    </b></td>        
+                <td class="Receipt">            <b>{{bill.customer}}                    </b></td>        
                 <td class="Receipt">                   </td>        
                 <td class="Receipt">                    </td>    
               </tr>    
@@ -89,11 +89,11 @@ tfoot td {
             <tfoot>
               <tr>        
                 <td width="70%" align="right" colspan=3>            Sub Total         </td>        
-                <td align="right" colspan=2>            {{invoice.total_price}}       </td>    
+                <td align="right" colspan=2>            {{bill.total_price}}       </td>    
               </tr>            
               <tr>        
                 <td width="70%" align="right" colspan=3>            Received Amount         </td>        
-                <td align="right" colspan=2>                        {{invoice.tendered_amount}}        </td>    
+                <td align="right" colspan=2>                        {{bill.tendered_amount}}        </td>    
               </tr>        
               <tr>        
                 <td width="70%" align="right" colspan=3>            Change         </td>        

@@ -133,7 +133,7 @@ urlpatterns = patterns('',
     url(r'^sales/confirm/$', SalesConfirm),
     url(r'^sales/invoice/$', direct_to_template,  {
                             'template': 'under_constructor.html', 
-                            'extra_context':{ 'msg':'Data insert success !! but invoice page is under constructor !!'}
+                            'extra_context':{ 'msg':'Data insert success !! but bill page is under constructor !!'}
                             }),
     url(r'^underconstructor/$', direct_to_template,  {
                             'template': 'under_constructor.html', 
@@ -141,7 +141,7 @@ urlpatterns = patterns('',
                             }),                            
     url(r'^report/daily/$', ReportDaily),                        
     #url(r'^sales/bill/$', direct_to_template,  {'template': 'bill.html'}),
-    url(r'^sales/bill/(?P<invoiceID>\w+)*', QueryBill),
+    url(r'^sales/bill/(?P<billID>\w+)*', QueryBill),
     #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
     #url(r'^sales/confirm/$', printData),
     (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
