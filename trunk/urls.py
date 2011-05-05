@@ -25,7 +25,7 @@ main_link = {
 show product list
 """
 product_list_view = {
-    'queryset': Product.objects.filter(disable=False),                      
+    'queryset': Product.objects.filter(active=True),                      
     'allow_empty': True,                      
     'template_name': 'product_list.html', 
     'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link},    

@@ -163,7 +163,7 @@ td input[type="text"] {
                                 "<tr id=\""+barcode+"_tr\">"+
                                 "<td><a href='#' id='removeItem' onclick=removeItem('"+barcode+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
                                 "<td id=\""+barcode+"_productName\">"+data[i].fields.name+"</td>"+
-                                "<td>$<input type=\"text\" name=\""+barcode+"_cost\" id=\""+barcode+"_cost\" value=\""+data[i].fields.price+" \" size=\"6\" /></td>"+
+                                "<td>$<input type=\"text\" name=\""+barcode+"_cost\" id=\""+barcode+"_cost\" value=\""+data[i].fields.cost+" \" size=\"6\" /></td>"+
                                 "<td style='text-align: center'><input type=\"text\" name=\""+barcode+"_quantity\" id=\""+barcode+"_quantity\" value=\"1\" size=\"2\"  /> </td>"+
                                 "<td id=\""+barcode+"_Inventory\" class='Inventory'>0</td>"+
                                 "<td id=\""+barcode+"_serialno\" class='SerialNo'><a href='#'>optional</a></td>"+
@@ -218,7 +218,10 @@ td input[type="text"] {
     }
     
     
-    
+  $("#id_do_date").datepicker({dateFormat: 'yy-mm-dd'});
+
+  
+  
   </script>
   
 {% endblock %}
