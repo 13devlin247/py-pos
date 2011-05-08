@@ -91,7 +91,7 @@ td input[type="text"] {
                             <tr>
                                 <th colspan=6 style="text-align:left;border-bottom:solid 1px black">
                                     <div>
-                                        <span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40" autocomplete="off" class="ac_input" onclick="return false;"/></span>
+                                        <span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40"  class="ac_input" onclick="return false;"/></span>
                                     </div>
                                 </th>
                             </tr>
@@ -219,7 +219,8 @@ td input[type="text"] {
     
   $("#id_do_date").datepicker({dateFormat: 'yy-mm-dd'});
 
-  
+  var data = ['apache', 'bash'];
+  $("#item").autocomplete(data, {matchContains: true});
   
   </script>
   
