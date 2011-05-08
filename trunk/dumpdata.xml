@@ -116,27 +116,6 @@
     <field type="CharField" name="term">30 Days</field>
     <field type="BooleanField" name="active">False</field>
   </object>
-  <object pk="1" model="kernal.instockbatch">
-    <field to="kernal.supplier" name="supplier" rel="ManyToOneRel">Supplier01</field>
-    <field type="DateField" name="do_date">2011-05-05</field>
-    <field type="CharField" name="invoice_no">Inv0001</field>
-    <field type="CharField" name="do_no">Do0001</field>
-    <field type="DateTimeField" name="create_at">2011-05-05 17:02:58</field>
-  </object>
-  <object pk="1" model="kernal.instockrecord">
-    <field to="kernal.instockbatch" name="inStockBatch" rel="ManyToOneRel">1</field>
-    <field type="CharField" name="barcode">BR00545650001</field>
-    <field type="DecimalField" name="cost">1000</field>
-    <field type="DecimalField" name="quantity">100</field>
-    <field type="DateTimeField" name="create_at">2011-05-05 17:03:27</field>
-  </object>
-  <object pk="2" model="kernal.instockrecord">
-    <field to="kernal.instockbatch" name="inStockBatch" rel="ManyToOneRel">1</field>
-    <field type="CharField" name="barcode">BR00545650002</field>
-    <field type="DecimalField" name="cost">1000</field>
-    <field type="DecimalField" name="quantity">100</field>
-    <field type="DateTimeField" name="create_at">2011-05-05 17:03:39</field>
-  </object>
   <object pk="2" model="contenttypes.contenttype">
     <field type="CharField" name="name">brand</field>
     <field type="CharField" name="app_label">kernal</field>

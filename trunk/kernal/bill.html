@@ -57,7 +57,7 @@ tfoot td {
                 <td class="Receipt">                    </td>    
               </tr>    
               <tr>        
-                <td colspan="5">            
+                <td colspan="4">            
                   <hr>        </td>    
               </tr>
             </tbody>
@@ -68,36 +68,42 @@ tfoot td {
 				<td class="Receipt">            QTY         </td>        
 				<td class="Receipt">            Item -- Serve         </td>        
                 <td align="right">            U. P.         </td>        
-                <td align="right">            Disc.         </td>        
-                <td align="right">            Sub Total         </td>    
+                <td align="right">            Amount         </td>    
               </tr>    
               <tr>        
-                <td colspan="5">            
+                <td colspan="4">            
                   <hr>        </td>    
               </tr>    
 			{% for outStockRecord in outStockRecordset%}
 				{{record}}
 				<tr>
                 <td class="Receipt">{{outStockRecord.quantity}}</td>
-                <td class="Receipt">{{outStockRecord.barcode}}</td>
+                <td class="Receipt">{{outStockRecord.product.name}}</td>
                 <td align="right">{{outStockRecord.unit_sell_price}}</td>
-                <td align="right">{{outStockRecord.discount}}</td>
-                <td align="right">100.00</td>
+                <td align="right">{{outStockRecord.amount}}</td>
 				</tr>
 			{% endfor %}			  
             </tbody>
             <tfoot>
               <tr>        
                 <td width="70%" align="right" colspan=3>            Sub Total         </td>        
-                <td align="right" colspan=2>            {{bill.total_price}}       </td>    
+                <td align="right" colspan=2>            {{bill.subtotal_price}}       </td>    
               </tr>            
+              <tr>        
+                <td width="70%" align="right" colspan=3>            Disc         </td>        
+                <td align="right" colspan=2>            {{bill.discount}}       </td>    
+              </tr>            
+              <tr>        
+                <td width="70%" align="right" colspan=3>            Total         </td>        
+                <td align="right" colspan=2>            {{bill.total_price}}       </td>    
+              </tr>                          
               <tr>        
                 <td width="70%" align="right" colspan=3>            Received Amount         </td>        
                 <td align="right" colspan=2>                        {{bill.tendered_amount}}        </td>    
               </tr>        
               <tr>        
                 <td width="70%" align="right" colspan=3>            Change         </td>        
-                <td align="right" colspan=2>            50.00        </td>    
+                <td align="right" colspan=2>           {{bill.change}}         </td>    
               </tr>        
               <tr>        
                 <td align="right" colspan=3>            Paid By         </td>        

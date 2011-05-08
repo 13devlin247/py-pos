@@ -114,6 +114,8 @@ def InventoryConfirm(request):
             inStockRecord = InStockRecord()
             inStockRecord.inStockBatch = inStockBatch
             inStockRecord.barcode = barcode
+            product = Product.objects.filter(barcode=barcode)[0]
+            inStockRecord.product = product
             inStockRecord.cost = inventoryDict [barcode]['cost'][0]
             inStockRecord.quantity = inventoryDict [barcode]['quantity'] [0]
             inStockRecord.save()
@@ -130,7 +132,13 @@ def SalesConfirm(request):
             if key == "subTotal":
                 continue            
             if key == "customer":
-                continue                            
+                continue                  
+            if key == "discount":
+                continue            
+            if key == "total":
+                continue              
+            if key == "change":
+                continue                        
             barcode = key.split("_")[0]
             attr = key.split("_")[1]
             if barcode not in salesDict:
@@ -140,8 +148,11 @@ def SalesConfirm(request):
         customerName = request.GET.get('customer', 'Cash')
         customer = Customer.objects.filter(name=customerName)[0]
         bill = Bill()
-        bill.total_price = request.GET.get('subTotal', '0')
+        bill.subtotal_price = request.GET.get('subTotal', '0')
+        bill.discount = request.GET.get('discount', '0')
+        bill.total_price = request.GET.get('total', '0')
         bill.tendered_amount = request.GET.get('amount_tendered', '0')
+        bill.change = request.GET.get('change', '0')
         bill.customer = customer
         bill.fulfill_payment = False
         bill.save()
@@ -151,9 +162,12 @@ def SalesConfirm(request):
             outStockRecord = OutStockRecord()
             outStockRecord.bill = bill
             outStockRecord.barcode = barcode
+            product = Product.objects.filter(barcode=barcode)[0]
+            outStockRecord.product = product            
+            
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
-
+            outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
             sales_index = 0
             #find last time sell record
             lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
