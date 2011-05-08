@@ -6,6 +6,8 @@ from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  Produc
 from pos.kernal.views import SalesConfirm, InventoryConfirm, ReportDaily, QueryBill
 from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm
 from pos.kernal.views import SupplierSave, CustomerSave
+from pos.kernal.views import SupplierList, CustomerList, ProductList
+
 
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -114,7 +116,10 @@ urlpatterns = patterns('',
 
     
     
-    
+   url(r'^supplier/ajax/$', SupplierList),    
+   url(r'^customer/ajax/$', CustomerList),    
+   url(r'^product/ajax/$', ProductList),    
+   
     url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/confirm/$', InventoryConfirm),    
     url(r'^^inventory/result/$', direct_to_template,  {
