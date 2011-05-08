@@ -62,7 +62,7 @@ form{
             <div id="register_wrapper">
                 
                 <div>
-                    <span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="BR00545650001" id="item" size="40" autocomplete="off" class="ac_input" /></span>
+                    <span  style="width:10%;margin: 0 100px 0 0"><label id="item_label" for="item">Item barcode</label> <input type="text" name="item" value="" id="item" size="40" autocomplete="off" class="ac_input" /></span>
 <form action="/sales/confirm" method="get">
                     <span style="text-align:right"><label id="customer_label" for="customer">Select Customer (Optional)</label> <input type="text" name="customer" value="Cash" id="customer" size="30" autocomplete="off" class="ac_input" /></span>
 
@@ -245,8 +245,19 @@ form{
         calcSubTotalPrice();
         calcTotalPrice();
     }
+
+  $("#item").autocomplete("/product/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
     
     
+     $("#customer").autocomplete("/customer/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
+  
+  
     
   </script>
   

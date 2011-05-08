@@ -11,6 +11,7 @@ from django.contrib import messages
 from django.core import serializers
 from django.db.models import Count
 from datetime import date
+from django.db.models import Q
 
 # import the logging library
 import logging
@@ -194,6 +195,31 @@ def QueryBill(request, billID):
     outStockRecordset = OutStockRecord.objects.filter(bill=bill)
     return render_to_response('bill.html',{'bill': bill, 'outStockRecordset':outStockRecordset })
         
+def SupplierList(request):
+    prefix = request.GET.get('q', "")
+    logging.debug("get ajax autocomplete query q: " + prefix)
+    supplierList = Supplier.objects.filter(Q(name__contains=prefix))
+    list = ''
+    for supplier in supplierList:
+        list = list + supplier.name + "\n"
+    return HttpResponse(list, mimetype="text/plain")
+    
+def ProductList(request):    
+    prefix = request.GET.get('q', "")
+    logging.debug("get ajax autocomplete query q: " + prefix)
+    productList = Product.objects.filter(Q(barcode__contains=prefix))
+    list = ''
+    for product in productList:
+        list = list + product.barcode+ "\n"
+    return HttpResponse(list, mimetype="text/plain")
+    
+def CustomerList(request):
+    customerList = Customer.objects.all()
+    list = ''
+    for customer in customerList :
+        list = list + customer.name + "\n"
+    return HttpResponse(list, mimetype="text/plain")    
+    
 def ProductInfo(request, barcode):
     messages.info(request, "check product: " + `barcode` + " info")
    
@@ -201,7 +227,6 @@ def ProductInfo(request, barcode):
     if not productSet:
         return HttpResponse("[{\"error\":true}]", mimetype="text/plain")    
     json = serializers.serialize("json",  productSet)
-    #json =                                                                               "[{\"inventoryCount\":"+str(inventoryCount)+"}]"
     return HttpResponse(json, mimetype="application/json")
     
 def ProductInventory(request, barcode):
