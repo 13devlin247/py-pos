@@ -155,7 +155,8 @@ form{
                 type: "JSON",
                 success: function(data){  
                     for (var i = 0; i < data.length; i++){
-                        var barcode = data[i].fields.barcode;
+                        //var barcode = data[i].fields.barcode;
+						var barcode = data[i].pk
                         productTable[barcode] = data;       
                         quantityTable[barcode] = 1;         
                         row += ""+
