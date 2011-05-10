@@ -111,6 +111,17 @@ class Bill(models.Model):
     def __unicode__(self):
         return " $" + str(self.total_price) + " "+str(self.create_at) 
 
+class Payment(models.Model):
+    bill = models.ForeignKey(Bill)
+    term = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
+    status = models.CharField(max_length=100)
+    create_at = models.DateTimeField(auto_now_add = True)
+
+    def __unicode__(self):
+        return str(self.bill) + " " + self.type + " " + self.status 
+        
+        
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)
     barcode = models.CharField(max_length=100)

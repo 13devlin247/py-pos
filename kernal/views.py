@@ -4,6 +4,7 @@ from pos.kernal.models import InStockBatch, InStockRecord, InStockRecordForm
 from pos.kernal.models import OutStockRecord, OutStockRecordForm
 from pos.kernal.models import Supplier, SupplierForm
 from pos.kernal.models import Customer, CustomerForm 
+from pos.kernal.models import Payment 
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
@@ -157,6 +158,13 @@ def SalesConfirm(request):
         bill.customer = customer
         bill.fulfill_payment = False
         bill.save()
+        
+        payment = Payment()
+        payment.bill = bill
+        payment.term = "Cash"
+        payment.type = "Cash Sales"
+        payment.status = "Complete"
+        payment.save()
         
         # build OutStockRecord to save data
         for barcode in salesDict:
