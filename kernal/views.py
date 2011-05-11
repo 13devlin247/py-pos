@@ -177,12 +177,7 @@ def SalesConfirm(request):
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
             outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
-            sales_index = 0
-            #find last time sell record
-            lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
-            if lastOutStockRecordSet.count() != 0:
-                lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
-                sales_index = lastOutStockRecord.sell_index
+            sales_index = __find_SalesIdx__(barcode)
             
             inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
             inStockObject = None
@@ -198,6 +193,17 @@ def SalesConfirm(request):
             outStockRecord.save()
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
 
+def __find_SalesIdx__(barcode):
+    sales_index = 0
+    #find last time sell record
+    lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
+    if lastOutStockRecordSet.count() != 0:
+        lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
+        sales_index = lastOutStockRecord.sell_index
+    logging.debug("barcode: "+barcode+"'s sales_index: " + str(sales_index))
+    return sales_index        
+            
+        
 def QueryBill(request, billID):    
     bill = Bill.objects.get(pk=billID)
     outStockRecordset = OutStockRecord.objects.filter(bill=bill)
@@ -239,7 +245,7 @@ def ProductInfo(request, barcode):
     
 def ProductInventory(request, barcode):
     outStockRecord = None
-    logging.info(request, "check product: " + `barcode` + "  inventory")
+    logging.info(request, "check product: " + barcode + "  inventory")
    
     inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
     if inStockRecordSet.count() == 0:
