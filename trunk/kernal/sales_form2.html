@@ -9,12 +9,14 @@
 {% block content %}
     <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos.css" />  	
     <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos_print.css"  media="print"/>
+
+<form action="/sales/confirm" method="get" id="sales">
 <div id="content_area_wrapper">  
       <div id="content_area">  
         <div id="page_title" style="margin-bottom:8px;">Sales Register
         </div>  
-        <div id="register_wrapper">  
-          <form action="https://demo.phppointofsale.com/index.php/sales/change_mode" method="post" id="mode_form">	
+        <div id="register_wrapper" >  
+          <div id="mode_form">
             <span>Register Mode
             </span>  
             <select name="mode" onchange="$('#mode_form').submit();">  
@@ -23,14 +25,7 @@
               <option value="return">Return
               </option>  
             </select>
-            <div id="show_suspended_sales_button">  	
-              <a href="https://demo.phppointofsale.com/index.php/sales/suspended/width:425" class="thickbox none" title="Suspended Sales">
-                <div class='small_button'>
-                  <span style='font-size:73%;'>Suspended Sales
-                  </span>
-                </div></a>
-            </div>  
-          </form>  
+          </div>  
           
             <label id="item_label" for="item">    Find/Scan Item
             </label>  
@@ -57,27 +52,15 @@
                 </th>  
               </tr>  
             </thead>  
-            <tbody id="cart_contents">  
-              <form action="https://demo.phppointofsale.com/index.php/sales/edit_item/2" method="post">		
-                <tr>
-				  <td>AC001</td>  		
-                  <td style="align:center;">Gucci  Baga<br /> [4.00 in stock]</td>        					<td>
-                    <input type="text" name="price" value="9000.00" size="6"  /></td>  		 		<td>  		
-                    <input type="text" name="quantity" value="1" size="2"  />		</td>    		
-					<td>$9000.00</td>  		
-                </tr>  		
-              </form>  	
-            </tbody>  
 			<tbody id="sell_detail"></tbody>			
           </table>  
         </div>      
+
         <div id="overall_sale">  	
-          <form action="https://demo.phppointofsale.com/index.php/sales/select_customer" method="post" id="select_customer_form">		
             <label id="customer_label" for="customer">Select Customer (Optional)
             </label>  		
             <input type="text" name="customer" value="Start Typing customer&#39;s name..." id="customer" size="30"  />		
-          </form>  		
-          <div style="margin-top:5px;text-align:center;">  		
+          <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
             <h3 style="margin: 5px 0 5px 0">OR</h3>  		
             <a href="https://demo.phppointofsale.com/index.php/customers/view/-1/width:350" class="thickbox none" title="New Customer">
               <div class='small_button' style='margin:0 auto;'>
@@ -90,23 +73,23 @@
           <div id='sale_details'>  		
             <div class="float_left" style="width:55%;">Sub Total:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$9046.00
+            <div class="float_left" style="width:45%;font-weight:bold;">$<input type=text name="subTotal" id="subTotal" value="0.00" readonly=false size="10" style="border: none; background: transparent;"/>
             </div>    				
             <div class="float_left" style='width:55%;'>Discount:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice()" />
+            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice()" autocomplete="off" />
             </div>  		 		
             <div class="float_left" style='width:55%;'>Total:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$10396.00
+            <div class="float_left" style="width:45%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
             </div>  	
             <div class="float_left" style='width:55%;'>Amount Tendered:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="amount_tendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()" />
+            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="amountTendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
             </div>  	
             <div class="float_left" style='width:55%;'>Change:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="change" value="0.00" style="border: none;" id="change" size="10" />
+            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="change" value="0.00" id="change" size="10" style="border: none; background: transparent;"/>
             </div>  	
 			
           </div>          	     	
@@ -114,19 +97,20 @@
           </div>  		    
           <div id="Payment_Types" >    		
             <div style="">    			
-              <form action="https://demo.phppointofsale.com/index.php/sales/add_payment" method="post" id="add_payment_form">			
-                <div class='small_button' id='add_payment_button' style='float:left;margin-top:5px;'>  				
+              <div id="add_payment_form">			
+                <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				
                   <span>Confirm
                   </span>  			
                 </div>  		
             </div>  		
-            </form>    		     	
+            </div>    		     	
           </div>    	
         </div>  
         <div class="clearfix" style="margin-bottom:30px;">&nbsp;
         </div>      
       </div>  
     </div>  
+</form>    
 <script type="text/javascript">
     var productTable = new Array();
     var quantityTable = new Array();    
@@ -154,7 +138,7 @@
                                 "<td id=\""+barcode+"_productName\">"+data[i].fields.name+" <br/> [<span id=\""+barcode+"_stockCount\"></span> in stock]</td>"+
                                 "<td><input type=\"text\" name=\""+barcode+"_price\" id=\""+barcode+"_price\" value=\""+data[i].fields.retail_price+" \" size=\"6\" onkeyup=recalcAll('"+barcode+"') /></td>"+
                                 "<td><input type=\"text\" name=\""+barcode+"_quantity\" id=\""+barcode+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+barcode+"') /></td>"+
-                                "<td id=\""+barcode+"_amount\" class='totalPrice'>$"+data[i].fields.retail_price+"</td>"+
+                                "<td>$<span id=\""+barcode+"_amount\" class='totalPrice'>"+data[i].fields.retail_price+"</span></td>"+
                                 "</tr>"
                         ;                        
                     }
@@ -203,7 +187,7 @@
     function calcAmount(barcode){
         var currentQuantity = parseInt($("#"+barcode+"_quantity").val());
         var price = $("#"+barcode+"_price").val();
-        $("#"+barcode+"_amount").html("$"+currentQuantity* price);
+        $("#"+barcode+"_amount").html(currentQuantity* price);
     }
     function calcSubTotalPrice(){
         var total = 0;
@@ -246,7 +230,16 @@
 		width: 260,
 		selectFirst: false
 	});
+   $("#customer").blur(function (){
+        customerName = $("#customer").val();
+        alert(customerName)
+//        $("#supplierDetail");
+	});
   
+  
+    $("#confirm").click(function(){
+        $("#sales").submit();
+    });
   
     
   </script>	
