@@ -129,18 +129,9 @@ def SalesConfirm(request):
         # process Request parameter
         sales_item = request.GET.lists()
         for key,  value in sales_item:
-            if key == "amount_tendered":
+            if '_' not in key:
                 continue
-            if key == "subTotal":
-                continue            
-            if key == "customer":
-                continue                  
-            if key == "discount":
-                continue            
-            if key == "total":
-                continue              
-            if key == "change":
-                continue                        
+
             barcode = key.split("_")[0]
             attr = key.split("_")[1]
             if barcode not in salesDict:
@@ -153,7 +144,7 @@ def SalesConfirm(request):
         bill.subtotal_price = request.GET.get('subTotal', '0')
         bill.discount = request.GET.get('discount', '0')
         bill.total_price = request.GET.get('total', '0')
-        bill.tendered_amount = request.GET.get('amount_tendered', '0')
+        bill.tendered_amount = request.GET.get('amountTendered', '0')
         bill.change = request.GET.get('change', '0')
         bill.customer = customer
         bill.fulfill_payment = False
