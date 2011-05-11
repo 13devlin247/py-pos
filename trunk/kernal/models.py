@@ -61,6 +61,7 @@ class Supplier(models.Model):
     phone_mobile = models.CharField(max_length=100, blank=True)
     fax = models.CharField(max_length=100, blank=True)
     email = models.EmailField(max_length=100, blank=True)
+    #remark = models.TextField(blank=True)
     address = models.TextField(blank=True)
     active = models.BooleanField(True)
     
@@ -120,7 +121,15 @@ class Payment(models.Model):
 
     def __unicode__(self):
         return str(self.bill) + " " + self.type + " " + self.status 
-        
+
+class Counter(models.Model):
+    initail_amount = models.DecimalField(max_digits=100,  decimal_places=2)
+    close_amount = models.DecimalField(max_digits=100,  decimal_places=2, blank=True)
+    active = models.BooleanField(True)
+    create_at = models.DateTimeField(auto_now_add = True)
+
+    def __unicode__(self):
+        return str(self.bill) + " " + self.type + " " + self.status         
         
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)

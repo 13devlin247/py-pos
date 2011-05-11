@@ -7,6 +7,8 @@
 {% endblock %}
 
 {% block content %}
+<link rel="stylesheet" rev="stylesheet" href="https://demo.phppointofsale.com/css/phppos.css" /> 
+<link rel="stylesheet" rev="stylesheet" href="https://demo.phppointofsale.com/css/phppos_print.css"  media="print"/> 
 <style type="text/css">
 #stockCount{
     font-weight: bold;
@@ -44,16 +46,35 @@ td input[type="text"] {
     padding: 0;
     margin:0;
 }
+
+#supplierDetail{
+border : solid red 1px;
+display: inline;
+float: left;
+}
+
+#supplierDetail table{
+  border: double black 1px;
+  width: 45%;
+  margin: 0 0 0 1em;
+  background-color: #C3D9FF;  
+}
+
+#supplierDetail table tr td{
+  border: none;
+}
+
 #inventoryDetail {
-    
+clear: both;
 }
 #inventoryBatch{
-    #float: right;
+  width: 40%;
+  float: left;
 }
 
 #inventoryBatch table{
   border: double black 1px;
-  width: 50%;
+  width: 95%;
   margin: 0 0 0 1em;
   background-color: #C3D9FF;  
 }
@@ -81,9 +102,16 @@ td input[type="text"] {
                 <table>
                     <th colspan=2 style="border-bottom: black 1.5px solid;"> Receivings Record</th>
                     {{form}}             
-                    <tr><th></th><td><input type="submit" value="Fulfill Detail" onClick="$('#register').attr('style','visibility: visible;'); return false;" /><td></tr>
+                    <tr><th></th><td><input type="submit" value="Fulfill Detail" onClick="expandDetail();return false;	" /><td></tr>
                 </table>
             </div>
+            <div id="inventoryBatch">
+                <table>
+                    <th colspan=2 style="border-bottom: black 1.5px solid;"> Supplier Detail</th>
+                    {{form}}             
+                    <tr><th></th><td><input type="submit" value="Fulfill Detail" onClick="expandDetail();return false;	" /><td></tr>
+                </table>
+            </div>			
             <div id="inventoryDetail">
                 <div>
                     <table id="register">
@@ -229,7 +257,22 @@ td input[type="text"] {
 		selectFirst: false
 	});
   
-  
+	function expandDetail(){
+		
+		if($('#id_supplier').val()==''){
+			return false;
+		}
+		if($('#id_do_date').val()==''){
+			return false;
+		}
+		if($('#id_do_no').val()==''){
+			return false;
+		}
+		if($('#id_inv_no').val()==''){
+			return false;
+		}		
+		$('#register').attr('style','visibility: visible;'); 
+	}
   
   
   </script>
