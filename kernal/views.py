@@ -162,29 +162,20 @@ def SalesConfirm(request):
             outStockRecord = OutStockRecord()
             outStockRecord.bill = bill
             outStockRecord.barcode = barcode
-            product = Product.objects.filter(barcode=barcode)[0]
+            product = Product.objects.get(pk=barcode)
             outStockRecord.product = product            
             
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
             outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
-            sales_index = __find_SalesIdx__(barcode)
-            
-            inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
-            inStockObject = None
-            if inStockRecordSet.count() != 0:
-                inStockObject = InStockRecord.objects.filter(barcode=barcode)[0]
-            if inStockObject:
-                outStockRecord.profit = str(float(outStockRecord.unit_sell_price) - float(inStockObject.cost)) # str() for convert to decimal prepare
-                sales_index = sales_index + int(outStockRecord.quantity) 
-            else:
-                outStockRecord.profit = '0.0'
-            
-            outStockRecord.sell_index = sales_index
+            outStockRecord.sell_index = -1;
+            outStockRecord.profit = -1;
             outStockRecord.save()
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
 
 def __find_SalesIdx__(barcode):
+
+
     sales_index = 0
     #find last time sell record
     lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
@@ -212,38 +203,40 @@ def SupplierList(request):
 def ProductList(request):    
     prefix = request.GET.get('q', "")
     logging.debug("get ajax autocomplete query q: " + prefix)
-    productList = Product.objects.filter(Q(barcode__contains=prefix))
+    productList = Product.objects.filter(Q(barcode__contains=prefix)|Q(name__contains=prefix))
     list = ''
     for product in productList:
-        list = list + product.barcode+ "\n"
+        list = list + product.name+ "\n"
     return HttpResponse(list, mimetype="text/plain")
     
 def CustomerList(request):
-    customerList = Customer.objects.all()
+    prefix = request.GET.get('q', "")
+    logging.debug("get ajax autocomplete query q: " + prefix)
+    customerList = Customer.objects.filter(Q(name__contains=prefix)|Q(phone__contains=prefix))
     list = ''
     for customer in customerList :
         list = list + customer.name + "\n"
     return HttpResponse(list, mimetype="text/plain")    
     
-def ProductInfo(request, barcode):
-    messages.info(request, "check product: " + `barcode` + " info")
+def ProductInfo(request, query):
+    logging.info(request, "check product: " + `query` + " info")
    
-    productSet = Product.objects.filter(barcode=barcode)
+    productSet = Product.objects.filter((Q(barcode__contains=query)|Q(name__contains=query)))
     if not productSet:
         return HttpResponse("[{\"error\":true}]", mimetype="text/plain")    
     json = serializers.serialize("json",  productSet)
     return HttpResponse(json, mimetype="application/json")
     
-def ProductInventory(request, barcode):
+def ProductInventory(request, pk):
     outStockRecord = None
-    logging.info(request, "check product: " + barcode + "  inventory")
+    logging.info(request, "check product: " + pk + "  inventory")
    
-    inStockRecordSet = InStockRecord.objects.filter(barcode=barcode)
+    inStockRecordSet = InStockRecord.objects.filter(product__pk=pk)
     if inStockRecordSet.count() == 0:
         logging.debug(request, "inStockRecordSet not found")
         return HttpResponse(0, mimetype="application/json")    
 
-    outStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
+    outStockRecordSet = OutStockRecord.objects.filter(product__pk=pk)
     
     if outStockRecordSet.count() != 0:
         outStockRecord = outStockRecordSet.order_by('-create_at')[0]
@@ -254,6 +247,28 @@ def ProductInventory(request, barcode):
     json = "[{\"inventory\":"+str(inventoryCount)+"}]"
     return HttpResponse(json, mimetype="application/json")    
 
+def CustomerInfo(request, query):
+    logging.info(request, "check customer: " + query)
+   
+    customerSet = Customer.objects.filter((Q(name__contains=query)))
+    if customerSet.count() == 0:
+        logging.debug(request, "customerSet not found")
+        return HttpResponse(0, mimetype="application/json")    
+
+    json = serializers.serialize("json",  customerSet)
+    return HttpResponse(json, mimetype="application/json")        
+    
+def SupplierInfo(request, query):
+    logging.info(request, "check supplier: " + query)
+   
+    supplierSet = Supplier.objects.filter((Q(name__contains=query)))
+    if supplierSet.count() == 0:
+        logging.debug(request, "supplierSet not found")
+        return HttpResponse(0, mimetype="application/json")    
+
+    json = serializers.serialize("json",  supplierSet)
+    return HttpResponse(json, mimetype="application/json")            
+    
 """ 
 below function for save form object to databases
 """

@@ -1,0 +1,269 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos.css" />  	
+    <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos_print.css"  media="print"/>
+<style type=text/css">
+.displayCustomer{
+ border: solid red 1px;
+ text-align: left;
+}
+
+</style>
+<form action="/inventory/confirm" method="get" id="sales">
+<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;">Items Receiving
+        </div>  
+        <div id="register_wrapper" >  
+          <div id="mode_form">
+            <span>Receiving Mode
+            </span>  
+            <select name="mode" onchange="$('#mode_form').submit();">  
+              <option value="receive" selected="selected">Receive
+              </option>  
+              <option value="return">Return
+              </option>  
+            </select>
+          </div>  
+          
+            <label id="item_label" for="item">    Find/Scan Item
+            </label>  
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+          <table id="register">  
+            <thead>  
+              <tr>  
+                <th style="width:30%;">Item #
+                </th>  
+                <th style="width:30%;">Item Name
+                </th>  
+                <th style="width:11%;">Cost
+                </th>  
+                <th style="width:11%;">Qty.
+                </th>  
+                <th style="width:15%;">Serial no.
+                </th>  
+              </tr>  
+            </thead>  
+			<tbody id="sell_detail"></tbody>			
+          </table>  
+        </div>      
+
+        <div id="overall_sale">  	
+                <table>
+                    <th colspan=2 style="border-bottom: black 1.5px solid;"> Receivings Record</th>
+                    {{form}}             
+                </table>
+          <div class="clearfix">&nbsp;
+          </div>  		 	
+          <div id='sale_details'>  		
+          <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
+            <h3 style="margin: 5px 0 5px 0">OR</h3>  		
+            <a href="/supplier/create/" class="thickbox none" title="New Supplier">
+
+              <div class='small_button' style='margin:0 auto;'>
+                <span>New Supplier
+                </span>
+              </div></a>		
+          </div> 	
+          </div>          	     	
+          <div class="clearfix" style="margin-bottom:1px;">&nbsp;
+          </div>  		    
+          <div id="Payment_Types" >    		
+            <div style="">    			
+              <div id="add_payment_form">			
+                <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				
+                  <span>Confirm
+                  </span>  			
+                </div>  		
+            </div>  		
+            </div>    		     	
+          </div>    	
+        </div>  
+        <div class="clearfix" style="margin-bottom:30px;">&nbsp;
+        </div>      
+      </div>  
+    </div>  
+</form>    
+<script type="text/javascript">
+    var productTable = new Array();
+    var quantityTable = new Array();    
+    $("#item").keydown(function(event){
+        if(event.keyCode != '13'){
+            return;
+        }
+            
+            /**
+                query product infor by ajax
+            **/
+            $.ajax({
+                url: "/product/info/"+$("#item").val(),
+                type: "JSON",
+                success: function(data){  
+                    for (var i = 0; i < data.length; i++){
+                        var barcode = data[i].fields.barcode;
+						var pk = data[i].pk;
+
+						if ( productTable[pk] == undefined){
+							row = $('#sell_detail').html();
+							productTable[pk] = data;       
+							quantityTable[pk] = 1;         
+							row += ""+
+									"<tr id=\""+pk+"_tr\">"+
+									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
+									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> [<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+
+									"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data[i].fields.retail_price+" \" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
+									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') /></td>"+
+									"<td><a href=\"#\" id=\""+pk+"_serial\" class='totalPrice'>optional</a></td>"+
+									"</tr>"
+							;
+							$('#sell_detail').html(row);
+							/**
+								keep value if update table
+							**/
+							for (var key in productTable){
+								$("#"+key+"_quantity").attr("value", quantityTable[key]);
+							}                    							
+							/**
+								query product inventory by ajax
+							**/
+							$.ajax({
+								url: "/product/inventory/"+pk,
+								type: "JSON",
+								success: function(data){  
+									$("#"+pk+"_stockCount").html(data[0].inventory);
+								},
+								error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
+								complete: function(data){},
+							});            
+						}else{
+							quantityPlugOne(pk)
+							calcAmount(pk);
+							calcSubTotalPrice();
+							calcTotalPrice();
+						}
+                    }
+                },
+                error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
+                complete: function(data){ 
+                    calcSubTotalPrice();
+                    calcTotalPrice();
+                },
+            });            
+    });
+    
+    function quantityPlugOne(pk){
+            var quantityField = $("#"+pk+"_quantity");
+            var currentQuantity = parseInt(quantityField.val());
+            quantityField.attr("value", currentQuantity+1);
+            quantityTable[pk] = currentQuantity+1;
+    }
+    function calcAmount(pk){
+        var currentQuantity = parseInt($("#"+pk+"_quantity").val());
+        var price = $("#"+pk+"_price").val();
+        $("#"+pk+"_amount").html(currentQuantity* price);
+    }
+    function calcSubTotalPrice(){
+        var total = 0;
+        for (var key in productTable){
+            total += parseInt($("#"+key+"_amount").html());
+        }
+        $("#subTotal").attr("value",total);
+    }
+    function calcTotalPrice(){
+        subTotal = $("#subTotal").val();
+        discount = $("#discount").val();
+        $("#total").attr("value", (subTotal-discount));
+    }
+    function calcChange(){
+        total = $("#total").val();
+        amount_tendered = $("#amount_tendered").val();
+        $("#change").attr("value", (amount_tendered-total));
+    }
+
+    function recalcAll(pk){
+        calcAmount(pk);
+        calcSubTotalPrice();
+        calcTotalPrice();
+    }
+    function removeItem(pk){
+        delete productTable[pk];
+        delete quantityTable[pk];
+        $("#"+pk+"_tr").remove();
+        calcSubTotalPrice();
+        calcTotalPrice();
+    }
+
+  $("#item").autocomplete("/product/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
+    
+     $("#id_supplier").autocomplete("/supplier/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
+    $("#id_supplier").result(function(event, data, formatted)
+    {
+        supplierName = $("#id_supplier").val();
+        $("#supplierDetail").html(supplierName);
+            $.ajax({
+                url: "/supplier/info/"+supplierName,
+                type: "JSON",
+                success: function(data){  
+					var supplierShow = '<div style="text-align: left">';
+					supplierShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
+					supplierShow += "<div>mobile: "+data[0].fields.phone_mobile+"</div>";
+					supplierShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
+					supplierShow += "</div>";
+					
+                    $("#supplierDetail").html(supplierShow);
+                },
+                error: function(data){ alert("Product Not found! please check your barcode: " + $("#id_supplier").val()) },
+                complete: function(data){},
+            });            
+		
+		
+    });  
+  
+    $("#confirm").click(function(){
+        $("#sales").submit();
+    });
+  
+  $("#id_do_date").datepicker({dateFormat: 'yy-mm-dd'});
+
+  $("#item").autocomplete("/product/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
+    
+  $("#id_supplier").autocomplete("/supplier/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
+  
+	function expandDetail(){
+		
+		if($('#id_supplier').val()==''){
+			return false;
+		}
+		if($('#id_do_date').val()==''){
+			return false;
+		}
+		if($('#id_do_no').val()==''){
+			return false;
+		}
+		if($('#id_inv_no').val()==''){
+			return false;
+		}		
+		$('#register').attr('style','visibility: visible;'); 
+	}
+      
+  </script>	
+{% endblock %}	
