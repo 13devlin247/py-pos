@@ -7,6 +7,8 @@ from pos.kernal.views import SalesConfirm, InventoryConfirm, ReportDaily, QueryB
 from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm
 from pos.kernal.views import SupplierSave, CustomerSave
 from pos.kernal.views import SupplierList, CustomerList, ProductList
+from pos.kernal.views import CustomerInfo, SupplierInfo
+
 
 
 #from pos.kernal.views import ajaxProductDetailView
@@ -99,8 +101,8 @@ urlpatterns = patterns('',
     url(r'^product/update/(?P<productID>\w+)', ProductUpdateView), 
     url(r'^product/delete/$', ProductDelete),    
     url(r'^product/save/(?P<productID>\w+)*', ProductSave), # controller
-    url(r'^product/info/(?P<barcode>\w+)*', ProductInfo), # controller
-    url(r'^product/inventory/(?P<barcode>\w+)*', ProductInventory), # controller
+    url(r'^product/info/(?P<query>\w+)*', ProductInfo), # controller
+    url(r'^product/inventory/(?P<pk>\w+)*', ProductInventory), # controller
 
     url(r'^supplier/create/$', create_update.create_object, supplier_form), 
     url(r'^supplier/search/$', list_detail.object_list, product_list_view),
@@ -113,14 +115,16 @@ urlpatterns = patterns('',
     url(r'^customer/update/(?P<productID>\w+)', ProductUpdateView), 
     url(r'^customer/delete/$', ProductDelete),    
     url(r'^customer/save/(?P<customerID>\w+)*', CustomerSave), # controller    
-
+    url(r'^customer/info/(?P<query>\w+)*', CustomerInfo),    # customer info json
+    url(r'^supplier/info/(?P<query>\w+)*', SupplierInfo),    # supplier info json
     
     
    url(r'^supplier/ajax/$', SupplierList),    
    url(r'^customer/ajax/$', CustomerList),    
    url(r'^product/ajax/$', ProductList),    
    
-    url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
+    url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
+    url(r'^inventory/list2/$', direct_to_template,  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/confirm/$', InventoryConfirm),    
     url(r'^^inventory/result/$', direct_to_template,  {
                             'template': 'under_constructor.html', 
