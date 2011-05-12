@@ -10,6 +10,8 @@ from pos.kernal.models import Brand, BrandForm
 from pos.kernal.models import Type, TypeForm
 from pos.kernal.models import UOM
 from pos.kernal.models import InStockBatch
+from pos.kernal.models import SerialNo
+
 admin.site.register(Product)
 admin.site.register(InStockRecord)
 admin.site.register(InStockBatch)
@@ -21,5 +23,6 @@ admin.site.register(Category)
 admin.site.register(Brand)
 admin.site.register(Type)
 admin.site.register(UOM)
+admin.site.register(SerialNo)
 
 
