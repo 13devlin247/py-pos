@@ -1,0 +1,113 @@
+{% extends "product.php.html" %}
+
+{% block content %}
+<style type="text/css">
+#SubTotal tr td{
+	text-align: right;
+}
+td {
+text-align: right;
+border: none;
+}
+
+tfoot td {
+	font-weight:bold
+}
+
+.Receipt{
+	text-align: left;
+}
+
+</style>
+
+<table width="100%" cellpadding="0" cellspacing="0" height="100%">    
+  <tbody>
+    <tr>                 
+      <td valign="center">            
+        <form method="post" name="frmDataEntry">
+          <input id="idId" name="Id" value="00067" type="hidden">
+          <input id="idAttendant" name="Attendant" value="0" type="hidden">
+          <input id="idDId" name="DId" value="" type="hidden">
+          <input id="idEmployeePurchase" name="EmployeePurchase" value="" type="hidden">
+          <table width="100%">    
+            <tbody>
+              <tr>        
+                <td colspan="4">            
+                  <p align="center">
+                    <font color="black"><b>RECEIVING ITEMS</b>
+                    </font>
+                  </p>
+                  <font color="black"><b>        </b>
+                  </font></td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt">            Receiving No:         </td>        
+                <td class="Receipt">            <b>{{inStockBatch.pk}}        </b></td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt">            Employee         </td>        
+                <td class="Receipt">            <b>{{inStockBatch.employee}}        </b></td>        
+                <!---->        
+                <td class="Receipt">            Date :         </td>        
+                <td class="Receipt">            {{inStockBatch.create_at}}        </td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt">            Supplier         </td>        
+                <td class="Receipt">            <b>{{inStockBatch.supplier}}                    </b></td>        
+                <td class="Receipt">                   </td>        
+                <td class="Receipt">                    </td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt">            Address        </td>        
+                <td class="Receipt">            <b>{{inStockBatch.supplier.address}}                    </b></td>        
+                <td class="Receipt">             Contact No.      </td>        
+                <td class="Receipt">             {{inStockBatch.supplier.phone_office}}       </td>    
+              </tr>                  
+              <tr>        
+                <td colspan="4">            
+                  <hr>        </td>    
+              </tr>
+            </tbody>
+          </table>
+          <table width="100%">    
+            <tbody>
+              <tr>        
+                <td class="Receipt">            Item -- Serve         </td>                      
+				<td class="Receipt">            QTY         </td>        
+                <td align="right">            Cost         </td>        
+                <td align="right">            Inventory         </td>    
+              </tr>    
+              <tr>        
+                <td colspan="4">            
+                  <hr>        </td>    
+              </tr>    
+			{% for inStockRecord in instockrecordSet%}
+				{{record}}
+				<tr>
+                <td class="Receipt">{{inStockRecord.product.name}}</td>
+                <td class="Receipt">{{inStockRecord.quantity}}</td>
+                <td align="right">{{inStockRecord.cost}}</td>
+                <td align="right"><div id="{{inStockRecord.product.pk}}_stockCount">0</div></td>
+				</tr>
+                <script>
+							/**
+								query product inventory by ajax
+							**/
+							$.ajax({
+								url: "/product/inventory/"+{{inStockRecord.product.pk}},
+								type: "JSON",
+								success: function(data){  
+									$("#{{inStockRecord.product.pk}}_stockCount").html(data[0].inventory);
+								},
+								error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
+								complete: function(data){},
+							});                            
+                </script>
+			{% endfor %}			  
+				<tr>
+                <td colspan=4><hr/></td>
+				</tr>                
+            
+            </tbody>
+          </table>
+{% endblock %}

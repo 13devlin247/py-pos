@@ -100,7 +100,16 @@ class InStockRecord(models.Model):
     
     def __unicode__(self):
         return self.barcode + " " +str(self.cost) + " " + str(self.quantity)
+
+class SerialNo(models.Model):
+    inStockRecord = models.ForeignKey(InStockRecord)
+    serial_no = models.CharField(max_length=100)
+    create_at = models.DateTimeField(auto_now_add = True)
+    
+    def __unicode__(self):
+        return str(self.inStockRecord.product.name) + " " +str(self.serial_no) 
         
+
 class Bill(models.Model):
     subtotal_price = models.DecimalField(max_digits=100,  decimal_places=2)
     discount = models.DecimalField(max_digits=100,  decimal_places=2)

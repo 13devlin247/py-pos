@@ -5,6 +5,7 @@ from pos.kernal.models import OutStockRecord, OutStockRecordForm
 from pos.kernal.models import Supplier, SupplierForm
 from pos.kernal.models import Customer, CustomerForm 
 from pos.kernal.models import Payment 
+from pos.kernal.models import SerialNo
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
@@ -18,7 +19,7 @@ from django.db.models import Q
 import logging
 
 logging.basicConfig(
-    level = logging.DEBUG,
+    level = logging.INFO,
     format = '%(asctime)s %(levelname)s %(message)s',
 )
 # Get an instance of a logger
@@ -90,12 +91,11 @@ def InventoryConfirm(request):
                 continue                
             if key.find("_") == -1:
                 continue
-            barcode = key.split("_")[0]
+            pk = key.split("_")[0]
             attr = key.split("_")[1]
-            logger.error('barcode: ' + key)
-            if barcode not in inventoryDict :
-                inventoryDict [barcode] ={}
-            inventoryDict [barcode] [attr]= value
+            if pk not in inventoryDict :
+                inventoryDict [pk] ={}
+            inventoryDict [pk] [attr]= value
         supplier_name = request.GET.get('supplier', "")
         supplier = None
         try:
@@ -112,16 +112,22 @@ def InventoryConfirm(request):
         inStockBatch.save();
         
         # build OutStockRecord to save data
-        for barcode in inventoryDict :
+        for pk in inventoryDict :
             inStockRecord = InStockRecord()
             inStockRecord.inStockBatch = inStockBatch
-            inStockRecord.barcode = barcode
-            product = Product.objects.filter(barcode=barcode)[0]
+            inStockRecord.barcode = pk
+            product = Product.objects.get(pk=pk)
             inStockRecord.product = product
-            inStockRecord.cost = inventoryDict [barcode]['cost'][0]
-            inStockRecord.quantity = inventoryDict [barcode]['quantity'] [0]
+            inStockRecord.cost = inventoryDict [pk]['cost'][0]
+            inStockRecord.quantity = inventoryDict [pk]['quantity'] [0]
             inStockRecord.save()
-        return HttpResponseRedirect('/inventory/result/')
+            for value in inventoryDict[pk] :
+                if 'serial-' in value:
+                    serial = SerialNo()
+                    serial.inStockRecord = inStockRecord
+                    serial.serial_no = request.GET.get(pk+"_"+value, "-")
+                    serial.save()            
+        return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
 
 def SalesConfirm(request):
     salesDict = {}
@@ -191,6 +197,11 @@ def QueryBill(request, billID):
     outStockRecordset = OutStockRecord.objects.filter(bill=bill)
     return render_to_response('bill.html',{'bill': bill, 'outStockRecordset':outStockRecordset })
         
+def QueryInventory(request, inStockBatchID):    
+    inStockBatch = InStockBatch.objects.get(pk=inStockBatchID)
+    return render_to_response('inventory_result.html',{'inStockBatch': inStockBatch,  'instockrecordSet': inStockBatch.instockrecord_set.all()})
+        
+        
 def SupplierList(request):
     prefix = request.GET.get('q', "")
     logging.debug("get ajax autocomplete query q: " + prefix)
@@ -207,6 +218,11 @@ def ProductList(request):
     list = ''
     for product in productList:
         list = list + product.name+ "\n"
+        
+    serialNoSet = SerialNo.objects.filter(Q(serial_no__contains=prefix))
+    for serialno in serialNoSet:
+        list = list + serialno.inStockRecord.product.name+ "\n"    
+    
     return HttpResponse(list, mimetype="text/plain")
     
 def CustomerList(request):

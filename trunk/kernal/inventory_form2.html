@@ -56,7 +56,7 @@
         </div>      
 
         <div id="overall_sale">  	
-                <table>
+                <table width="100%">
                     <th colspan=2 style="border-bottom: black 1.5px solid;"> Receivings Record</th>
                     {{form}}             
                 </table>
@@ -118,10 +118,14 @@
 									"<tr id=\""+pk+"_tr\">"+
 									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
 									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> [<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+
-									"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data[i].fields.retail_price+" \" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
+									"<td><input type=\"text\" name=\""+pk+"_cost\" id=\""+pk+"_cost\" value=\""+data[i].fields.retail_price+" \" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
 									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') /></td>"+
-									"<td><a href=\"#\" id=\""+pk+"_serial\" class='totalPrice'>optional</a></td>"+
+									"<td><a href=\"#\" class='totalPrice' onclick=\"buildSerialNo("+pk+");return false;\">optional</a></td>"+
+									"</tr>"+
+									"<tr>"+
+									"<td colspan=5 id=\""+pk+"_serial_td\" style='display: none'><div id=\""+pk+"_serial\" ></div></td>"+
 									"</tr>"
+                                    
 							;
 							$('#sell_detail').html(row);
 							/**
@@ -157,6 +161,25 @@
                 },
             });            
     });
+    
+    function buildSerialNo(pk){
+       
+
+        if($("#"+pk+"_serial_td").css("display") == "block"){
+            $("#"+pk+"_serial_td").css("display", "none");
+        }else{
+            $("#"+pk+"_serial_td").css("display", "block");
+        }        
+
+        var idx = $("#"+pk+"_quantity").val();
+        var inputField = '';
+        for (var i = 0 ; i < idx ; i ++){
+            inputField += "<input name="+pk+"_serial-"+i+"></input> <br/>";
+        }
+         
+        $("#"+pk+"_serial").html(inputField);
+        
+    }
     
     function quantityPlugOne(pk){
             var quantityField = $("#"+pk+"_quantity");
