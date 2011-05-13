@@ -64,13 +64,6 @@
           </div>  		 	
           <div id='sale_details'>  		
           <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
-            <h3 style="margin: 5px 0 5px 0">OR</h3>  		
-            <a href="/supplier/create/" class="thickbox none" title="New Supplier">
-
-              <div class='small_button' style='margin:0 auto;'>
-                <span>New Supplier
-                </span>
-              </div></a>		
           </div> 	
           </div>          	     	
           <div class="clearfix" style="margin-bottom:1px;">&nbsp;
@@ -98,7 +91,19 @@
         if(event.keyCode != '13'){
             return;
         }
-            
+		if($("#id_supplier").val() == ''){
+			return;
+		}
+		if($("#id_do_date").val() == ''){
+			return;
+		}
+		if($("#id_do_no").val() == ''){
+			return;
+		}
+		if($("#id_inv_no").val() == ''){
+			return;
+		}
+
             /**
                 query product infor by ajax
             **/

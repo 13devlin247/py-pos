@@ -56,16 +56,11 @@
         </div>      
 
         <div id="overall_sale">  	
-            <label id="customer_label" for="customer">Select Customer (Optional)
+            <label id="customer_label" for="customer">Select Customer
             </label>  		
             <input type="text" name="customer" value="" id="customer" size="30"  />		
           <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
-            <h3 style="margin: 5px 0 5px 0">OR</h3>  		
-            <a href="/customer/create/" class="thickbox none" title="New Customer">
-              <div class='small_button' style='margin:0 auto;'>
-                <span>New Customer
-                </span>
-              </div></a>		
+            		
           </div>  		
           <div class="clearfix">&nbsp;
           </div>  		 	
@@ -117,7 +112,10 @@
         if(event.keyCode != '13'){
             return;
         }
-            
+    if($("#customer").val()==''){
+		alert("Please fulfill customer field.");
+		return;
+	}        
             /**
                 query product infor by ajax
             **/
