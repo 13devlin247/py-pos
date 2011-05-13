@@ -15,6 +15,7 @@
  text-align: left;
 }
 
+
 </style>
 <form action="/inventory/confirm" method="get" id="sales">
 <div id="content_area_wrapper">  
@@ -56,7 +57,7 @@
         </div>      
 
         <div id="overall_sale">  	
-                <table width="100%">
+                <table id="supplierForm">
                     <th colspan=2 style="border-bottom: black 1.5px solid;"> Receivings Record</th>
                     {{form}}             
                 </table>
@@ -92,15 +93,19 @@
             return;
         }
 		if($("#id_supplier").val() == ''){
+			alert("please fulfill Supplier field");
 			return;
 		}
 		if($("#id_do_date").val() == ''){
+			alert("please fulfill Do date field");
 			return;
 		}
 		if($("#id_do_no").val() == ''){
+			alert("please fulfill Do no field");
 			return;
 		}
 		if($("#id_inv_no").val() == ''){
+			alert("please fulfill Inv no field");
 			return;
 		}
 
