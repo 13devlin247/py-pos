@@ -1,7 +1,12 @@
-{% extends "admin/base_site.html" %}
+{% extends "product.php.html" %}
 {% load i18n %}
 
-{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% load adminmedia %}{% admin_media_prefix %}css/dashboard.css" />{% endblock %}
+{% block extrastyle %}
+{{ block.super }}<link rel="stylesheet" type="text/css" href="{% load adminmedia %}{% admin_media_prefix %}css/dashboard.css" />
+<link rel="stylesheet" type="text/css" href="/static/css/base.css" />
+
+{% endblock %}
+
 
 {% block coltype %}colMS{% endblock %}
 

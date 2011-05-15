@@ -5,6 +5,7 @@ from django.forms.extras.widgets import SelectDateWidget
 from django.contrib.admin.widgets import AdminDateWidget 
 import datetime
 from django.contrib.localflavor.us.models import PhoneNumberField
+from django.contrib.auth.models import User
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),  
@@ -87,6 +88,7 @@ class InStockBatch(models.Model):
     do_date = models.DateField(auto_now_add = False)
     invoice_no = models.CharField(max_length=100)
     do_no = models.CharField(max_length=100)
+#  user = models.ForeignKey(User)
     create_at = models.DateTimeField(auto_now_add = True)
     
         
