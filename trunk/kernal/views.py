@@ -14,6 +14,8 @@ from django.core import serializers
 from django.db.models import Count
 from datetime import date
 from django.db.models import Q
+from django.contrib.auth.models import User
+from django.contrib.sessions.models import Session
 
 # import the logging library
 import logging
@@ -102,9 +104,15 @@ def InventoryConfirm(request):
             supplier = Supplier.objects.filter(name=supplier_name)[0:1].get()
         except Supplier.DoesNotExist:
             supplier = None # supplier not found
-            
+        
+#        session_key = request.GET.get('sessionid', "0")
+#        session = Session.objects.get(session_key=session_key)
+#        uid = session.get_decoded().get('_auth_user_id')
+#        user = User.objects.get(pk=uid)
+        
         inStockBatch = InStockBatch()
         inStockBatch.supplier = supplier
+#        user = user
         today = date.today()
         inStockBatch.do_date = request.GET.get('do_date', today.strftime("%d/%m/%y"))
         inStockBatch.invoice_no = request.GET.get('inv_no', "-")

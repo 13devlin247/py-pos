@@ -430,7 +430,16 @@ input[type=text], input[type=password], textarea, select, .vTextField {
 }
 
 .module table {
+    width: 300px
     border-collapse: collapse;
+}
+
+.module table tr th{
+    width: 10%;
+}
+
+.module table tr td{
+    width: 10%;    
 }
 
 /* MESSAGES & ERRORS */
@@ -647,6 +656,7 @@ table#change-history tbody th {
 
 #content {
     margin: 10px 15px;
+    width: 100%;
 }
 
 #header {
@@ -655,10 +665,12 @@ table#change-history tbody th {
 
 #content-main {
     /*float: left;*/
-    width: 30%;
-	border: solid red 1px;
-	text-align: center;
+    width: 100%;
 }
+#content-main label{
+    margin: 0 0 0 10em;
+}
+
 
 #content-related {
     float: right;
