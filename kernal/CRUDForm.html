@@ -7,6 +7,12 @@
 {% endblock %}
 
 {% block content %}
+Session: {{sessionid}} <br/>
+Uid: {{user.pk}}<br/>
+name: {{user.username}}<br/>
+{% for key, value in session.items%}
+    {{key}} : {{value}} <br/>
+{% endfor %}
 <form action='{{submit_form}}' method='GET'>
 <table>
 {{ form }}    

@@ -8,8 +8,8 @@ from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm
 from pos.kernal.views import SupplierSave, CustomerSave
 from pos.kernal.views import SupplierList, CustomerList, ProductList
 from pos.kernal.views import CustomerInfo, SupplierInfo
-
-
+from pos.kernal.views import test
+from django.contrib.auth.decorators import login_required
 
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -152,6 +152,10 @@ urlpatterns = patterns('',
     #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
     #url(r'^sales/confirm/$', printData),
     (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
+    (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     
+    
+    # testing
+    url(r'^test/$', login_required(test)),
 
 )
