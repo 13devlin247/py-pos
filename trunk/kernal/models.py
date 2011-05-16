@@ -88,7 +88,7 @@ class InStockBatch(models.Model):
     do_date = models.DateField(auto_now_add = False)
     invoice_no = models.CharField(max_length=100)
     do_no = models.CharField(max_length=100)
-#  user = models.ForeignKey(User)
+    user = models.ForeignKey(User)
     create_at = models.DateTimeField(auto_now_add = True)
     
         
@@ -120,6 +120,7 @@ class Bill(models.Model):
     change = models.DecimalField(max_digits=100,  decimal_places=2)
     customer = models.ForeignKey(Customer)
     create_at = models.DateTimeField(auto_now_add = True)
+    user = models.ForeignKey(User)
     def __unicode__(self):
         return " $" + str(self.total_price) + " "+str(self.create_at) 
 

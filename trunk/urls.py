@@ -94,65 +94,65 @@ urlpatterns = patterns('',
 
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^$', list_detail.object_list, product_list_view),
+    url(r'^$', login_required(list_detail.object_list), product_list_view),
     
-    url(r'^product/create/$', create_update.create_object, product_form), 
-    url(r'^product/search/$', list_detail.object_list, product_list_view),
-    url(r'^product/update/(?P<productID>\w+)', ProductUpdateView), 
-    url(r'^product/delete/$', ProductDelete),    
-    url(r'^product/save/(?P<productID>\w+)*', ProductSave), # controller
-    url(r'^product/info/(?P<query>\w+)*', ProductInfo), # controller
-    url(r'^product/inventory/(?P<pk>\w+)*', ProductInventory), # controller
+    url(r'^product/create/$', login_required(create_update.create_object), product_form), 
+    url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
+    url(r'^product/update/(?P<productID>\w+)', login_required(ProductUpdateView)), 
+    url(r'^product/delete/$', login_required(ProductDelete)),    
+    url(r'^product/save/(?P<productID>\w+)*', login_required(ProductSave)), # controller
+    url(r'^product/info/(?P<query>\w+)*', login_required(ProductInfo)), # controller
+    url(r'^product/inventory/(?P<pk>\w+)*', login_required(ProductInventory)), # controller
 
-    url(r'^supplier/create/$', create_update.create_object, supplier_form), 
-    url(r'^supplier/search/$', list_detail.object_list, product_list_view),
-    url(r'^supplier/update/(?P<productID>\w+)', ProductUpdateView), 
-    url(r'^supplier/delete/$', ProductDelete),    
-    url(r'^supplier/save/(?P<supplierID>\w+)*', SupplierSave), # controller
+    url(r'^supplier/create/$', login_required(create_update.create_object), supplier_form), 
+    url(r'^supplier/search/$', login_required(list_detail.object_list), product_list_view),
+    url(r'^supplier/update/(?P<productID>\w+)', login_required(ProductUpdateView)), 
+    url(r'^supplier/delete/$', login_required(ProductDelete)),    
+    url(r'^supplier/save/(?P<supplierID>\w+)*', login_required(SupplierSave)), # controller
 
-    url(r'^customer/create/$', create_update.create_object, customer_form), 
-    url(r'^customer/search/$', list_detail.object_list, product_list_view),
-    url(r'^customer/update/(?P<productID>\w+)', ProductUpdateView), 
-    url(r'^customer/delete/$', ProductDelete),    
-    url(r'^customer/save/(?P<customerID>\w+)*', CustomerSave), # controller    
-    url(r'^customer/info/(?P<query>\w+)*', CustomerInfo),    # customer info json
-    url(r'^supplier/info/(?P<query>\w+)*', SupplierInfo),    # supplier info json
+    url(r'^customer/create/$', login_required(create_update.create_object), customer_form), 
+    url(r'^customer/search/$', login_required(list_detail.object_list), product_list_view),
+    url(r'^customer/update/(?P<productID>\w+)', login_required(ProductUpdateView)), 
+    url(r'^customer/delete/$', login_required(ProductDelete)),    
+    url(r'^customer/save/(?P<customerID>\w+)*', login_required(CustomerSave)), # controller    
+    url(r'^customer/info/(?P<query>\w+)*', login_required(CustomerInfo)),    # customer info json
+    url(r'^supplier/info/(?P<query>\w+)*', login_required(SupplierInfo)),    # supplier info json
     
     
-   url(r'^supplier/ajax/$', SupplierList),    
-   url(r'^customer/ajax/$', CustomerList),    
-   url(r'^product/ajax/$', ProductList),    
+   url(r'^supplier/ajax/$', login_required(SupplierList)),    
+   url(r'^customer/ajax/$', login_required(CustomerList)),    
+   url(r'^product/ajax/$', login_required(ProductList)),    
    
-    url(r'^inventory/list/$', direct_to_template,  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
-    url(r'^inventory/list2/$', direct_to_template,  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
-    url(r'^inventory/confirm/$', InventoryConfirm),    
-    url(r'^^inventory/result/(?P<inStockBatchID>\w+)*', QueryInventory),                                
-    url(r'^in_stock_record/create/$', create_update.create_object, in_stock_record_crud_view), 
-    url(r'^in_stock_record/search/$', list_detail.object_list,  in_stock_record_list_view), 
-    url(r'^in_stock_record/save/$', InStockRecordSave), 
+    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
+    url(r'^inventory/list2/$', login_required(direct_to_template),  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
+    url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
+    url(r'^inventory/result/(?P<inStockBatchID>\w+)*', login_required(QueryInventory)),                                
+    url(r'^in_stock_record/create/$', login_required(create_update.create_object), in_stock_record_crud_view), 
+    url(r'^in_stock_record/search/$', login_required(list_detail.object_list),  in_stock_record_list_view), 
+    url(r'^in_stock_record/save/$', login_required(InStockRecordSave)), 
 
-    url(r'^out_stock_record/create/$', create_update.create_object, out_stock_record_crud_view), 
-    url(r'^out_stock_record/search/$', list_detail.object_list,  out_stock_record_list_view), 
-    url(r'^out_stock_record/save/$', OutStockRecordSave), 
-    url(r'^sales/order/$', direct_to_template,  {'template': 'pos.html'}),
-    url(r'^sales/list/$', direct_to_template,  {'template': 'sales_form2.html'}),
-    url(r'^sales/list1/$', direct_to_template,  {'template': 'sales_form.html'}),
-    url(r'^sales/confirm/$', SalesConfirm),
-    url(r'^sales/invoice/$', direct_to_template,  {
+    url(r'^out_stock_record/create/$', login_required(create_update.create_object), out_stock_record_crud_view), 
+    url(r'^out_stock_record/search/$', login_required(list_detail.object_list),  out_stock_record_list_view), 
+    url(r'^out_stock_record/save/$', login_required(OutStockRecordSave)), 
+    url(r'^sales/order/$', login_required(direct_to_template),  {'template': 'pos.html'}),
+    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_form2.html'}),
+    url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
+    url(r'^sales/confirm/$', login_required(SalesConfirm)),
+    url(r'^sales/invoice/$', login_required(direct_to_template),  {
                             'template': 'under_constructor.html', 
                             'extra_context':{ 'msg':'Data insert success !! but bill page is under constructor !!'}
                             }),
-    url(r'^underconstructor/$', direct_to_template,  {
+    url(r'^underconstructor/$', login_required(direct_to_template),  {
                             'template': 'under_constructor.html', 
                             'extra_context':{ 'msg':'this page is under constructor !!'}
                             }),                            
-    url(r'^report/daily/$', ReportDaily),                        
+    url(r'^report/daily/$', login_required(ReportDaily)),                        
     #url(r'^sales/bill/$', direct_to_template,  {'template': 'bill.html'}),
-    url(r'^sales/bill/(?P<billID>\w+)*', QueryBill),
+    url(r'^sales/bill/(?P<billID>\w+)*', login_required(QueryBill)),
     #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
     #url(r'^sales/confirm/$', printData),
     (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
-    (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
+    (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
     
     
     # testing
