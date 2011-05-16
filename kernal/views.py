@@ -105,14 +105,11 @@ def InventoryConfirm(request):
         except Supplier.DoesNotExist:
             supplier = None # supplier not found
         
-#        session_key = request.GET.get('sessionid', "0")
-#        session = Session.objects.get(session_key=session_key)
-#        uid = session.get_decoded().get('_auth_user_id')
-#        user = User.objects.get(pk=uid)
+        
         
         inStockBatch = InStockBatch()
         inStockBatch.supplier = supplier
-#        user = user
+        inStockBatch.user = User.objects.get(pk=request.session.get('_auth_user_id'))
         today = date.today()
         inStockBatch.do_date = request.GET.get('do_date', today.strftime("%d/%m/%y"))
         inStockBatch.invoice_no = request.GET.get('inv_no', "-")
@@ -161,11 +158,12 @@ def SalesConfirm(request):
         bill.tendered_amount = request.GET.get('amountTendered', '0')
         bill.change = request.GET.get('change', '0')
         bill.customer = customer
+        bill.user = User.objects.get(pk=request.session.get('_auth_user_id'))
         bill.fulfill_payment = False
         bill.save()
         
         payment = Payment()
-        payment.bill = billCustomerInfo, SupplierInfo
+        payment.bill = bill
         payment.term = "Cash"
         payment.type = "Cash Sales"
         payment.status = "Complete"
@@ -394,8 +392,6 @@ def countInventory(inStockRecordSet, outStockRecord):
     return count
 
 def test(request):
-    
-    
     #uid = session.get_decoded().get('_auth_user_id')
     user = None
     if request.session.get('_auth_user_id'):
