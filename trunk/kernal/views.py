@@ -165,7 +165,7 @@ def SalesConfirm(request):
         bill.save()
         
         payment = Payment()
-        payment.bill = bill
+        payment.bill = billCustomerInfo, SupplierInfo
         payment.term = "Cash"
         payment.type = "Cash Sales"
         payment.status = "Complete"
@@ -393,3 +393,13 @@ def countInventory(inStockRecordSet, outStockRecord):
     count = count - sellCount
     return count
 
+def test(request):
+    
+    
+    #uid = session.get_decoded().get('_auth_user_id')
+    user = None
+    if request.session.get('_auth_user_id'):
+        user = User.objects.get(pk=request.session.get('_auth_user_id'))
+    
+    #return render_to_response('CRUDForm.html',{'sessionid':session_key,  'user':user,  })
+    return render_to_response('CRUDForm.html',{'session': request.session,  'user': user}, )
