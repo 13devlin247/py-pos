@@ -6,6 +6,7 @@ from pos.kernal.models import Supplier, SupplierForm
 from pos.kernal.models import Customer, CustomerForm 
 from pos.kernal.models import Payment 
 from pos.kernal.models import SerialNo
+from pos.kernal.models import Counter
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
@@ -16,6 +17,7 @@ from datetime import date
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
+from django.contrib.auth import REDIRECT_FIELD_NAME
 
 # import the logging library
 import logging
@@ -390,6 +392,16 @@ def countInventory(inStockRecordSet, outStockRecord):
         count = count + inStockRecord.quantity
     count = count - sellCount
     return count
+
+def checkCounter(function):
+    today = date.today()
+    counter = Counter.objects.filter(create_at = today )
+    if not counter:
+            pass
+    function(request,  {'template': 'inventory_form2.html',  'extra_context': {'form': None} })
+    return function
+        
+        #return HttpResponseRedirect('/out_stock_record/create/')
 
 def test(request):
     #uid = session.get_decoded().get('_auth_user_id')
