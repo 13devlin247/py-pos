@@ -10,6 +10,7 @@ from pos.kernal.views import SupplierList, CustomerList, ProductList
 from pos.kernal.views import CustomerInfo, SupplierInfo
 from pos.kernal.views import test
 from django.contrib.auth.decorators import login_required
+from pos.kernal.views import checkCounter
 
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -123,7 +124,7 @@ urlpatterns = patterns('',
    url(r'^customer/ajax/$', login_required(CustomerList)),    
    url(r'^product/ajax/$', login_required(ProductList)),    
    
-    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
+    url(r'^inventory/list/$', login_required(checkCounter(direct_to_template)),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/list2/$', login_required(direct_to_template),  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
     url(r'^inventory/result/(?P<inStockBatchID>\w+)*', login_required(QueryInventory)),                                
