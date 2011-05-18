@@ -393,13 +393,10 @@ def countInventory(inStockRecordSet, outStockRecord):
     count = count - sellCount
     return count
 
-def checkCounter(function):
-    today = date.today()
-    counter = Counter.objects.filter(create_at = today )
-    if not counter:
-            pass
-    function(request,  {'template': 'inventory_form2.html',  'extra_context': {'form': None} })
-    return function
+def checkCounter(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
+    def decorate(view_func):
+        logging.error("here we are");
+        return function
         
         #return HttpResponseRedirect('/out_stock_record/create/')
 
