@@ -91,7 +91,6 @@ class InStockBatch(models.Model):
     user = models.ForeignKey(User)
     create_at = models.DateTimeField(auto_now_add = True)
     
-        
 class InStockRecord(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
     barcode = models.CharField(max_length=100)
@@ -100,12 +99,15 @@ class InStockRecord(models.Model):
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     create_at = models.DateTimeField(auto_now_add = True)
     
+    def natural_key(self):
+        return (self.product.name)    
+        
     def __unicode__(self):
         return self.barcode + " " +str(self.cost) + " " + str(self.quantity)
 
 class SerialNo(models.Model):
     inStockRecord = models.ForeignKey(InStockRecord)
-    serial_no = models.CharField(max_length=100)
+    serial_no = models.CharField(max_length=100, primary_key=True)
     create_at = models.DateTimeField(auto_now_add = True)
     
     def __unicode__(self):
@@ -122,7 +124,7 @@ class Bill(models.Model):
     create_at = models.DateTimeField(auto_now_add = True)
     user = models.ForeignKey(User)
     def __unicode__(self):
-        return " $" + str(self.total_price) + " "+str(self.create_at) 
+        return " $" + str(self.total_price) + " "+str(self.create_at) + " Cashier: " + self.user.username 
 
 class Payment(models.Model):
     bill = models.ForeignKey(Bill)
@@ -151,6 +153,7 @@ class OutStockRecord(models.Model):
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     amount = models.DecimalField(max_digits=100,  decimal_places=2) 
     sell_index = models.IntegerField(blank=True)
+    serial_no = models.ForeignKey(SerialNo, blank=True)
     profit = models.DecimalField(max_digits=100,  decimal_places=2, blank=True)
     create_at = models.DateTimeField(auto_now_add = True)
 
