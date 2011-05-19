@@ -54,8 +54,8 @@ tfoot td {
               <tr>        
                 <td class="Receipt">            Customer         </td>        
                 <td class="Receipt">            <b>{{bill.customer}}                    </b></td>        
-                <td class="Receipt">                   </td>        
-                <td class="Receipt">                    </td>    
+                <td class="Receipt">            paid by        </td>        
+                <td class="Receipt">            {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
               </tr>    
               <tr>        
                 <td colspan="4">            
@@ -79,7 +79,7 @@ tfoot td {
 				{{record}}
 				<tr>
                 <td class="Receipt">{{outStockRecord.quantity}}</td>
-                <td class="Receipt">{{outStockRecord.product.name}}</td>
+                <td class="Receipt">{{outStockRecord.product.name}} {% if  outStockRecord.serial_no.serial_no %}<div style="font-weight: bolder"> IMIC: {{outStockRecord.serial_no.serial_no}}</div>{% endif %}</td>
                 <td align="right">{{outStockRecord.unit_sell_price}}</td>
                 <td align="right">{{outStockRecord.amount}}</td>
 				</tr>

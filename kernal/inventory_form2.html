@@ -87,6 +87,12 @@
 </form>    
 <script type="text/javascript">
     var productTable = new Array();
+
+  $("#item").autocomplete("/product/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
+
     $("#item").keydown(function(event){
         if(event.keyCode != '13'){
             return;
@@ -274,10 +280,6 @@
   
   $("#id_do_date").datepicker({dateFormat: 'yy-mm-dd'});
 
-  $("#item").autocomplete("/product/ajax/", {
-		width: 260,
-		selectFirst: false
-	});
     
   $("#id_supplier").autocomplete("/supplier/ajax/", {
 		width: 260,
