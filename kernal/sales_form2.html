@@ -58,7 +58,7 @@
         <div id="overall_sale">  	
             <label id="customer_label" for="customer">Select Customer
             </label>  		
-            <input type="text" name="customer" value="" id="customer" size="30"  />		
+            <input type="text" name="customer" value="Cash" id="customer" size="30"  />		
           <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
             		
           </div>  		
@@ -107,15 +107,15 @@
 </form>    
 <script type="text/javascript">
     var productTable = new Array();
-    var quantityTable = new Array();    
     $("#item").keydown(function(event){
         if(event.keyCode != '13'){
             return;
         }
-    if($("#customer").val()==''){
-		alert("Please fulfill customer field.");
-		return;
-	}        
+		
+		if($("#customer").val()==''){
+			alert("Please fulfill customer field.");
+			return;
+		}        
             /**
                 query product infor by ajax
             **/
@@ -128,25 +128,19 @@
 						var pk = data[i].pk;
 
 						if ( productTable[pk] == undefined){
-							row = $('#sell_detail').html();
+							// row = $('#sell_detail').html();
 							productTable[pk] = data;       
-							quantityTable[pk] = 1;         
-							row += ""+
+							row = ""+
 									"<tr id=\""+pk+"_tr\">"+
 									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
-									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> [<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+
+									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> IMIC: " + pk + "</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
 									"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data[i].fields.retail_price+" \" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
-									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') /></td>"+
+									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"' onChange=resetQuantityField('"+pk+"')) /></td>"+
 									"<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data[i].fields.retail_price+"</span></td>"+
 									"</tr>"
 							;
-							$('#sell_detail').html(row);
-							/**
-								keep value if update table
-							**/
-							for (var key in productTable){
-								$("#"+key+"_quantity").attr("value", quantityTable[key]);
-							}                    							
+							$('#sell_detail').append(row);
+
 							/**
 								query product inventory by ajax
 							**/
@@ -175,11 +169,17 @@
             });            
     });
     
+	function _build_serial_input_textfield_by_pk_and_quantity(pk, quantity){
+		var inputField = '';
+        for (var i = 0 ; i < quantity ; i ++){
+            inputField += "<input name="+pk+"_serial-"+i+"></input> <br/>";
+        }
+		return inputField;
+	}
     function quantityPlugOne(pk){
             var quantityField = $("#"+pk+"_quantity");
             var currentQuantity = parseInt(quantityField.val());
             quantityField.attr("value", currentQuantity+1);
-            quantityTable[pk] = currentQuantity+1;
     }
     function calcAmount(pk){
         var currentQuantity = parseInt($("#"+pk+"_quantity").val());
@@ -209,9 +209,17 @@
         calcSubTotalPrice();
         calcTotalPrice();
     }
+	
+	function resetQuantityField(pk){
+		$("#"+pk+"_serial").html();
+		var quantity = $("#"+pk+"_quantity").val();
+		var inputField = _build_serial_input_textfield_by_pk_and_quantity(pk, quantity);
+		$("#"+pk+"_serial").html(inputField);		
+	}
+	
     function removeItem(pk){
         delete productTable[pk];
-        delete quantityTable[pk];
+		$("#"+pk+"_serial_tr").remove();
         $("#"+pk+"_tr").remove();
         calcSubTotalPrice();
         calcTotalPrice();

@@ -120,10 +120,10 @@ urlpatterns = patterns('',
     url(r'^supplier/info/(?P<query>\w+)*', login_required(SupplierInfo)),    # supplier info json
     
     
-   url(r'^supplier/ajax/$', login_required(SupplierList)),    
-   url(r'^customer/ajax/$', login_required(CustomerList)),    
-   url(r'^product/ajax/$', login_required(ProductList)),    
-    url(r'^inventory/list/$', checkCounter(direct_to_template),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
+    url(r'^supplier/ajax/$', login_required(SupplierList)),    
+    url(r'^customer/ajax/$', login_required(CustomerList)),    
+    url(r'^product/ajax/$', login_required(ProductList)),    
+    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/list2/$', login_required(direct_to_template),  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
     url(r'^inventory/result/(?P<inStockBatchID>\w+)*', login_required(QueryInventory)),                                

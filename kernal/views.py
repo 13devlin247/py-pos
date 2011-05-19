@@ -152,6 +152,8 @@ def SalesConfirm(request):
             salesDict[barcode] [attr]= value
         
         customerName = request.GET.get('customer', 'Cash')
+        imei = request.GET.get('imei', '')
+        serial_no = SerialNo.objects.get(serial_no = imei)
         customer = Customer.objects.filter(name=customerName)[0]
         bill = Bill()
         bill.subtotal_price = request.GET.get('subTotal', '0')
@@ -178,7 +180,7 @@ def SalesConfirm(request):
             outStockRecord.barcode = barcode
             product = Product.objects.get(pk=barcode)
             outStockRecord.product = product            
-            
+            outStockRecord.serial_no = serial_no
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
             outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
@@ -224,12 +226,14 @@ def ProductList(request):
     logging.debug("get ajax autocomplete query q: " + prefix)
     productList = Product.objects.filter(Q(barcode__contains=prefix)|Q(name__contains=prefix))
     list = ''
-    for product in productList:
-        list = list + product.name+ "\n"
+    if productList:
+        for product in productList:
+            list = list + product.name+ "\n"
         
     serialNoSet = SerialNo.objects.filter(Q(serial_no__contains=prefix))
-    for serialno in serialNoSet:
-        list = list + serialno.inStockRecord.product.name+ "\n"    
+    if serialNoSet.count() > 0:
+        for serialno in serialNoSet:
+            list = list + serialno.serial_no + "\n"    
     
     return HttpResponse(list, mimetype="text/plain")
     
@@ -243,8 +247,26 @@ def CustomerList(request):
     return HttpResponse(list, mimetype="text/plain")    
     
 def ProductInfo(request, query):
-    logging.info(request, "check product: " + `query` + " info")
-   
+    logging.info("check product: %s info" % query)
+
+    # serialNoSet = SerialNo.objects.filter(Q(serial_no__contains=query))
+    try:
+        serialNo = SerialNo.objects.get(serial_no=query)
+        
+        if serialNo:
+            logging.info("SerialNo Found !! %s " % str(serialNo.serial_no))
+            product = serialNo.inStockRecord.product
+            serial_no = serialNo.serial_no
+            productSet = []
+            productSet.append(product)
+            json = serializers.serialize("json",  productSet)
+            newJson = json.replace("\"pk\": "+str(product.pk),"\"pk\": " + "\""+serial_no+"\"")
+            logging.info("Json: %s" % newJson)
+            return HttpResponse(newJson, mimetype="application/json")    
+        
+    except SerialNo.DoesNotExist:
+        logging.info("SerialNo Not Found !! %s, try search product barcode and name " % query)
+        
     productSet = Product.objects.filter((Q(barcode__contains=query)|Q(name__contains=query)))
     if not productSet:
         return HttpResponse("[{\"error\":true}]", mimetype="text/plain")    
@@ -253,7 +275,7 @@ def ProductInfo(request, query):
     
 def ProductInventory(request, pk):
     outStockRecord = None
-    logging.info(request, "check product: " + pk + "  inventory")
+    logging.info("check product: %s  inventory" % pk)
    
     inStockRecordSet = InStockRecord.objects.filter(product__pk=pk)
     if inStockRecordSet.count() == 0:
