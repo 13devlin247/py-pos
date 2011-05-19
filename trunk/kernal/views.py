@@ -152,8 +152,6 @@ def SalesConfirm(request):
             salesDict[barcode] [attr]= value
         
         customerName = request.GET.get('customer', 'Cash')
-        imei = request.GET.get('imei', '')
-        serial_no = SerialNo.objects.get(serial_no = imei)
         customer = Customer.objects.filter(name=customerName)[0]
         bill = Bill()
         bill.subtotal_price = request.GET.get('subTotal', '0')
@@ -169,6 +167,10 @@ def SalesConfirm(request):
         payment = Payment()
         payment.bill = bill
         payment.term = "Cash"
+        transactionNo = request.GET.get('transactionNo', '')
+        if transactionNo != '': 
+                payment.term = "CreaditCard"
+                payment.transaction_no = transactionNo
         payment.type = "Cash Sales"
         payment.status = "Complete"
         payment.save()
@@ -178,9 +180,18 @@ def SalesConfirm(request):
             outStockRecord = OutStockRecord()
             outStockRecord.bill = bill
             outStockRecord.barcode = barcode
-            product = Product.objects.get(pk=barcode)
-            outStockRecord.product = product            
-            outStockRecord.serial_no = serial_no
+
+            try:
+                imei = request.GET.get(barcode+'_imei', '')
+                serial_no = SerialNo.objects.get(serial_no = imei)
+                outStockRecord.serial_no = serial_no
+                product = serial_no.inStockRecord.product
+                outStockRecord.product = product            
+            except SerialNo.DoesNotExist:
+                product = Product.objects.get(pk=barcode)
+                outStockRecord.product = product            
+                logging.info("no imei no. found ")
+            
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
             outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
@@ -260,7 +271,8 @@ def ProductInfo(request, query):
             productSet = []
             productSet.append(product)
             json = serializers.serialize("json",  productSet)
-            newJson = json.replace("\"pk\": "+str(product.pk),"\"pk\": " + "\""+serial_no+"\"")
+            #newJson = json.replace("\"pk\": "+str(product.pk),"\"pk\": " + "\""+serial_no+"\"")
+            newJson = json.replace("\"pk\"","\"imei\": " + "\""+serial_no+"\", \"pk\"")
             logging.info("Json: %s" % newJson)
             return HttpResponse(newJson, mimetype="application/json")    
         

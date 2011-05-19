@@ -131,6 +131,7 @@ class Payment(models.Model):
     term = models.CharField(max_length=100)
     type = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
+    transaction_no = models.CharField(max_length=100, blank = True)
     create_at = models.DateTimeField(auto_now_add = True)
 
     def __unicode__(self):
@@ -153,7 +154,7 @@ class OutStockRecord(models.Model):
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     amount = models.DecimalField(max_digits=100,  decimal_places=2) 
     sell_index = models.IntegerField(blank=True)
-    serial_no = models.ForeignKey(SerialNo, blank=True)
+    serial_no = models.ForeignKey(SerialNo, blank=True,  null=True)
     profit = models.DecimalField(max_digits=100,  decimal_places=2, blank=True)
     create_at = models.DateTimeField(auto_now_add = True)
 

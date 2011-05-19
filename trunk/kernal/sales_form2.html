@@ -11,8 +11,12 @@
     <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos_print.css"  media="print"/>
 <style type=text/css">
 .displayCustomer{
- border: solid red 1px;
  text-align: left;
+}
+
+.float_left{
+ border: solid red 1px;
+ vertical-align: middle;
 }
 
 </style>
@@ -39,9 +43,9 @@
           <table id="register">  
             <thead>  
               <tr>  
-                <th style="width:30%;">Item #
+                <th style="width:auto">Item #
                 </th>  
-                <th style="width:30%;">Item Name
+                <th style="width:auto">Item Name
                 </th>  
                 <th style="width:11%;">Price
                 </th>  
@@ -71,7 +75,7 @@
             </div>    				
             <div class="float_left" style='width:55%;'>Discount:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice()" autocomplete="off" />
+            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
             </div>  		 		
             <div class="float_left" style='width:55%;'>Total:
             </div>  		
@@ -81,11 +85,19 @@
             </div>  		
             <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="amountTendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
             </div>  	
+	<div id="change_block">
             <div class="float_left" style='width:55%;'>Change:
             </div>  		
             <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="change" value="0.00" id="change" size="10" style="border: none; background: transparent;"/>
             </div>  	
-			
+	</div>		
+	<div id="creaditCard_block" style="display: none">
+            <div class="float_left" style='width:55%;'>Transaction No:
+            </div>  		
+            <div class="float_left" style="width:45%;font-weight:bold;"><input type="text" name="transactionNo" id="transactionNo" size="10" />
+            </div>  	
+	</div>			
+	
           </div>          	     	
           <div class="clearfix" style="margin-bottom:1px;">&nbsp;
           </div>  		    
@@ -94,6 +106,20 @@
               <div id="add_payment_form">			
                 <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				
                   <span>Confirm
+                  </span>  			
+                </div>  		
+            </div>  		
+            <div style="">    			
+              <div>			
+                <div class='small_button' id='creadit_card' style='float:right;margin-top:5px;'>  				
+                  <span>Creadit Card
+                  </span>  			
+                </div>  		
+            </div>  		
+            <div style="">    			
+              <div>			
+                <div class='small_button' id='cash' style='float:right;margin-top:5px;display:none'>  				
+                  <span>Cash
                   </span>  			
                 </div>  		
             </div>  		
@@ -107,6 +133,12 @@
 </form>    
 <script type="text/javascript">
     var productTable = new Array();
+
+  $("#item").autocomplete("/product/ajax/", {
+		width: 260,
+		selectFirst: false
+	});
+
     $("#item").keydown(function(event){
         if(event.keyCode != '13'){
             return;
@@ -126,6 +158,9 @@
                     for (var i = 0; i < data.length; i++){
                         var barcode = data[i].fields.barcode;
 						var pk = data[i].pk;
+                        if('imei' in data[i]){
+                            pk = data[i].imei;
+                        }
 
 						if ( productTable[pk] == undefined){
 							// row = $('#sell_detail').html();
@@ -133,10 +168,10 @@
 							row = ""+
 									"<tr id=\""+pk+"_tr\">"+
 									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
-									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> IMIC: " + pk + "</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
+									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data[i].imei+"\" readonly=false size=\"18\" style=\"border: none; background: transparent;\"/></td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
 									"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data[i].fields.retail_price+" \" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
 									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"' onChange=resetQuantityField('"+pk+"')) /></td>"+
-									"<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data[i].fields.retail_price+"</span></td>"+
+									"<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data[i].fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data[i].pk+"\" /></td>"+
 									"</tr>"
 							;
 							$('#sell_detail').append(row);
@@ -145,10 +180,10 @@
 								query product inventory by ajax
 							**/
 							$.ajax({
-								url: "/product/inventory/"+pk,
+								url: "/product/inventory/"+data[i].pk,
 								type: "JSON",
 								success: function(data){  
-									$("#"+pk+"_stockCount").html(data[0].inventory);
+									$("#"+data[i].pk+"_stockCount").html(data[0].inventory);
 								},
 								error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
 								complete: function(data){},
@@ -225,11 +260,6 @@
         calcTotalPrice();
     }
 
-  $("#item").autocomplete("/product/ajax/", {
-		width: 260,
-		selectFirst: false
-	});
-    
      $("#customer").autocomplete("/customer/ajax/", {
 		width: 260,
 		selectFirst: false
@@ -261,7 +291,26 @@
     $("#confirm").click(function(){
         $("#sales").submit();
     });
-  
+
+    $("#creadit_card").click(function(){
+	calcTotalPrice();
+        $("#amount_tendered").attr("value",$("#total").val());
+	calcChange();
+        $("#creadit_card").css("display","none");
+        $("#cash").css("display","block");
+        $("#change_block").css("display","none");
+        $("#creaditCard_block").css("display","block");
+
+    });  
+
+    $("#cash").click(function(){
+        $("#creadit_card").css("display","block");
+        $("#cash").css("display","none");
+        $("#change_block").css("display","block");
+        $("#creaditCard_block").css("display","none");
+    });  
+
+
     
   </script>	
 {% endblock %}	
