@@ -47,6 +47,18 @@ def ReportDaily(request):
         profitTable[bill.pk] = total_proift
     return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable })
         
+def ReportPerson(request):
+    bills = Bill.objects.all()
+    profitTable = {}
+    
+    for bill in bills:
+        outStockRecords = OutStockRecord.objects.filter(bill=bill)
+        total_proift = 0
+        for outStockRecord in outStockRecords:
+            total_proift = total_proift + outStockRecord.profit
+        profitTable[bill.pk] = total_proift
+    return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable })
+    
 def printData(request):
     txt = ""
     salesDict = {}

@@ -46,7 +46,7 @@
 			{%for bill in bills%}
               <tr>  				<td>
                   <a href="#" class="expand">+</a></td>  								<td>
-                  <a href="#" target="_blank">{{bill.pk}}</a></td>  								<td>{{bill.create_at}}</td>  								<td>{{bill.user.username}}</td>  								<td>{{bill.customer}}</td>  								<td>{{bill.subtotal_price}}</td>  								<td>{{bill.discount}}</td>  								<td>{{bill.total_price}}</td> 								<td>{{bill.profit}}</td>  								
+                  <a href="/sales/bill/{{bill.pk}}" target="_blank">{{bill.pk}}</a></td>  								<td>{{bill.create_at}}</td>  								<td>{{bill.user.username}}</td>  								<td>{{bill.customer}}</td>  								<td>{{bill.subtotal_price}}</td>  								<td>{{bill.discount}}</td>  								<td>{{bill.total_price}}</td> 								<td>{{bill.profit}}</td>  								
               </tr>  			
 			{%endfor%}
             </tbody>  	

@@ -3,7 +3,8 @@ from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm, InStockBatchForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
-from pos.kernal.views import SalesConfirm, InventoryConfirm, ReportDaily, QueryBill,  QueryInventory
+from pos.kernal.views import SalesConfirm, InventoryConfirm, QueryBill,  QueryInventory
+from pos.kernal.views import ReportPerson, ReportDaily
 from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm
 from pos.kernal.views import SupplierSave, CustomerSave
 from pos.kernal.views import SupplierList, CustomerList, ProductList
@@ -147,6 +148,7 @@ urlpatterns = patterns('',
                             'extra_context':{ 'msg':'this page is under constructor !!'}
                             }),                            
     url(r'^report/daily/$', login_required(ReportDaily)),                        
+    url(r'^report/person/$', direct_to_template,  {'template': 'report_dailyPerson.html'}),                        
     #url(r'^sales/bill/$', direct_to_template,  {'template': 'bill.html'}),
     url(r'^sales/bill/(?P<billID>\w+)*', login_required(QueryBill)),
     #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
