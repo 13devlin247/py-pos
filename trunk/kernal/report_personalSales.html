@@ -1,0 +1,65 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;">Detailed Sales Report
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">05/10/2011-05/10/2011
+        </div>  
+        <div id="table_holder">  	
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>+
+                </th>  								
+                <th>Sale ID
+                </th>  								
+                <th>Price
+                </th>  								
+                <th>Cost
+                </th>  								
+                <th>Profit
+                </th>  								
+                <th>QTT
+                </th>  								
+              </tr>  		
+            </thead>  		
+            <tbody>  						
+			{%for bill in bills%}
+              <tr>  				<td>
+                  <a href="#" class="expand">+</a></td>  								<td>
+                  <a href="/sales/bill/{{bill.pk}}" target="_blank">{{bill.pk}}</a></td>  								<td>{{bill.create_at}}</td>  								<td>{{bill.user.username}}</td>  								<td>{{bill.customer}}</td>  								<td>{{bill.subtotal_price}}</td>  								
+              </tr>  			
+			{%endfor%}
+            </tbody>  	
+          </table>  
+        </div>  
+        <div id="report_summary">  	
+          <div class="summary_row">Subtotal: $125475.97
+          </div>  	
+          <div class="summary_row">Total: $140279.32
+          </div>  	
+          <div class="summary_row">Tax: $14803.35
+          </div>  	
+          <div class="summary_row">Profit: -$1057.70
+          </div>  
+        </div>  
+      </div>  
+    </div>
+
+{% endblock %}
+
+
+	
