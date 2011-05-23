@@ -153,7 +153,7 @@ def SalesConfirm(request):
     if request.method == 'GET':
         # check Counter 
         counter = None
-        counter = Counter.objects.filter(active=True)
+        counter = Counter.objects.filter(active=True).order_by('-create_at')
         if counter.count() == 0:
             return HttpResponseRedirect('/admin/kernal/counter/add/')    
             
@@ -219,17 +219,6 @@ def SalesConfirm(request):
             outStockRecord.profit = -1;
             outStockRecord.save()
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
-
-def __find_SalesIdx__(barcode):
-    sales_index = 0
-    #find last time sell record
-    lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
-    if lastOutStockRecordSet.count() != 0:
-        lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
-        sales_index = lastOutStockRecord.sell_index
-    logging.debug("barcode: "+barcode+"'s sales_index: " + str(sales_index))
-    return sales_index        
-            
         
 def QueryBill(request, billID):    
     bill = Bill.objects.get(pk=billID)
@@ -447,14 +436,14 @@ def countInventory(inStockRecordSet, outStockRecord):
 
 def CounterUpdate(request):
     counterID =  request.GET.get('counterID', "")
-    closeAmount =  request.GET.get('closeAmount', "")
     
+    # count close amount
     counter = Counter.objects.get(pk=counterID)
     bills = Bill.objects.filter(counter=counter)
-    totalAmount = 0
+    totalAmount = counter.initail_amount
     for bill in bills:
         totalAmount = totalAmount + bill.total_price
-    
+        _update_outStockRecord_set(bill)
     counter.close_amount = totalAmount
     counter.active = False
     counter.save()
@@ -462,8 +451,45 @@ def CounterUpdate(request):
     
     return HttpResponseRedirect('/counter/close/') 
     
-        
-    
+def _update_outStockRecord_set(bill):
+    outStockRecordSet = bill.outStockRecord_set.all()
+	for outStockRecord in outStockRecordSet:
+		sales_index = __find_SalesIdx__(outStockRecord.product)
+	
+def __find_SalesIdx__(product):
+    sales_index = 0
+    #find last time sell record
+    lastOutStockRecordSet = OutStockRecord.objects.filter(product=product)
+    if lastOutStockRecordSet.count() != 0:
+        lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
+        sales_index = lastOutStockRecord.sell_index
+    logging.debug("barcode: "+barcode+"'s sales_index: " + str(sales_index))
+    return sales_index    	
+
+def __find_cost__(salesIdx, product):
+    sales_index = 0
+    #find last time sell record
+	productCost = []
+	productQuantity = []
+	inStockRecordSet = InStockRecord.objects.filter(product=product)
+	currentQuantity = 0
+	salesIdxPosision = 0
+	
+	for idx,inStockRecord in inStockRecordSet:
+		productCost.append(inStockRecord.cost)
+		currentQuantity = currentQuantity + inStockRecord.quantity
+		productQuantity.append(currentQuantity)
+		if salesIdx <= currentQuantity:
+			salesIdxPosision = idx
+	
+	
+	
+    lastOutStockRecordSet = OutStockRecord.objects.filter(product=product)
+    if lastOutStockRecordSet.count() != 0:
+        lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
+        sales_index = lastOutStockRecord.sell_index
+    logging.debug("barcode: "+barcode+"'s sales_index: " + str(sales_index))
+    return sales_inde    
     
 def checkCounter(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
     def decorate(view_func):
