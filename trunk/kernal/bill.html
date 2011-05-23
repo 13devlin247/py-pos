@@ -54,8 +54,8 @@ tfoot td {
               <tr>        
                 <td class="Receipt">            Customer         </td>        
                 <td class="Receipt">            <b>{{bill.customer}}                    </b></td>        
-                <td class="Receipt">            paid by        </td>        
-                <td class="Receipt">            {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
+                <td class="Receipt">                    </td>        
+                <td class="Receipt">                    </td>    
               </tr>    
               <tr>        
                 <td colspan="4">            
@@ -112,7 +112,7 @@ tfoot td {
               </tr>        
               <tr>        
                 <td align="right" colspan=3>            Paid By         </td>        
-                <td align="right" colspan=2>             Cash        </td>    
+                <td align="right" colspan=2>             {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
               </tr>             
               <tr>        
                 <td colspan="10">            

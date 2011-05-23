@@ -151,6 +151,12 @@ def InventoryConfirm(request):
 def SalesConfirm(request):
     salesDict = {}
     if request.method == 'GET':
+        # check Counter 
+        counter = None
+        counter = Counter.objects.filter(active=True)
+        if counter.count() == 0:
+            return HttpResponseRedirect('/admin/kernal/counter/add/')    
+            
         # process Request parameter
         sales_item = request.GET.lists()
         for key,  value in sales_item:
@@ -172,6 +178,7 @@ def SalesConfirm(request):
         bill.tendered_amount = request.GET.get('amountTendered', '0')
         bill.change = request.GET.get('change', '0')
         bill.customer = customer
+        bill.counter = counter[0]
         bill.user = User.objects.get(pk=request.session.get('_auth_user_id'))
         bill.fulfill_payment = False
         bill.save()
@@ -181,8 +188,9 @@ def SalesConfirm(request):
         payment.term = "Cash"
         transactionNo = request.GET.get('transactionNo', '')
         if transactionNo != '': 
-                payment.term = "CreaditCard"
-                payment.transaction_no = transactionNo
+            logging.info("paid by creadit card")
+            payment.term = "CreaditCard"
+            payment.transaction_no = transactionNo
         payment.type = "Cash Sales"
         payment.status = "Complete"
         payment.save()
@@ -213,8 +221,6 @@ def SalesConfirm(request):
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
 
 def __find_SalesIdx__(barcode):
-
-
     sales_index = 0
     #find last time sell record
     lastOutStockRecordSet = OutStockRecord.objects.filter(barcode=barcode)
@@ -439,6 +445,26 @@ def countInventory(inStockRecordSet, outStockRecord):
     count = count - sellCount
     return count
 
+def CounterUpdate(request):
+    counterID =  request.GET.get('counterID', "")
+    closeAmount =  request.GET.get('closeAmount', "")
+    
+    counter = Counter.objects.get(pk=counterID)
+    bills = Bill.objects.filter(counter=counter)
+    totalAmount = 0
+    for bill in bills:
+        totalAmount = totalAmount + bill.total_price
+    
+    counter.close_amount = totalAmount
+    counter.active = False
+    counter.save()
+        
+    
+    return HttpResponseRedirect('/counter/close/') 
+    
+        
+    
+    
 def checkCounter(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
     def decorate(view_func):
         logging.error("here we are");
