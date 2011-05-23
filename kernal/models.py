@@ -6,6 +6,7 @@ from django.contrib.admin.widgets import AdminDateWidget
 import datetime
 from django.contrib.localflavor.us.models import PhoneNumberField
 from django.contrib.auth.models import User
+from django.contrib import admin
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),  
@@ -43,13 +44,13 @@ class Product(models.Model):
     barcode = models.CharField(max_length=100)
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
-    category = models.CharField(max_length=100,  choices=CHOICES_ITEM)
-    brand = models.CharField(max_length=100,  choices=CHOICES_ITEM)
-    type = models.CharField(max_length=100,  choices=CHOICES_ITEM)
+    category = models.ForeignKey(Category)
+    brand = models.ForeignKey(Brand)
+    type = models.ForeignKey(Type)
     retail_price = models.DecimalField(max_digits=100,  decimal_places=2)
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     uom = models.ForeignKey(UOM)
-    active = models.BooleanField(True)
+    active = models.BooleanField("actived product", True)
     
     def __unicode__(self):
         return self.name
@@ -112,6 +113,16 @@ class SerialNo(models.Model):
     
     def __unicode__(self):
         return str(self.inStockRecord.product.name) + " " +str(self.serial_no) 
+
+class Counter(models.Model):
+    initail_amount = models.DecimalField(max_digits=100,  decimal_places=2)
+    close_amount = models.DecimalField(max_digits=100,  decimal_places=2, null=True)
+    active = models.BooleanField("counter actived", True)
+    user = models.ForeignKey(User)
+    create_at = models.DateTimeField(auto_now_add = True)
+
+    def __unicode__(self):
+        return str(self.create_at) + " " + str(self.initail_amount) + " " + self.user.username         
         
 
 class Bill(models.Model):
@@ -122,6 +133,7 @@ class Bill(models.Model):
     change = models.DecimalField(max_digits=100,  decimal_places=2)
     customer = models.ForeignKey(Customer)
     create_at = models.DateTimeField(auto_now_add = True)
+    counter = models.ForeignKey(Counter)
     user = models.ForeignKey(User)
     def __unicode__(self):
         return " $" + str(self.total_price) + " "+str(self.create_at) + " Cashier: " + self.user.username 
@@ -136,15 +148,6 @@ class Payment(models.Model):
 
     def __unicode__(self):
         return str(self.bill) + " " + self.type + " " + self.status 
-
-class Counter(models.Model):
-    initail_amount = models.DecimalField(max_digits=100,  decimal_places=2)
-    close_amount = models.DecimalField(max_digits=100,  decimal_places=2, blank=True)
-    active = models.BooleanField(True)
-    create_at = models.DateTimeField(auto_now_add = True)
-
-    def __unicode__(self):
-        return str(self.bill) + " " + self.type + " " + self.status         
         
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)

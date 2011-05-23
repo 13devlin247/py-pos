@@ -1,7 +1,8 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
-from pos.kernal.models import Product,  InStockRecord, OutStockRecord, ProductForm, InStockRecordForm, OutStockRecordForm, InStockBatchForm
+from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Counter
+from pos.kernal.models import ProductForm, InStockRecordForm, OutStockRecordForm, InStockBatchForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
 from pos.kernal.views import SalesConfirm, InventoryConfirm, QueryBill,  QueryInventory
 from pos.kernal.views import ReportPerson, ReportDaily
@@ -11,7 +12,8 @@ from pos.kernal.views import SupplierList, CustomerList, ProductList
 from pos.kernal.views import CustomerInfo, SupplierInfo
 from pos.kernal.views import test
 from django.contrib.auth.decorators import login_required
-from pos.kernal.views import checkCounter
+from pos.kernal.views import CounterUpdate
+
 
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -37,6 +39,12 @@ product_list_view = {
     'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link},    
 }
 
+counter_list_view = {
+    'queryset': Counter.objects.filter(active=True),                      
+    'allow_empty': True,                      
+    'template_name': 'counter_list.html', 
+    'extra_context': {'form': ProductForm, 'submit_form':'/counter/save/', 'main_link': main_link},    
+}
 
 """
 response AJAX method for create product
@@ -120,7 +128,6 @@ urlpatterns = patterns('',
     url(r'^customer/info/(?P<query>\w+)*', login_required(CustomerInfo)),    # customer info json
     url(r'^supplier/info/(?P<query>\w+)*', login_required(SupplierInfo)),    # supplier info json
     
-    
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
     url(r'^product/ajax/$', login_required(ProductList)),    
@@ -148,7 +155,10 @@ urlpatterns = patterns('',
                             'extra_context':{ 'msg':'this page is under constructor !!'}
                             }),                            
     url(r'^report/daily/$', login_required(ReportDaily)),                        
-    url(r'^report/person/$', direct_to_template,  {'template': 'report_dailyPerson.html'}),                        
+    url(r'^report/person/$', direct_to_template,  {'template': 'report_personalSales.html'}),                        
+    #url(r'^counter/close/$', CloseCounter),         
+    url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
+    url(r'^counter/save/$', login_required(CounterUpdate)),
     #url(r'^sales/bill/$', direct_to_template,  {'template': 'bill.html'}),
     url(r'^sales/bill/(?P<billID>\w+)*', login_required(QueryBill)),
     #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
