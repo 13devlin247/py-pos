@@ -142,9 +142,12 @@ def InventoryConfirm(request):
             inStockRecord.save()
             for value in inventoryDict[pk] :
                 if 'serial-' in value:
+                    serialNO = request.GET.get(pk+"_"+value, '') 
+                    if serialNO == '':
+                        continue
                     serial = SerialNo()
                     serial.inStockRecord = inStockRecord
-                    serial.serial_no = request.GET.get(pk+"_"+value, "-")
+                    serial.serial_no = serialNO
                     serial.save()            
         return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
 
@@ -178,6 +181,7 @@ def SalesConfirm(request):
         bill.tendered_amount = request.GET.get('amountTendered', '0')
         bill.change = request.GET.get('change', '0')
         bill.customer = customer
+        bill.profit = 0
         bill.counter = counter[0]
         bill.user = User.objects.get(pk=request.session.get('_auth_user_id'))
         bill.fulfill_payment = False
@@ -215,8 +219,8 @@ def SalesConfirm(request):
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
             outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
-            outStockRecord.sell_index = -1;
-            outStockRecord.profit = -1;
+            outStockRecord.sell_index = 0;
+            outStockRecord.profit = 0;
             outStockRecord.save()
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
         
@@ -443,6 +447,7 @@ def CounterUpdate(request):
     totalAmount = counter.initail_amount
     for bill in bills:
         totalAmount = totalAmount + bill.total_price
+        logging.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
         _update_outStockRecord_set(bill)
     counter.close_amount = totalAmount
     counter.active = False
@@ -452,44 +457,61 @@ def CounterUpdate(request):
     return HttpResponseRedirect('/counter/close/') 
     
 def _update_outStockRecord_set(bill):
-    outStockRecordSet = bill.outStockRecord_set.all()
-	for outStockRecord in outStockRecordSet:
-		sales_index = __find_SalesIdx__(outStockRecord.product)
-	
+    outStockRecordSet = bill.outstockrecord_set.all()
+    totalProfit = 0
+    for outStockRecord in outStockRecordSet:
+        product = outStockRecord.product
+        sales_index = __find_SalesIdx__(product)
+        totalCost = __find_cost__(sales_index, outStockRecord)
+        outStockRecord.sales_index = sales_index + outStockRecord.quantity
+        logging.info("%s : %s : %s",sales_index , outStockRecord.quantity, outStockRecord.sales_index);
+        outStockRecord.profit = outStockRecord.amount - totalCost
+        outStockRecord.save()
+        totalProfit = totalProfit + outStockRecord.profit
+        logging.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sales_index)
+    bill.profit = totalProfit
+    logging.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
+    bill.save()
+        
 def __find_SalesIdx__(product):
     sales_index = 0
     #find last time sell record
     lastOutStockRecordSet = OutStockRecord.objects.filter(product=product)
     if lastOutStockRecordSet.count() != 0:
-        lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
+        lastOutStockRecord = lastOutStockRecordSet.order_by('create_at')[0]
         sales_index = lastOutStockRecord.sell_index
-    logging.debug("barcode: "+barcode+"'s sales_index: " + str(sales_index))
-    return sales_index    	
+        logging.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
+    #logging.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
+    return sales_index        
 
-def __find_cost__(salesIdx, product):
+def __find_cost__(salesIdx, outStockRecord):
+    product = outStockRecord.product
     sales_index = 0
     #find last time sell record
-	productCost = []
-	productQuantity = []
-	inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')
-	currentQuantity = 0
-	salesIdxPosision = 0
-	
-	for idx,inStockRecord in inStockRecordSet:
-		productCost.append(inStockRecord.cost)
-		currentQuantity = currentQuantity + inStockRecord.quantity
-		productQuantity.append(currentQuantity)
-		if salesIdx <= currentQuantity:
-			salesIdxPosision = idx
-	
-	
-	
-    lastOutStockRecordSet = OutStockRecord.objects.filter(product=product)
-    if lastOutStockRecordSet.count() != 0:
-        lastOutStockRecord = lastOutStockRecordSet.order_by('-create_at')[0]
-        sales_index = lastOutStockRecord.sell_index
-    logging.debug("barcode: "+barcode+"'s sales_index: " + str(sales_index))
-    return sales_inde    
+    historyCost = []
+    productQuantity = []
+    inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')
+    currentQuantity = 0
+    salesIdxPosision = -1
+    
+    idx = 0
+    for inStockRecord in inStockRecordSet:
+        historyCost.append(inStockRecord.cost)
+        currentQuantity = currentQuantity + inStockRecord.quantity
+        productQuantity.append(currentQuantity)
+        if salesIdx <= currentQuantity and salesIdxPosision == -1:
+            salesIdxPosision = idx
+        idx = idx + 1
+    totalproductCost = 0
+    cost = historyCost[salesIdxPosision]
+    for i in range(outStockRecord.quantity):
+        if (salesIdx + i + 1) > productQuantity[salesIdxPosision]:
+            salesIdxPosision = salesIdxPosision + 1
+        cost = historyCost[salesIdxPosision]
+        logging.debug("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
+        totalproductCost = totalproductCost + cost
+    
+    return totalproductCost
     
 def checkCounter(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
     def decorate(view_func):
