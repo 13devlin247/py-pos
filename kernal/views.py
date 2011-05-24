@@ -471,7 +471,7 @@ def __find_cost__(salesIdx, product):
     #find last time sell record
 	productCost = []
 	productQuantity = []
-	inStockRecordSet = InStockRecord.objects.filter(product=product)
+	inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')
 	currentQuantity = 0
 	salesIdxPosision = 0
 	
