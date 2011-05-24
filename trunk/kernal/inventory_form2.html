@@ -132,7 +132,7 @@
 									"<tr id=\""+pk+"_tr\">"+
 									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
 									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> [<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+
-									"<td><input type=\"text\" name=\""+pk+"_cost\" id=\""+pk+"_cost\" value=\""+data[i].fields.cost+" \" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
+									"<td><input type=\"text\" name=\""+pk+"_cost\" id=\""+pk+"_cost\" value=\""+data[i].fields.cost+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
 									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
 									"<td><a href=\"#\" class='totalPrice' onclick=\"buildSerialNo("+pk+");return false;\">optional</a></td>"+
 									"</tr>"+

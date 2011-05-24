@@ -81,9 +81,9 @@ in_stock_record_crud_view  = {
 }
 
 out_stock_record_list_view = {
-    'queryset': OutStockRecord.objects.all(),                      
+    'queryset': OutStockRecord.objects.all().order_by('bill__user'),                      
     'allow_empty': True,                      
-    'template_name': 'product_list.html', 
+    'template_name': 'report_personalSales.html', 
     'extra_context': {'main_link': main_link},
 }
 out_stock_record_crud_view  = {
@@ -155,7 +155,7 @@ urlpatterns = patterns('',
                             'extra_context':{ 'msg':'this page is under constructor !!'}
                             }),                            
     url(r'^report/daily/$', login_required(ReportDaily)),                        
-    url(r'^report/person/$', direct_to_template,  {'template': 'report_personalSales.html'}),                        
+    url(r'^report/person/$', list_detail.object_list,  out_stock_record_list_view),                        
     #url(r'^counter/close/$', CloseCounter),         
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),

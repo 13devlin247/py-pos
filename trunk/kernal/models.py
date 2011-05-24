@@ -155,6 +155,7 @@ class OutStockRecord(models.Model):
     barcode = models.CharField(max_length=100)
     product = models.ForeignKey(Product) 
     unit_sell_price = models.DecimalField(max_digits=100,  decimal_places=2)
+    cost = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     amount = models.DecimalField(max_digits=100,  decimal_places=2) 
     sell_index = models.IntegerField(blank=True)
