@@ -221,6 +221,7 @@ def SalesConfirm(request):
             outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
             outStockRecord.sell_index = 0;
             outStockRecord.profit = 0;
+            outStockRecord.cost = -1;
             outStockRecord.save()
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
         
@@ -463,12 +464,13 @@ def _update_outStockRecord_set(bill):
         product = outStockRecord.product
         sales_index = __find_SalesIdx__(product)
         totalCost = __find_cost__(sales_index, outStockRecord)
-        outStockRecord.sales_index = sales_index + outStockRecord.quantity
-        logging.info("%s : %s : %s",sales_index , outStockRecord.quantity, outStockRecord.sales_index);
+        outStockRecord.sell_index = sales_index + outStockRecord.quantity
+        logging.info("%s : %s : %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
         outStockRecord.profit = outStockRecord.amount - totalCost
+        outStockRecord.cost = totalCost
         outStockRecord.save()
         totalProfit = totalProfit + outStockRecord.profit
-        logging.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sales_index)
+        logging.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
     bill.profit = totalProfit
     logging.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
     bill.save()
@@ -505,10 +507,16 @@ def __find_cost__(salesIdx, outStockRecord):
     totalproductCost = 0
     cost = historyCost[salesIdxPosision]
     for i in range(outStockRecord.quantity):
+        logging.error("%s, %s",(salesIdx + i + 1) , productQuantity[salesIdxPosision])        
         if (salesIdx + i + 1) > productQuantity[salesIdxPosision]:
-            salesIdxPosision = salesIdxPosision + 1
+            if salesIdxPosision >= len(historyCost):
+                logging.error("salesIdxPosision over limit: %s" % salesIdxPosision )
+                pass
+            else:
+                salesIdxPosision = salesIdxPosision + 1
         cost = historyCost[salesIdxPosision]
-        logging.debug("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
+        logging.info("salesIdxPosision: %s", salesIdxPosision)
+        logging.info("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
         totalproductCost = totalproductCost + cost
     
     return totalproductCost

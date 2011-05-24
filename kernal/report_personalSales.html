@@ -22,10 +22,12 @@
           <table class="tablesorter report" id="sortable_table">  		
             <thead>  			
               <tr>  				
-                <th>+
+                <th>Employee
                 </th>  								
-                <th>Sale ID
+                <th>Bill ID
                 </th>  								
+                <th>Product
+                </th>  								                
                 <th>Price
                 </th>  								
                 <th>Cost
@@ -37,10 +39,9 @@
               </tr>  		
             </thead>  		
             <tbody>  						
-			{%for bill in bills%}
-              <tr>  				<td>
-                  <a href="#" class="expand">+</a></td>  								<td>
-                  <a href="/sales/bill/{{bill.pk}}" target="_blank">{{bill.pk}}</a></td>  								<td>{{bill.create_at}}</td>  								<td>{{bill.user.username}}</td>  								<td>{{bill.customer}}</td>  								<td>{{bill.subtotal_price}}</td>  								
+			{%for outStockRecord in object_list%}
+              <tr>  				<td>{{outStockRecord.bill.user.username}}</td>  								<td>
+                  <a href="/sales/bill/{{outStockRecord.bill.pk}}" target="_blank">{{outStockRecord.bill.pk}}</a></td>  <td>{{outStockRecord.product.name}}</td>  <td>{{outStockRecord.unit_sell_price}}</td>  <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td>   <td>{{outStockRecord.quantity}}</td> 
               </tr>  			
 			{%endfor%}
             </tbody>  	
