@@ -474,6 +474,39 @@ def _update_outStockRecord_set(bill):
     bill.profit = totalProfit
     logging.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
     bill.save()
+
+def PersonReport(request):
+    products = Product.objects.all()
+    salesReport = {}
+    
+    for product in products:
+        users = _build_users_sold_dict(product)
+        salesReport[product] = users
+    
+    return render_to_response('report_personalSales.html',{'session': request.session,  'salesReport': salesReport}, )
+        
+def _build_users_sold_dict(product):
+    outStockRecordSet = OutStockRecord.objects.filter(product=product)
+    users = {}
+    for outStockRecord in outStockRecordSet:
+        user = outStockRecord.bill.user
+        if user not in users:
+            logging.info("create %s in users" % user )
+            summaryOutStockRecord = OutStockRecord()
+            summaryOutStockRecord.bill = outStockRecord.bill
+            summaryOutStockRecord.unit_sell_price = 0
+            summaryOutStockRecord.cost = 0
+            summaryOutStockRecord.quantity = 0
+            summaryOutStockRecord.profit = 0
+            users[user] = [summaryOutStockRecord]
+        users[user][0].unit_sell_price = users[user][0].unit_sell_price + outStockRecord.unit_sell_price
+        users[user][0].cost = users[user][0].cost + outStockRecord.cost
+        users[user][0].quantity = users[user][0].quantity + outStockRecord.quantity
+        users[user][0].profit = users[user][0].profit + outStockRecord.profit
+        users[user].append(outStockRecord)
+        logging.info("add %s's  outStockRecord" % user )
+    return users
+
         
 def __find_SalesIdx__(product):
     sales_index = 0
