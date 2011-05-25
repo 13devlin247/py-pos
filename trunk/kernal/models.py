@@ -209,3 +209,9 @@ class InStockBatchForm(forms.Form):
     do_date =  forms.DateField(widget=AdminDateWidget)
     do_no =  forms.CharField(max_length=150)
     inv_no =  forms.CharField(max_length=150)
+
+class ReportFilterForm(forms.Form):
+    start_date =  forms.DateField(widget=AdminDateWidget)
+    end_date =  forms.DateField(widget=AdminDateWidget)    
+
+

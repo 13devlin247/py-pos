@@ -6,13 +6,15 @@ from pos.kernal.models import ProductForm, InStockRecordForm, OutStockRecordForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
 from pos.kernal.views import SalesConfirm, InventoryConfirm, QueryBill,  QueryInventory
 from pos.kernal.views import ReportPerson, ReportDaily
-from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm
+from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm, ReportFilterForm
 from pos.kernal.views import SupplierSave, CustomerSave
 from pos.kernal.views import SupplierList, CustomerList, ProductList
 from pos.kernal.views import CustomerInfo, SupplierInfo
 from pos.kernal.views import test
 from django.contrib.auth.decorators import login_required
 from pos.kernal.views import CounterUpdate
+from pos.kernal.views import PersonReport
+
 
 
 #from pos.kernal.views import ajaxProductDetailView
@@ -154,8 +156,11 @@ urlpatterns = patterns('',
                             'template': 'under_constructor.html', 
                             'extra_context':{ 'msg':'this page is under constructor !!'}
                             }),                            
+    url(r'^report/$', login_required(direct_to_template),  {'template': 'report.html'}),                                        
+    url(r'^report/daily/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/'} }),                                    
     url(r'^report/daily/$', login_required(ReportDaily)),                        
-    url(r'^report/person/$', list_detail.object_list,  out_stock_record_list_view),                        
+    url(r'^report/person/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/person/'} }),                                
+    url(r'^report/person/$', PersonReport),                        
     #url(r'^counter/close/$', CloseCounter),         
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
