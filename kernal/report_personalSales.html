@@ -27,6 +27,11 @@
 	font-weight: lighter;
 }
 
+.productName{
+    font-size: 12pt;
+    font-weight: bolder;
+    color: red;
+}
 </style> 
 	<div id="content_area_wrapper">  
       <div id="content_area">  
@@ -38,7 +43,7 @@
         <div id="table_holder">  	
 		<div id="toggle" style="margin-bottom:8px;text-align: right">Expand/ Collapse Detail</div>
 		{% for product, users in salesReport.items %}
-			{{product}}
+			<div class="productName">{{product}}</div>
           <table class="tablesorter report" id="sortable_table">  		
             <thead>  			
               <tr>  				
@@ -68,16 +73,6 @@
             </tbody>  	
           </table>  
 		  {% endfor %}
-        </div>  
-        <div id="report_summary">  	
-          <div class="summary_row">Subtotal: $125475.97
-          </div>  	
-          <div class="summary_row">Total: $140279.32
-          </div>  	
-          <div class="summary_row">Tax: $14803.35
-          </div>  	
-          <div class="summary_row">Profit: -$1057.70
-          </div>  
         </div>  
       </div>  
     </div>
