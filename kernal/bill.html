@@ -11,7 +11,7 @@ border: none;
 }
 
 tfoot td {
-	font-weight:bold
+	font-weight:bold;
 }
 
 .Receipt{
@@ -34,11 +34,9 @@ tfoot td {
               <tr>        
                 <td colspan="4">            
                   <p align="center">
-                    <font color="black"><b>RECEIPT</b>
-                    </font>
+                    RECEIPT
                   </p>
-                  <font color="black"><b>        </b>
-                  </font></td>    
+				</td>    
               </tr>    
               <tr>        
                 <td class="Receipt">            Bill No:         </td>        
@@ -57,13 +55,13 @@ tfoot td {
                 <td class="Receipt">                    </td>        
                 <td class="Receipt">                    </td>    
               </tr>    
-              <tr>        
+              <tr class="hr">
                 <td colspan="4">            
-                  <hr>        </td>    
+                  <hr/>        </td>    
               </tr>
             </tbody>
           </table>
-          <table width="100%">    
+          <table width="100%" id="bill_content">    
             <tbody>
               <tr>        
 				<td class="Receipt">            QTY         </td>        
@@ -71,7 +69,7 @@ tfoot td {
                 <td align="right">            U. P.         </td>        
                 <td align="right">            Amount         </td>    
               </tr>    
-              <tr>        
+              <tr class="hr">        
                 <td colspan="4">            
                   <hr>        </td>    
               </tr>    
@@ -79,41 +77,35 @@ tfoot td {
 				{{record}}
 				<tr>
                 <td class="Receipt">{{outStockRecord.quantity}}</td>
-                <td class="Receipt">{{outStockRecord.product.name}} {% if  outStockRecord.serial_no.serial_no %}<div style="font-weight: bolder"> IMIC: {{outStockRecord.serial_no.serial_no}}</div>{% endif %}</td>
+                <td class="Receipt">{{outStockRecord.product.name}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMIC: {{outStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
                 <td align="right">{{outStockRecord.unit_sell_price}}</td>
                 <td align="right">{{outStockRecord.amount}}</td>
 				</tr>
 			{% endfor %}			  
-				<tr>
+				<tr class="hr">
                 <td colspan=4><hr/></td>
 				</tr>                
             
             </tbody>
             <tfoot>
-              <tr>        
-                <td width="70%" align="right" colspan=3>            Sub Total         </td>        
-                <td align="right" colspan=2>            {{bill.subtotal_price}}       </td>    
+              <tr id="bill_summary">        
+                <td  align="right" >            Received Amount         </td>        
+                <td align="right" >                        {{bill.tendered_amount}}        </td>    			  
+                <td  align="right" >            Sub Total         </td>        
+                <td align="right" >            {{bill.subtotal_price}}       </td>    
               </tr>            
               <tr>        
-                <td width="70%" align="right" colspan=3>            Disc         </td>        
-                <td align="right" colspan=2>            {{bill.discount}}       </td>    
+                <td  align="right" >            Change         </td>        
+                <td align="right" >           {{bill.change}}         </td>    
+                <td  align="right" >            Disc         </td>        
+                <td align="right" >            {{bill.discount}}       </td>    
               </tr>            
               <tr>        
-                <td width="70%" align="right" colspan=3>            Total         </td>        
-                <td align="right" colspan=2>            {{bill.total_price}}       </td>    
+                <td align="right" >            Paid By         </td>        
+                <td align="right" >             {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
+                <td  align="right" >            Total         </td>        
+                <td align="right" >            {{bill.total_price}}       </td>    
               </tr>                          
-              <tr>        
-                <td width="70%" align="right" colspan=3>            Received Amount         </td>        
-                <td align="right" colspan=2>                        {{bill.tendered_amount}}        </td>    
-              </tr>        
-              <tr>        
-                <td width="70%" align="right" colspan=3>            Change         </td>        
-                <td align="right" colspan=2>           {{bill.change}}         </td>    
-              </tr>        
-              <tr>        
-                <td align="right" colspan=3>            Paid By         </td>        
-                <td align="right" colspan=2>             {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
-              </tr>             
               <tr>        
                 <td colspan="10">            
                   <hr>        </td>    
@@ -124,13 +116,9 @@ tfoot td {
             <tbody>
               <tr>        
                 <td width="30%" align="center">                 
-                  <br>
-                  <br>
                   <br>____________________         </td>        
                 <td width="30%" align="center">                          </td>        
                 <td width="30%" align="center">                 
-                  <br>
-                  <br>
                   <br>_____________________         </td>    
               </tr>    
               <tr>        

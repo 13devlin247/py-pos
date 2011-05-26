@@ -31,3 +31,38 @@ blockquote {margin:1.5em;padding:1em;font-style:italic;font-size:.9em;}
 .hide {display:none;}
 a:link, a:visited {background:transparent;font-weight:700;text-decoration:underline;}
 a:link:after, a:visited:after {content:" (" attr(href) ")";font-size:90%;}
+
+#lineshadow{
+	display: none;
+}
+
+#bill_content{
+	margin: 1em 0 0 0;
+	border-top: solid #CCC 1px;
+}
+
+#bill_summary td{
+	margin: 10em 0 0 0;
+	border-top: solid #CCC 1px;
+}
+
+.hr td{
+	display: none;
+}
+
+table{
+	margin: 0;
+	padding:0;
+	width: 95%;
+}
+tr{
+	margin: 0;
+	padding:0;
+	width: auto;
+}
+td{
+	margin: 0;
+	padding:0;
+	width: auto;
+}
+
