@@ -3,7 +3,7 @@ from pos.kernal.models import Bill
 from pos.kernal.models import InStockBatch, InStockRecord, InStockRecordForm
 from pos.kernal.models import OutStockRecord, OutStockRecordForm
 from pos.kernal.models import Supplier, SupplierForm
-from pos.kernal.models import Customer, CustomerForm 
+from pos.kernal.models import Customer, CustomerForm
 from pos.kernal.models import Payment 
 from pos.kernal.models import SerialNo
 from pos.kernal.models import Counter
@@ -18,7 +18,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.contrib.auth import REDIRECT_FIELD_NAME
-
+from datetime import date
 # import the logging library
 import logging
 
@@ -476,17 +476,24 @@ def _update_outStockRecord_set(bill):
     bill.save()
 
 def PersonReport(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = date.min
+        endDate = date.max
+        
     products = Product.objects.all()
     salesReport = {}
     
     for product in products:
-        users = _build_users_sold_dict(product)
+        users = _build_users_sold_dict(product, startDate, endDate)
         salesReport[product] = users
     
-    return render_to_response('report_personalSales.html',{'session': request.session,  'salesReport': salesReport}, )
+    return render_to_response('report_personalSales.html',{'session': request.session,  'salesReport': salesReport, 'dateRange': str(startDate)+" to "+str(endDate)}, )
         
-def _build_users_sold_dict(product):
-    outStockRecordSet = OutStockRecord.objects.filter(product=product)
+def _build_users_sold_dict(product, startDate, endDate):
+    #outStockRecordSet = OutStockRecord.objects.filter(product=product)
+    outStockRecordSet = OutStockRecord.objects.filter(product=product).filter(create_at__range=(startDate,endDate))
     users = {}
     for outStockRecord in outStockRecordSet:
         user = outStockRecord.bill.user
