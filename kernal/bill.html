@@ -17,6 +17,13 @@ tfoot td {
 .Receipt{
 	text-align: left;
 }
+{% block css %}
+.invoice{
+	
+}
+{% endblock%}
+
+
 
 </style>
 
@@ -34,7 +41,9 @@ tfoot td {
               <tr>        
                 <td colspan="4">            
                   <p align="center">
-                    RECEIPT
+					{% block PageTitle %}
+						{{bill.payment_set.select_related.0.type}}
+					{% endblock %}
                   </p>
 				</td>    
               </tr>    
@@ -66,8 +75,8 @@ tfoot td {
               <tr>        
 				<td class="Receipt">            QTY         </td>        
 				<td class="Receipt">            Item -- Serve         </td>        
-                <td align="right">            U. P.         </td>        
-                <td align="right">            Amount         </td>    
+                <td align="right" class="invoice">            U. P.         </td>        
+                <td align="right" class="invoice">            Amount         </td>    
               </tr>    
               <tr class="hr">        
                 <td colspan="4">            
@@ -78,8 +87,8 @@ tfoot td {
 				<tr>
                 <td class="Receipt">{{outStockRecord.quantity}}</td>
                 <td class="Receipt">{{outStockRecord.product.name}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMIC: {{outStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
-                <td align="right">{{outStockRecord.unit_sell_price}}</td>
-                <td align="right">{{outStockRecord.amount}}</td>
+                <td align="right" class="invoice">{{outStockRecord.unit_sell_price}}</td>
+                <td align="right" class="invoice">{{outStockRecord.amount}}</td>
 				</tr>
 			{% endfor %}			  
 				<tr class="hr">
@@ -89,22 +98,22 @@ tfoot td {
             </tbody>
             <tfoot>
               <tr id="bill_summary">        
-                <td  align="right" >            Received Amount         </td>        
-                <td align="right" >                        {{bill.tendered_amount}}        </td>    			  
-                <td  align="right" >            Sub Total         </td>        
-                <td align="right" >            {{bill.subtotal_price}}       </td>    
+                <td  align="right" class="invoice" >            Received Amount         </td>        
+                <td align="right" class="invoice" >                        {{bill.tendered_amount}}        </td>    			  
+                <td  align="right" class="invoice" >            Sub Total         </td>        
+                <td align="right" class="invoice" >            {{bill.subtotal_price}}       </td>    
               </tr>            
               <tr>        
-                <td  align="right" >            Change         </td>        
-                <td align="right" >           {{bill.change}}         </td>    
-                <td  align="right" >            Disc         </td>        
-                <td align="right" >            {{bill.discount}}       </td>    
+                <td  align="right" class="invoice" >            Change         </td>        
+                <td align="right" class="invoice" >           {{bill.change}}         </td>    
+                <td  align="right" class="invoice" >            Disc         </td>        
+                <td align="right" class="invoice" >            {{bill.discount}}       </td>    
               </tr>            
               <tr>        
-                <td align="right" >            Paid By         </td>        
-                <td align="right" >             {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
-                <td  align="right" >            Total         </td>        
-                <td align="right" >            {{bill.total_price}}       </td>    
+                <td align="right" class="invoice" >            Paid By         </td>        
+                <td align="right" class="invoice" >             {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
+                <td  align="right" class="invoice" >            Total         </td>        
+                <td align="right" class="invoice" >            {{bill.total_price}}       </td>    
               </tr>                          
               <tr>        
                 <td colspan="10">            

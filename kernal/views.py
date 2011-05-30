@@ -36,7 +36,15 @@ Below function for ajax use
    # if request.method == 'GET':
 
 def ReportDaily(request):
-    bills = Bill.objects.all()
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+
+    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate))
     profitTable = {}
     
     for bill in bills:
@@ -45,20 +53,8 @@ def ReportDaily(request):
         for outStockRecord in outStockRecords:
             total_proift = total_proift + outStockRecord.profit
         profitTable[bill.pk] = total_proift
-    return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable })
+    return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate)}, )
         
-def ReportPerson(request):
-    bills = Bill.objects.all()
-    profitTable = {}
-    
-    for bill in bills:
-        outStockRecords = OutStockRecord.objects.filter(bill=bill)
-        total_proift = 0
-        for outStockRecord in outStockRecords:
-            total_proift = total_proift + outStockRecord.profit
-        profitTable[bill.pk] = total_proift
-    return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable })
-    
 def printData(request):
     txt = ""
     salesDict = {}
@@ -189,14 +185,21 @@ def SalesConfirm(request):
         
         payment = Payment()
         payment.bill = bill
-        payment.term = "Cash"
+        salesMode = request.GET.get('salesMode', '')
+        if salesMode == 'cash':
+            payment.term = "Cash"
+            payment.type = "Cash Sales"
+            payment.status = "Complete"
+        else:
+            payment.term = "Invoice: " + customer.term
+            payment.type = "Invoice"
+            payment.status = "Incomplete"        
+            
         transactionNo = request.GET.get('transactionNo', '')
         if transactionNo != '': 
             logging.info("paid by creadit card")
             payment.term = "CreaditCard"
             payment.transaction_no = transactionNo
-        payment.type = "Cash Sales"
-        payment.status = "Complete"
         payment.save()
         
         # build OutStockRecord to save data
@@ -225,10 +228,10 @@ def SalesConfirm(request):
             outStockRecord.save()
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
         
-def QueryBill(request, billID):    
+def QueryBill(request, displayPage, billID):    
     bill = Bill.objects.get(pk=billID)
     outStockRecordset = OutStockRecord.objects.filter(bill=bill)
-    return render_to_response('bill.html',{'bill': bill, 'outStockRecordset':outStockRecordset })
+    return render_to_response(displayPage+".html",{'bill': bill, 'outStockRecordset':outStockRecordset })
         
 def QueryInventory(request, inStockBatchID):    
     inStockBatch = InStockBatch.objects.get(pk=inStockBatchID)
@@ -479,9 +482,11 @@ def PersonReport(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
     if startDate == '' or endDate == '':
-        startDate = date.min
-        endDate = date.max
-        
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    
     products = Product.objects.all()
     salesReport = {}
     

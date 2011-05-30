@@ -5,7 +5,7 @@ from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Counter
 from pos.kernal.models import ProductForm, InStockRecordForm, OutStockRecordForm, InStockBatchForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
 from pos.kernal.views import SalesConfirm, InventoryConfirm, QueryBill,  QueryInventory
-from pos.kernal.views import ReportPerson, ReportDaily
+from pos.kernal.views import ReportDaily
 from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm, ReportFilterForm
 from pos.kernal.views import SupplierSave, CustomerSave
 from pos.kernal.views import SupplierList, CustomerList, ProductList
@@ -145,7 +145,8 @@ urlpatterns = patterns('',
     url(r'^out_stock_record/search/$', login_required(list_detail.object_list),  out_stock_record_list_view), 
     url(r'^out_stock_record/save/$', login_required(OutStockRecordSave)), 
     url(r'^sales/order/$', login_required(direct_to_template),  {'template': 'pos.html'}),
-    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_form2.html'}),
+    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register'} }),
+    url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register'} }),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
     url(r'^sales/confirm/$', login_required(SalesConfirm)),
     url(r'^sales/invoice/$', login_required(direct_to_template),  {
@@ -165,7 +166,7 @@ urlpatterns = patterns('',
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
     #url(r'^sales/bill/$', direct_to_template,  {'template': 'bill.html'}),
-    url(r'^sales/bill/(?P<billID>\w+)*', login_required(QueryBill)),
+    url(r'^sales/(?P<displayPage>\w+)*/(?P<billID>\w+)*', login_required(QueryBill)),
     #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
     #url(r'^sales/confirm/$', printData),
     (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),

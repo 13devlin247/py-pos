@@ -1,0 +1,20 @@
+{% extends "sales_base.html" %}
+
+{% block SalesMode %}
+	<input type="hidden" name="salesMode" value="invoice"/>
+{% endblock %}
+
+{% block mode_form %}
+{% endblock %}
+
+{% block Customer %}
+            <label id="customer_label" for="customer">Select Customer
+            </label>  		
+            <input type="text" name="customer" value="" id="customer" size="30"  />		
+{% endblock %}
+
+{% block AmountTendered %}
+{% endblock %}
+
+{% block CreaditCard %}
+{% endblock %}
