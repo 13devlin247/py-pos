@@ -1,0 +1,26 @@
+{% extends "product.php.html" %}
+
+{% block content %}   
+<style type="text/css">
+/* LIST #5 */
+
+#list5 { color:#111; }
+#list5 ol { font-size:18px; }
+#list5 ol li {  }
+#list5 ol li ol { list-style-image: url("/static/images/nested.png"); padding:5px 0 5px 18px; font-size:15px; }
+#list5 ol li ol li { color:gray; height:15px; margin-left:10px; font-size:14px;}
+</style> 
+<div style="margin: auto; font: 62.5% Georgia,Arial,sans-serif;">
+<div id="list5">
+   <ol>
+      <li>Delivery Order List
+         <ol>
+			{% for payment in object_list %}
+            <li><a href="/sales/do/{{payment.bill.pk}}"> {{payment.bill.create_at}} </a> ${{payment.bill.total_price}} </li>
+			{% endfor %}
+         </ol>
+      </li>
+   </ol>
+</div>
+</div>
+{% endblock %}	
