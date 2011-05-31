@@ -136,9 +136,10 @@
     </div>  
 </form>    
 <script type="text/javascript">
-    var productTable = new Array();
+	var productTable = new Array();
 
-  $("#item").autocomplete("/product/ajax/", {
+	
+  $("#item").autocomplete ("/product/ajax/", {
 		width: 260,
 		selectFirst: false
 	});
@@ -173,7 +174,7 @@
 									"<tr id=\""+pk+"_tr\">"+
 									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
 									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data[i].imei+"\" readonly=false size=\"18\" style=\"border: none; background: transparent;\"/></td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
-									"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data[i].fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
+									"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data[i].fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
 									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"' onChange=resetQuantityField('"+pk+"')) /></td>"+
 									"<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data[i].fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data[i].pk+"\" /></td>"+
 									"</tr>"
@@ -187,7 +188,7 @@
 								url: "/product/inventory/"+data[i].pk,
 								type: "JSON",
 								success: function(data){  
-									$("#"+data[i].pk+"_stockCount").html(data[0].inventory);
+									$("#"+data[i].pk+"_stockCount").html(data[i].inventory);
 								},
 								error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
 								complete: function(data){},
@@ -248,6 +249,15 @@
         calcSubTotalPrice();
         calcTotalPrice();
     }
+
+	function lowerCostDetact(pk){
+        var price = parseFloat($("#"+pk+"_price").val());
+		var cost = parseFloat(productTable[pk][0].fields.cost);
+		if(cost > price){
+			alert(productTable[pk][0].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n');
+			
+		}
+	}
 	
 	function resetQuantityField(pk){
 		$("#"+pk+"_serial").html();
@@ -293,7 +303,18 @@
     });  
   
     $("#confirm").click(function(){
-        $("#sales").submit();
+		var msg = '';
+		for(var pk in productTable){
+			var price = parseFloat($("#"+pk+"_price").val());
+			var cost = parseFloat(productTable[pk][0].fields.cost);
+			if(cost > price){
+				msg += productTable[pk][0].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n'
+			}
+		}
+		ans = confirm(msg + " \n Are you sure?");
+		if(ans){
+			$("#sales").submit();
+		}
     });
 
     $("#creadit_card").click(function(){
@@ -313,8 +334,6 @@
         $("#change_block").css("display","block");
         $("#creaditCard_block").css("display","none");
     });  
-
-
-    
+   
   </script>	
 {% endblock %}	

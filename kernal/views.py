@@ -18,6 +18,7 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
 from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth.decorators import permission_required
 from datetime import date
 # import the logging library
 import logging
@@ -282,6 +283,7 @@ def ProductInfo(request, query):
         if serialNo:
             logging.info("SerialNo Found !! %s " % str(serialNo.serial_no))
             product = serialNo.inStockRecord.product
+            product.cost = serialNo.inStockRecord.cost
             serial_no = serialNo.serial_no
             productSet = []
             productSet.append(product)
@@ -442,6 +444,7 @@ def countInventory(inStockRecordSet, outStockRecord):
     count = count - sellCount
     return count
 
+@permission_required('kernal.change_counter', login_url='/accounts/login/')
 def CounterUpdate(request):
     counterID =  request.GET.get('counterID', "")
     

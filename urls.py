@@ -1,7 +1,7 @@
 from django.conf.urls.defaults import patterns, include, url
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
-from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Counter
+from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Counter, Payment
 from pos.kernal.models import ProductForm, InStockRecordForm, OutStockRecordForm, InStockBatchForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
 from pos.kernal.views import SalesConfirm, InventoryConfirm, QueryBill,  QueryInventory
@@ -88,6 +88,13 @@ out_stock_record_list_view = {
     'template_name': 'report_personalSales.html', 
     'extra_context': {'main_link': main_link},
 }
+
+sales_do_list_view = {
+    'queryset': Payment.objects.filter(type='Invoice').order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'do_list.html', 
+}
+
 out_stock_record_crud_view  = {
     'model': OutStockRecord, 
     'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save', 'main_link': main_link},
@@ -149,10 +156,7 @@ urlpatterns = patterns('',
     url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register'} }),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
     url(r'^sales/confirm/$', login_required(SalesConfirm)),
-    url(r'^sales/invoice/$', login_required(direct_to_template),  {
-                            'template': 'under_constructor.html', 
-                            'extra_context':{ 'msg':'Data insert success !! but bill page is under constructor !!'}
-                            }),
+    url(r'^sales/do/list$', login_required(list_detail.object_list),  sales_do_list_view), 
     url(r'^underconstructor/$', login_required(direct_to_template),  {
                             'template': 'under_constructor.html', 
                             'extra_context':{ 'msg':'this page is under constructor !!'}
@@ -162,6 +166,7 @@ urlpatterns = patterns('',
     url(r'^report/daily/$', login_required(ReportDaily)),                        
     url(r'^report/person/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/person/'} }),                                
     url(r'^report/person/$', PersonReport),                        
+    url(r'^sales/do/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/do/list'} }),                                
     #url(r'^counter/close/$', CloseCounter),         
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),

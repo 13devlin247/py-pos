@@ -14,6 +14,11 @@ CHOICES_ITEM = (
     ('Iphone', 'Iphone'),            
 )
 
+PAYMENT_STATUS = (
+    ('Complete', 'Complete'),  
+    ('Incomplete', 'Incomplete'),             
+)
+
 class Category(models.Model):
     category_name = models.CharField(max_length=100)
 
@@ -54,6 +59,17 @@ class Product(models.Model):
     
     def __unicode__(self):
         return self.name
+
+class Company(models.Model):
+    name = models.CharField(max_length=100)
+    contact_person = models.CharField(max_length=100)
+    phone_office = models.CharField(max_length=100, blank=True)
+    phone_mobile = models.CharField(max_length=100, blank=True)
+    fax = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(max_length=100, blank=True)
+    address = models.TextField(blank=True)
+    active = models.BooleanField(True)
+    create_at = models.DateTimeField(auto_now_add = True)    
         
 class Supplier(models.Model):
     supplier_code = models.CharField(max_length=100, primary_key=True)
@@ -63,7 +79,6 @@ class Supplier(models.Model):
     phone_mobile = models.CharField(max_length=100, blank=True)
     fax = models.CharField(max_length=100, blank=True)
     email = models.EmailField(max_length=100, blank=True)
-    #remark = models.TextField(blank=True)
     address = models.TextField(blank=True)
     active = models.BooleanField(True)
     
@@ -137,13 +152,13 @@ class Bill(models.Model):
     counter = models.ForeignKey(Counter)
     user = models.ForeignKey(User)
     def __unicode__(self):
-        return " $" + str(self.total_price) + " "+str(self.create_at) + " Cashier: " + self.user.username 
+        return self.customer.name 
 
 class Payment(models.Model):
     bill = models.ForeignKey(Bill)
     term = models.CharField(max_length=100)
     type = models.CharField(max_length=100)
-    status = models.CharField(max_length=100)
+    status = models.CharField(max_length=100, choices=PAYMENT_STATUS)
     transaction_no = models.CharField(max_length=100, blank = True)
     create_at = models.DateTimeField(auto_now_add = True)
 
@@ -214,4 +229,17 @@ class ReportFilterForm(forms.Form):
     start_date =  forms.DateField(widget=AdminDateWidget)
     end_date =  forms.DateField(widget=AdminDateWidget)    
 
+class BillAdmin(admin.ModelAdmin):
+	list_display=('customer', 'create_at', 'user', 'total_price')
+	ordering = ['-create_at']
+	list_per_page = 25
+	search_fields = ['customer__name']
+	date_hierarchy = 'create_at'    
 
+class PaymentAdmin(admin.ModelAdmin):
+	list_display=('bill','create_at', 'term', 'status')
+	ordering = ['-create_at']
+	list_per_page = 25
+	search_fields = ['bill__customer__name', 'term', 'status']
+	date_hierarchy = 'create_at'        
+    
