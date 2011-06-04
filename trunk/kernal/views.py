@@ -7,6 +7,10 @@ from pos.kernal.models import Customer, CustomerForm
 from pos.kernal.models import Payment 
 from pos.kernal.models import SerialNo
 from pos.kernal.models import Counter
+from pos.kernal.models import Company
+from pos.kernal.models import Category
+from pos.kernal.models import Brand
+from pos.kernal.models import Type
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
@@ -36,6 +40,55 @@ Below function for ajax use
 #def ajaxProductDetailView(request):
    # if request.method == 'GET':
 
+
+
+def InventoryReturnReport(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    inStockBatchs = InStockBatch.objects.filter(mode='return').filter(create_at__range=(startDate,endDate)).order_by('-create_at')
+    return render_to_response('inventory_return_list.html',{'inStockBatchs': inStockBatchs, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+   
+   
+def SalesReturnReport(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    bills = Bill.objects.filter(mode='return').filter(create_at__range=(startDate,endDate)).order_by('-create_at')
+    return render_to_response('sales_return_list.html',{'bills': bills, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+   
+def CashSalesReport(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    payments = Payment.objects.all().filter(create_at__range=(startDate,endDate)).filter(type='Cash Sales').order_by('-create_at')
+    return render_to_response('cash_sales_list.html',{'payments': payments, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+
+   
+def InvoiceReport(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    payments = Payment.objects.all().filter(create_at__range=(startDate,endDate)).filter(type='Invoice').order_by('-create_at')
+    return render_to_response('do_list.html',{'payments': payments, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+           
+   
 def ReportDaily(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -116,9 +169,10 @@ def InventoryConfirm(request):
         except Supplier.DoesNotExist:
             supplier = None # supplier not found
         
-        
+        mode = request.GET.get('mode', 'receive')
         
         inStockBatch = InStockBatch()
+        inStockBatch.mode = mode
         inStockBatch.supplier = supplier
         inStockBatch.user = User.objects.get(pk=request.session.get('_auth_user_id'))
         today = date.today()
@@ -171,7 +225,9 @@ def SalesConfirm(request):
         
         customerName = request.GET.get('customer', 'Cash')
         customer = Customer.objects.filter(name=customerName)[0]
+        mode = request.GET.get('mode', 'sale')
         bill = Bill()
+        bill.mode = mode
         bill.subtotal_price = request.GET.get('subTotal', '0')
         bill.discount = request.GET.get('discount', '0')
         bill.total_price = request.GET.get('total', '0')
@@ -192,7 +248,7 @@ def SalesConfirm(request):
             payment.type = "Cash Sales"
             payment.status = "Complete"
         else:
-            payment.term = "Invoice: " + customer.term
+            payment.term = customer.term
             payment.type = "Invoice"
             payment.status = "Incomplete"        
             
@@ -208,18 +264,23 @@ def SalesConfirm(request):
             outStockRecord = OutStockRecord()
             outStockRecord.bill = bill
             outStockRecord.barcode = barcode
-
+            logging.info("looking for pk : %s " % barcode)
+            if "-foc-product" in barcode:
+                logging.info("Foc product found !! : %s " % barcode)    
+                
             try:
-                imei = request.GET.get(barcode+'_imei', '')
+                imei = request.GET.get(barcode+'_imei', 'None')
                 serial_no = SerialNo.objects.get(serial_no = imei)
                 outStockRecord.serial_no = serial_no
                 product = serial_no.inStockRecord.product
                 outStockRecord.product = product            
+                logging.info("product found by imei : %s " % barcode)
             except SerialNo.DoesNotExist:
                 product = Product.objects.get(pk=barcode)
                 outStockRecord.product = product            
                 logging.info("no imei no. found ")
-            
+                logging.info("product found by pk : %s " % barcode)
+                
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
             outStockRecord.amount = str(float(salesDict[barcode]['price'][0]) * float(salesDict[barcode]['quantity'] [0])) 
@@ -232,7 +293,8 @@ def SalesConfirm(request):
 def QueryBill(request, displayPage, billID):    
     bill = Bill.objects.get(pk=billID)
     outStockRecordset = OutStockRecord.objects.filter(bill=bill)
-    return render_to_response(displayPage+".html",{'bill': bill, 'outStockRecordset':outStockRecordset })
+    company = Company.objects.all()[0]
+    return render_to_response(displayPage+".html",{'bill': bill, 'outStockRecordset':outStockRecordset, 'company': company})
         
 def QueryInventory(request, inStockBatchID):    
     inStockBatch = InStockBatch.objects.get(pk=inStockBatchID)
@@ -249,9 +311,12 @@ def SupplierList(request):
     return HttpResponse(list, mimetype="text/plain")
     
 def ProductList(request):    
-    prefix = request.GET.get('q', "")
-    logging.debug("get ajax autocomplete query q: " + prefix)
-    productList = Product.objects.filter(Q(barcode__contains=prefix)|Q(name__contains=prefix))
+    q = request.GET.get('q', "")
+    logging.debug("get ajax autocomplete query q: " + q)
+    prefixs = q.split(",")
+    productList = Product.objects.all()
+    for prefix in prefixs:
+        productList = productList.filter(Q(barcode__contains=prefix)|Q(name__contains=prefix))
     list = ''
     if productList:
         for product in productList:
@@ -272,6 +337,17 @@ def CustomerList(request):
     for customer in customerList :
         list = list + customer.name + "\n"
     return HttpResponse(list, mimetype="text/plain")    
+
+def CategoryInfo(request):
+    categorys = Category.objects.all()
+    brands = Brand.objects.all()
+    types = Type.objects.all()
+    
+    categorys_str = serializers.serialize("json",  categorys).replace("[","").replace("]","")
+    brands_str = serializers.serialize("json",  brands).replace("[","").replace("]","")
+    types_str = serializers.serialize("json",  types).replace("[","").replace("]","")
+    json = "["+categorys_str+", "+brands_str+", "+types_str+"]"
+    return HttpResponse(json, mimetype="application/json")
     
 def ProductInfo(request, query):
     logging.info("check product: %s info" % query)
@@ -298,7 +374,7 @@ def ProductInfo(request, query):
         
     productSet = Product.objects.filter((Q(barcode__contains=query)|Q(name__contains=query)))
     if not productSet:
-        return HttpResponse("[{\"error\":true}]", mimetype="text/plain")    
+        return HttpResponse("[]", mimetype="application/json")    
     json = serializers.serialize("json",  productSet)
     return HttpResponse(json, mimetype="application/json")
     
@@ -384,18 +460,42 @@ def ProductSave(request, productID=None):
         form = ProductForm(request.GET, instance=product)
             
         if form.is_valid():
-            product = form.save(commit = True)
+            product = form.save(commit = False)
+            
+            category_pk = request.GET.get('category','-1')
+            brand_pk = request.GET.get('brand','-1')
+            type_pk = request.GET.get('type','-1')
+            try:
+                category = Category.objects.get(pk=int(category_pk))
+                brand = Brand.objects.get(pk=int(brand_pk))
+                type = Type.objects.get(pk=int(type_pk))
+            except Category.DoesNotExist:
+                return HttpResponseRedirect('/product/search/')    
+            except brand.DoesNotExist:
+                return HttpResponseRedirect('/product/search/')    
+            except type.DoesNotExist:
+                return HttpResponseRedirect('/product/search/')                    
+                
+            product.category = category
+            product.brand = brand
+            product.type = type
+            
+            product.active=True
             product.save()
             return HttpResponseRedirect('/product/search/')
         else:
-            return HttpResponseRedirect('/product/create/')
+            return HttpResponseRedirect('/product/search/')
 
 def ProductUpdateView(request, productID):
     product = Product.objects.get(pk=productID)
     form = ProductForm(instance=product)
-    return render_to_response('product_form.html',{'form': form, 'submit_form':'/product/save/'+productID, 'form_title': 'Update Product'})
+    barcode = product.barcode
+    return render_to_response('product_form.html',{'form': form, 'submit_form':'/product/save/'+productID, 'form_title': 'Update Product', 'barcode': barcode})
 
-
+def PrintBarcode(request, barcode):    
+    return render_to_response('printBarcode.html',{'barcode': barcode})
+    
+    
 def ProductDelete(request):
     if request.method == 'GET':
         delete_products = request.GET.getlist('delete_product[]')

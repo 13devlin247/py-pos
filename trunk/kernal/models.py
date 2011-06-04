@@ -69,6 +69,7 @@ class Company(models.Model):
     email = models.EmailField(max_length=100, blank=True)
     address = models.TextField(blank=True)
     active = models.BooleanField(True)
+    logo = models.ImageField(upload_to='./12static/images/upload/', max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)    
         
 class Supplier(models.Model):
@@ -84,7 +85,13 @@ class Supplier(models.Model):
     
     def __unicode__(self):
         return self.name
-        
+
+class SupplierAdmin(admin.ModelAdmin):
+    list_display=('supplier_code','name', 'contact_person', 'phone_office', 'email', 'active')
+    ordering = ['-supplier_code']
+    list_per_page = 25
+    search_fields = ['supplier_code', 'name', 'contact_person', 'phone_office', 'email']
+            
 class Customer(models.Model):
     customer_code = models.CharField(max_length=100, primary_key=True)
     name = models.CharField(max_length=100)
@@ -98,6 +105,12 @@ class Customer(models.Model):
 
     def __unicode__(self):
         return self.name 
+
+class CustomerAdmin(admin.ModelAdmin):
+    list_display=('customer_code','name', 'contact_person', 'phone', 'email', 'active')
+    ordering = ['-customer_code']
+    list_per_page = 25
+    search_fields = ['customer_code', 'name', 'contact_person', 'phone', 'email']
     
 class InStockBatch(models.Model):
     supplier = models.ForeignKey(Supplier)
@@ -105,6 +118,7 @@ class InStockBatch(models.Model):
     invoice_no = models.CharField(max_length=100)
     do_no = models.CharField(max_length=100)
     user = models.ForeignKey(User)
+    mode = models.CharField(max_length=150) 
     create_at = models.DateTimeField(auto_now_add = True)
     
 class InStockRecord(models.Model):
@@ -137,7 +151,7 @@ class Counter(models.Model):
     create_at = models.DateTimeField(auto_now_add = True)
 
     def __unicode__(self):
-        return str(self.create_at) + " " + str(self.initail_amount) + " " + self.user.username         
+        return str(self.create_at) + " " + str(self.active and  "Open" or "Close")         
         
 
 class Bill(models.Model):
@@ -151,6 +165,7 @@ class Bill(models.Model):
     create_at = models.DateTimeField(auto_now_add = True)
     counter = models.ForeignKey(Counter)
     user = models.ForeignKey(User)
+    mode = models.CharField(max_length=100)
     def __unicode__(self):
         return self.customer.name 
 
@@ -184,7 +199,7 @@ class OutStockRecord(models.Model):
 class ProductForm(ModelForm):
     class Meta:
         model = Product
-        exclude = ('active', )
+        exclude = ('active', 'category', 'brand' , 'type')
         
 class InStockRecordForm(ModelForm):
     class Meta:
@@ -221,25 +236,41 @@ class TypeForm(ModelForm):
         
 class InStockBatchForm(forms.Form):        
     supplier = forms.CharField(max_length=150)
-    do_date =  forms.DateField(widget=AdminDateWidget)
-    do_no =  forms.CharField(max_length=150)
-    inv_no =  forms.CharField(max_length=150)
+    do_date = forms.DateField(widget=AdminDateWidget)
+    do_no = forms.CharField(max_length=150)
+    inv_no = forms.CharField(max_length=150)
 
 class ReportFilterForm(forms.Form):
     start_date =  forms.DateField(widget=AdminDateWidget)
     end_date =  forms.DateField(widget=AdminDateWidget)    
 
 class BillAdmin(admin.ModelAdmin):
-	list_display=('customer', 'create_at', 'user', 'total_price')
-	ordering = ['-create_at']
-	list_per_page = 25
-	search_fields = ['customer__name']
-	date_hierarchy = 'create_at'    
+    list_display=('customer', 'create_at', 'user', 'total_price', 'counter')
+    ordering = ['-create_at']
+    list_per_page = 25
+    search_fields = ['customer__name']
+    date_hierarchy = 'create_at'
 
+    def queryset(self, request):
+        user = None
+        if request.session.get('_auth_user_id'):
+            user = User.objects.get(pk=request.session.get('_auth_user_id'))    
+            if user.is_superuser:
+                return Bill.objects.all()        
+            
+        return Bill.objects.filter(counter__active = True)
+         
 class PaymentAdmin(admin.ModelAdmin):
-	list_display=('bill','create_at', 'term', 'status')
-	ordering = ['-create_at']
-	list_per_page = 25
-	search_fields = ['bill__customer__name', 'term', 'status']
-	date_hierarchy = 'create_at'        
+    list_display=('bill','create_at', 'term', 'status')
+    ordering = ['-create_at']
+    list_per_page = 25
+    search_fields = ['bill__customer__name', 'term', 'status']
+    date_hierarchy = 'create_at'        
+    
+class ProductAdmin(admin.ModelAdmin):
+    list_display=('barcode','name', 'description', 'category', 'brand', 'type')
+    ordering = ['-name']
+    list_per_page = 25
+    search_fields = ['name', 'description', 'category', 'brand', 'type']
+    
     

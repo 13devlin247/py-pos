@@ -1,11 +1,11 @@
 from django.contrib import admin
-from pos.kernal.models import Product, ProductForm
+from pos.kernal.models import Product, ProductAdmin
 from pos.kernal.models import InStockRecord, InStockRecordForm
 from pos.kernal.models import OutStockRecord, OutStockRecordForm
 from pos.kernal.models import Bill, BillForm, BillAdmin
 from pos.kernal.models import Payment, PaymentAdmin
-from pos.kernal.models import Supplier, SupplierForm
-from pos.kernal.models import Customer, CustomerForm
+from pos.kernal.models import Supplier, SupplierAdmin
+from pos.kernal.models import Customer, CustomerAdmin
 from pos.kernal.models import Category, CategoryForm
 from pos.kernal.models import Brand, BrandForm
 from pos.kernal.models import UOM
@@ -17,14 +17,14 @@ from pos.kernal.models import Type, TypeForm
 from pos.kernal.models import Counter
 from pos.kernal.models import Company
 
-admin.site.register(Product)
+admin.site.register(Product, ProductAdmin)
 admin.site.register(InStockRecord)
 admin.site.register(InStockBatch)
 admin.site.register(OutStockRecord)
 admin.site.register(Bill, BillAdmin)
 admin.site.register(Payment, PaymentAdmin)
-admin.site.register(Supplier)
-admin.site.register(Customer)
+admin.site.register(Supplier, SupplierAdmin)
+admin.site.register(Customer, CustomerAdmin)
 admin.site.register(UOM)
 admin.site.register(SerialNo)
 admin.site.register(Category)

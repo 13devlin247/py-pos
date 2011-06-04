@@ -1,11 +1,31 @@
-{% extends "bill.html" %}
+{% extends "invoice.html" %}
 
 {% block css %}
-.invoice{
-	display: none;
-}
+	.price{
+		display: none;
+	}
+
+	.summary{
+		visibility: hidden;
+	}
+	
+	#bill_detail{
+		height: 700px;
+		vertical-align:top;
+		margin:0;
+		padding:0;		
+	}		
+{% endblock %}
+
+{% block javascript %}
+	$(".qty").each(function(){
+		$(this).attr('colspan','3');
+	});;
+	
 {% endblock %}
 
 {% block PageTitle %}
-Delivery Order
+						<div id="PageTitle">
+							DELIVERY ORDER
+						</div>	
 {% endblock %}
