@@ -55,6 +55,27 @@
               </tr>  
             </thead>  
 			<tbody id="sell_detail"></tbody>			
+			<!--
+            <tfoot>  
+              <tr>  
+                <td style="width:auto"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:auto"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:11%;"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:11%;"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:15%;"><input type="text" name="" style="width: 80%" />
+                </td>  
+              </tr>  
+              <tr>  
+                <td style="width:auto;text-align: left" colspan="5"><input type="submit" name="Free Of Charge" />
+                </td>  
+              </tr>                
+              
+            </tfoot>  			
+			-->
           </table>  
         </div>      
 
@@ -160,45 +181,21 @@
                 url: "/product/info/"+$("#item").val(),
                 type: "JSON",
                 success: function(data){  
+                    if(data.length == 0){   // if product not found in server, entry foc process
+                        var foc = $("#item").val();
+                        var foc_pk = foc.replace(/\s/g,"-")+"-foc-product";
+                        var focJSON = "[{\"pk\": \""+foc_pk+"\", \"model\": \"kernal.foc\", \"fields\": {\"name\": \""+foc+"\", \"barcode\": \""+foc+"\", \"tag\": \""+foc+"\", \"cost\": \"0\", \"active\": true, \"retail_price\": \"0\", \"uom\": 1, \"description\": \""+foc+"\"}}]";
+                        var focObject = jQuery.parseJSON(focJSON);
+                        _localProductStore(foc_pk, focObject[0]);                        
+                        return;
+                    } // foc process leave
                     for (var i = 0; i < data.length; i++){
                         var barcode = data[i].fields.barcode;
 						var pk = data[i].pk;
                         if('imei' in data[i]){
                             pk = data[i].imei;
                         }
-
-						if ( productTable[pk] == undefined){
-							// row = $('#sell_detail').html();
-							productTable[pk] = data;       
-							row = ""+
-									"<tr id=\""+pk+"_tr\">"+
-									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+barcode+"</td>"+
-									"<td id=\""+pk+"_productName\">"+data[i].fields.name+" <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data[i].imei+"\" readonly=false size=\"18\" style=\"border: none; background: transparent;\"/></td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
-									"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data[i].fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
-									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"' onChange=resetQuantityField('"+pk+"')) /></td>"+
-									"<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data[i].fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data[i].pk+"\" /></td>"+
-									"</tr>"
-							;
-							$('#sell_detail').append(row);
-
-							/**
-								query product inventory by ajax
-							**/
-							$.ajax({
-								url: "/product/inventory/"+data[i].pk,
-								type: "JSON",
-								success: function(data){  
-									$("#"+data[i].pk+"_stockCount").html(data[i].inventory);
-								},
-								error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
-								complete: function(data){},
-							});            
-						}else{
-							quantityPlugOne(pk)
-							calcAmount(pk);
-							calcSubTotalPrice();
-							calcTotalPrice();
-						}
+                        _localProductStore(pk, data[i]);
                     }
                 },
                 error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
@@ -209,6 +206,57 @@
             });            
     });
     
+    function _localProductStore(pk, data){
+        if ( productTable[pk] == undefined){
+            // row = $('#sell_detail').html();
+            productTable[pk] = data;       
+            row = _genRowByPK(pk, data);
+            $('#sell_detail').append(row);
+            if(data.model == "kernal.foc"){ // foc product no stock
+                return;
+            }
+            _queryInventory(data);
+        }else{
+            quantityPlugOne(pk);
+            calcAmount(pk);
+            calcSubTotalPrice();
+            calcTotalPrice();
+        }    
+    }
+    
+    function _queryInventory(pk){
+        /**
+            query product inventory by ajax
+        **/
+        $.ajax({
+            url: "/product/inventory/"+pk,
+            type: "JSON",
+            success: function(data){  
+                $("#"+data[0].pk+"_stockCount").html(data[0].inventory);
+            },
+            error: function(data){ 
+                alert("Product Not found! please check your query: " + $("#item").val()) 
+            },
+            complete: function(data){},
+        });    
+    }
+    
+    function _genRowByPK(pk, data){
+        var IMEI_str = "";
+        if (data.imei != undefined){
+            IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=false size=\"18\" style=\"border: none; background: transparent;\"/>";
+        }
+        row = ""+
+                "<tr id=\""+pk+"_tr\">"+
+                "<td><a href='#' id='removeItem' onclick=\"removeItem('"+pk+"')\"><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
+                "<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +"</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
+                "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); readonly style='border:none; background: transparent'/></td>"+
+                "<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"' onChange=resetQuantityField('"+pk+"')) /></td>"+
+                "<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data.fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data.pk+"\" /></td>"+
+                "</tr>"
+        ;    
+        return row;
+    }
 	function _build_serial_input_textfield_by_pk_and_quantity(pk, quantity){
 		var inputField = '';
         for (var i = 0 ; i < quantity ; i ++){
@@ -229,7 +277,7 @@
     function calcSubTotalPrice(){
         var total = 0;
         for (var key in productTable){
-            total += parseInt($("#"+key+"_amount").html());
+            total += parseFloat($("#"+key+"_amount").html());
         }
         $("#subTotal").attr("value",total);
     }
@@ -252,9 +300,9 @@
 
 	function lowerCostDetact(pk){
         var price = parseFloat($("#"+pk+"_price").val());
-		var cost = parseFloat(productTable[pk][0].fields.cost);
+		var cost = parseFloat(productTable[pk].fields.cost);
 		if(cost > price){
-			alert(productTable[pk][0].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n');
+			alert(productTable[pk].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n');
 			
 		}
 	}
@@ -306,9 +354,9 @@
 		var msg = '';
 		for(var pk in productTable){
 			var price = parseFloat($("#"+pk+"_price").val());
-			var cost = parseFloat(productTable[pk][0].fields.cost);
+			var cost = parseFloat(productTable[pk].fields.cost);
 			if(cost > price){
-				msg += productTable[pk][0].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n'
+				msg += productTable[pk].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n'
 			}
 		}
 		ans = confirm(msg + " \n Are you sure?");

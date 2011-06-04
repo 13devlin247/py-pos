@@ -11,11 +11,15 @@ from pos.kernal.views import SupplierSave, CustomerSave
 from pos.kernal.views import SupplierList, CustomerList, ProductList
 from pos.kernal.views import CustomerInfo, SupplierInfo
 from pos.kernal.views import test
+from pos.kernal.views import CategoryInfo
 from django.contrib.auth.decorators import login_required
 from pos.kernal.views import CounterUpdate
 from pos.kernal.views import PersonReport
-
-
+from pos.kernal.views import PrintBarcode
+from pos.kernal.views import InvoiceReport
+from pos.kernal.views import CashSalesReport
+from pos.kernal.views import SalesReturnReport
+from pos.kernal.views import InventoryReturnReport
 
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -156,7 +160,6 @@ urlpatterns = patterns('',
     url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register'} }),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
     url(r'^sales/confirm/$', login_required(SalesConfirm)),
-    url(r'^sales/do/list$', login_required(list_detail.object_list),  sales_do_list_view), 
     url(r'^underconstructor/$', login_required(direct_to_template),  {
                             'template': 'under_constructor.html', 
                             'extra_context':{ 'msg':'this page is under constructor !!'}
@@ -167,6 +170,16 @@ urlpatterns = patterns('',
     url(r'^report/person/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/person/'} }),                                
     url(r'^report/person/$', PersonReport),                        
     url(r'^sales/do/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/do/list'} }),                                
+    url(r'^sales/do/list$', login_required(InvoiceReport)), 
+    url(r'^sales/cash/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/cash/list'} }),                                
+    url(r'^sales/cash/list$', login_required(CashSalesReport)),     
+    url(r'^sales/return/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/return/list'} }),                                
+    url(r'^sales/return/list$', login_required(SalesReturnReport)),         
+    url(r'^inventory/return/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/inventory/return/list'} }),                                
+    url(r'^inventory/return/list$', login_required(InventoryReturnReport)),             
+    
+    
+    
     #url(r'^counter/close/$', CloseCounter),         
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
@@ -176,6 +189,10 @@ urlpatterns = patterns('',
     #url(r'^sales/confirm/$', printData),
     (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
+    
+    url(r'^category/info/$', login_required(CategoryInfo)),
+    url(r'^print/barcode/(?P<barcode>\w+)*', login_required(PrintBarcode)),
+
     
     
     # testing

@@ -2,25 +2,49 @@
 
 {% block content %}   
 <style type="text/css">
-/* LIST #5 */
-
-#list5 { color:#111; }
-#list5 ol { font-size:18px; }
-#list5 ol li {  }
-#list5 ol li ol { list-style-image: url("/static/images/nested.png"); padding:5px 0 5px 18px; font-size:15px; }
-#list5 ol li ol li { color:gray; height:15px; margin-left:10px; font-size:14px;}
+.innertable {
+	display: none;
+}
 </style> 
-<div style="margin: auto; font: 62.5% Georgia,Arial,sans-serif;">
-<div id="list5">
-   <ol>
-      <li>Delivery Order List
-         <ol>
-			{% for payment in object_list %}
-            <li><a href="/sales/do/{{payment.bill.pk}}"> {{payment.bill.create_at}} </a> ${{payment.bill.total_price}} </li>
-			{% endfor %}
-         </ol>
-      </li>
-   </ol>
-</div>
-</div>
-{% endblock %}	
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Invoice and Delivery Order</h1>
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder">  	
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>Sale ID
+                </th>  								
+                <th>Date
+                </th>  								
+                <th>Customer
+                </th>  								
+                <th>Sold by
+                </th>  								
+                <th>Invoice
+                </th>  								
+                <th>Do
+                </th>  												
+              </tr>  		
+            </thead>  		
+            <tbody>  						
+			{% for payment in payments %}
+              <tr>
+                  <td>{{payment.bill.pk}}</td>
+                  <td>{{payment.bill.create_at}}</td>
+                  <td>{{payment.bill.customer.name}}</td>
+                  <td>{{payment.bill.user.username}}</td>
+                  <td><a href="/sales/invoice/{{payment.bill.pk}}" target="_blank">Show</a></td>
+                  <td><a href="/sales/do/{{payment.bill.pk}}" target="_blank">Show</a></td>
+              </tr>  			
+			{%endfor%}
+            </tbody>  	
+          </table>  
+        </div>  
+      </div>  
+    </div>
+
+{% endblock %}

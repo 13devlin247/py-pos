@@ -6,32 +6,107 @@
 	text-align: right;
 }
 td {
-text-align: right;
-border: none;
+	text-align: right;
+	border: none;
 }
 
 tfoot td {
 	font-weight:bold;
 }
 
-.Receipt{
+.itemno{
 	text-align: left;
+	width: 125px;
 }
+
+#CompanyProfile{
+	text-align: left;
+	
+}
+
+#CompanyProfile .logo{
+	float: left;
+}
+.logo img{
+	width: 100px;
+	height:  70px;
+}
+
+
+
+
+#CompanyProfile .company{
+	font-size: 14pt;
+}
+
+#CompanyProfile .address{
+	font-size: 10pt;
+}
+
+#CompanyProfile .contect span{
+	font-size: 10pt;
+	margin: 0 1.5em 0 0;
+}
+
+.signature{
+	text-align: center;
+}
+
 {% block css %}
+#bill_detail{
+	height: 300px;
+	vertical-align:top;
+	margin:0;
+	padding:0;
+}
+
 .invoice{
 	
 }
 {% endblock%}
 
+#PageTitle{
+	text-align:center;
+	font-size: 18pt;
+	font-weight: bold;
+	margin: 1em 0 0 0;
+}
 
+.Receipt{
+	text-align: left;
+	padding: 0 0 0 2em;	
+}
+
+.label{
+	font-weight: bolder;
+	width: 100px;
+	text-align: left;
+
+ }
+
+.label span{
+	float: right;
+ }
+  
+.border-top{
+	border-top: solid 2px black;
+}
+.border-bottom{
+	border-bottom: solid 2px black;
+}
+
+th,td{
+ //border: solid red 1px;
+}
 
 </style>
+
 
 <table width="100%" cellpadding="0" cellspacing="0" height="100%">    
   <tbody>
     <tr>                 
       <td valign="center">            
-        <form method="post" name="frmDataEntry">
+        <form id="f" method="post" name="frmDataEntry">
           <input id="idId" name="Id" value="00067" type="hidden">
           <input id="idAttendant" name="Attendant" value="0" type="hidden">
           <input id="idDId" name="DId" value="" type="hidden">
@@ -41,100 +116,296 @@ tfoot td {
               <tr>        
                 <td colspan="4">            
                   <p align="center">
+					{% block CompanyProfile %}
+						<div id="CompanyProfile">
+							<div class="logo"><img src="/{{company.logo}}"/></div>
+							<div class="company">{{company.name}}</div>
+							<div class="address">{{company.address}}</div>
+							<div class="contect"><span>TEL: {{company.phone_office}}</span><span> FAX: {{company.fax}} </span><span>EMAIL: {{company.email}}</span></div>
+						</div>
+					{% endblock %}
 					{% block PageTitle %}
-						{{bill.payment_set.select_related.0.type}}
+						<div id="PageTitle">
+							RECEIPT
+						</div>					
 					{% endblock %}
                   </p>
 				</td>    
               </tr>    
+			  {% block BillTitle %}
               <tr>        
-                <td class="Receipt">            Bill No:         </td>        
+                <td class="Receipt label">            Bill No<span>:</span>         </td>        
                 <td class="Receipt">            <b>{{bill.pk}}        </b></td>    
+                <td class="Receipt label">            Date<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{bill.create_at}}</b>        </td>    				
               </tr>    
               <tr>        
-                <td class="Receipt">            Cashier         </td>        
+                <td class="Receipt label">            Cashier<span>:</span>          </td>        
                 <td class="Receipt">            <b>{{bill.user.username}}        </b></td>        
                 <!---->        
-                <td class="Receipt">            Date :         </td>        
-                <td class="Receipt">            {{bill.create_at}}        </td>    
+                <td class="Receipt label" >            Paid By<span>:</span>         </td>        
+                <td class="Receipt" >             <b>{{bill.payment_set.select_related.0.term}}</b>  {{bill.payment_set.select_related.0.transaction_no}}        </td>    				
               </tr>    
               <tr>        
-                <td class="Receipt">            Customer         </td>        
+                <td class="Receipt label">            TO<span>:</span>         </td>        
                 <td class="Receipt">            <b>{{bill.customer}}                    </b></td>        
                 <td class="Receipt">                    </td>        
                 <td class="Receipt">                    </td>    
               </tr>    
-              <tr class="hr">
-                <td colspan="4">            
-                  <hr/>        </td>    
-              </tr>
+			  {% endblock %}
             </tbody>
           </table>
-          <table width="100%" id="bill_content">    
+		  
+          <table width="100%">    
             <tbody>
-              <tr>        
-				<td class="Receipt">            QTY         </td>        
-				<td class="Receipt">            Item -- Serve         </td>        
-                <td align="right" class="invoice">            U. P.         </td>        
-                <td align="right" class="invoice">            Amount         </td>    
-              </tr>    
-              <tr class="hr">        
-                <td colspan="4">            
-                  <hr>        </td>    
-              </tr>    
-			{% for outStockRecord in outStockRecordset%}
-				{{record}}
+			  <tr>
+				<td colspan="5" id="bill_detail">
+					<table>   
+						  <tr>        
+							<td colspan="5" class="border-bottom"></td>    
+						  </tr>   
+						  <tr>        
+							<td class="Receipt itemno">            ITEM NO.         </td>        
+							<td class="Receipt">            DESCRIPTION         </td>        
+							<td class="right qty">            QTY         </td>        
+							<td align="right" class="price">            U.PRICE         </td>        
+							<td align="right" class="price">            AMOUNT         </td>    
+						  </tr>    
+						  <tr>        
+							<td colspan="5" class="border-top"></td>    
+						  </tr>    
+						{% for outStockRecord in outStockRecordset%}
+							{{record}}
+							<tr>
+							<td class="Receipt itemno"> {{forloop.counter}} {{outStockRecord.product.name}}</td>
+							<td class="Receipt">{{outStockRecord.product.description}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMEI: {{outStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
+							<td class="right qty">{{outStockRecord.quantity}}</td>
+							<td align="right" class="price">{{outStockRecord.unit_sell_price}}</td>
+							<td align="right" class="price">{{outStockRecord.amount}}</td>
+							</tr>
+						{% endfor %}			  
+					</table>				
+				</td>
+			  </tr>
 				<tr>
-                <td class="Receipt">{{outStockRecord.quantity}}</td>
-                <td class="Receipt">{{outStockRecord.product.name}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMIC: {{outStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
-                <td align="right" class="invoice">{{outStockRecord.unit_sell_price}}</td>
-                <td align="right" class="invoice">{{outStockRecord.amount}}</td>
-				</tr>
-			{% endfor %}			  
-				<tr class="hr">
-                <td colspan=4><hr/></td>
+                <td colspan="5" class="border-top"></td>
 				</tr>                
             
             </tbody>
             <tfoot>
               <tr id="bill_summary">        
-                <td  align="right" class="invoice" >            Received Amount         </td>        
-                <td align="right" class="invoice" >                        {{bill.tendered_amount}}        </td>    			  
-                <td  align="right" class="invoice" >            Sub Total         </td>        
-                <td align="right" class="invoice" >            {{bill.subtotal_price}}       </td>    
+				<td class="summary Receipt" id="total_word" colspan=3></td>        
+                <td  align="right" class="summary" >            Sub Total         </td>        
+                <td align="right" class="summary" >            {{bill.subtotal_price}}       </td>    
               </tr>            
               <tr>        
-                <td  align="right" class="invoice" >            Change         </td>        
-                <td align="right" class="invoice" >           {{bill.change}}         </td>    
-                <td  align="right" class="invoice" >            Disc         </td>        
-                <td align="right" class="invoice" >            {{bill.discount}}       </td>    
+				<td  align="right" class="summary" >            </td>        			  
+				<td  align="right" class="summary" >            </td>        
+				<td  align="right" class="summary" >            </td>        
+                <td  align="right" class="summary" >            Disc         </td>        
+                <td align="right" class="summary" >            {{bill.discount}}       </td>    
               </tr>            
               <tr>        
-                <td align="right" class="invoice" >            Paid By         </td>        
-                <td align="right" class="invoice" >             {{bill.payment_set.select_related.0.term}} : {{bill.payment_set.select_related.0.transaction_no}}        </td>    
-                <td  align="right" class="invoice" >            Total         </td>        
-                <td align="right" class="invoice" >            {{bill.total_price}}       </td>    
+				<td  align="right" class="summary" >            </td>        			  
+                <td align="right" class="summary" >                     </td>        
+                <td align="right" class="summary" >            </td>    
+                <td  align="right" class="summary border-bottom" >            Total         </td>        
+                <td align="right" class="summary border-bottom" id="total_amount">{{bill.total_price}}</td>    
               </tr>                          
+
+              <tr>        
+				<td class="signature"> ____________________         </td>
+                <td class="signature"> ____________________         </td>
+                <td align="right" class="summary" >            </td>    
+                <td align="right" class="summary" >            Received Amount         </td>        
+                <td align="right" class="summary" >                        {{bill.tendered_amount}}        </td>    			  
+			  </tr>                          
+			  
+              <tr>        
+				<td class="signature">                 Customer Signature         </td>        
+                <td class="signature">                 Authorised By         </td>    
+                <td align="right" class="summary" >            </td>    
+                <td align="right" class="summary" >            Change         </td>        
+                <td align="right" class="summary" >           {{bill.change}}         </td>    
+			  </tr>                          
+				
               <tr>        
                 <td colspan="10">            
                   <hr>        </td>    
               </tr>        
             </tfoot>
           </table>
-          <table width="100%">    
-            <tbody>
-              <tr>        
-                <td width="30%" align="center">                 
-                  <br>____________________         </td>        
-                <td width="30%" align="center">                          </td>        
-                <td width="30%" align="center">                 
-                  <br>_____________________         </td>    
-              </tr>    
-              <tr>        
-                <td width="30%" align="center">                 Customer Signature         </td>        
-                <td width="30%" align="center">                          </td>        
-                <td width="30%" align="center">                 Authorised By         </td>    
-              </tr>
-            </tbody>
-          </table>
+		  
+<script type="text/javascript">
+var ones = new Array(
+
+ '',
+
+ ' one',
+
+ ' two',
+
+ ' three',
+
+ ' four',
+
+ ' five',
+
+ ' six',
+
+ ' seven',
+
+ ' eight',
+
+ ' nine',
+
+ ' ten',
+
+ ' eleven',
+
+ ' twelve',
+
+ ' thirteen',
+
+ ' fourteen',
+
+ ' fifteen',
+
+ ' sixteen',
+
+ ' seventeen',
+
+ ' eighteen',
+
+ ' nineteen'
+
+);
+
+
+
+var tens = new Array(
+
+ '',
+
+ '',
+
+ ' twenty',
+
+ ' thirty',
+
+ ' forty',
+
+ ' fifty',
+
+ ' sixty',
+
+ ' seventy',
+
+ ' eighty',
+
+ ' ninety'
+
+);
+
+
+
+var triplets = new Array(
+
+ '',
+
+ ' thousand',
+
+ ' million',
+
+ ' billion',
+
+ ' trillion',
+
+ ' quadrillion',
+
+ ' quintillion',
+
+ ' sextillion',
+
+ ' septillion',
+
+ ' octillion',
+
+ ' nonillion'
+
+);
+
+
+
+function convertTri(num, tri) {
+
+ var str = '', comma = '',
+
+  r = Math.round( ( num / 1000 ) - 0.5 ),
+
+  x = Math.round( ( num / 100 ) - 0.5 ) % 10,
+
+  y = Math.round( ( num % 100 ) - 0.5 );
+
+ if(x > 0) { // hundreds
+
+  str = ones[x] + ' hundred';
+
+ }
+
+ if(y < 20) { // ones and tens
+
+  str += ones[y];
+
+ } else {
+
+  str += tens[Math.round( (y / 10) - 0.5 )] + ones[y % 10];
+
+ }
+
+ if(str) { // thousands
+
+  str += triplets[tri];
+
+ }
+
+ if(r > 0) { // continue recursing?
+/*
+  if(str) {
+
+   var f = document.forms.f;
+
+   comma += f.comma.checked ? ',' : '';
+
+   comma += f.wrapx.checked ? '&lt;br /&gt;' : '';
+
+  }
+
+  return convertTri( r, tri + 1 ) + comma + str;
+*/
+	return convertTri( r, tri + 1 ) + str;
+ }
+
+ return str;
+
+}
+var total_txt = $("#total_amount").text();
+if(total_txt.indexOf(".") == -1){
+	var total = parseInt(total_txt);
+	var dollar = convertTri(total,0);
+	$("#total_word").append("RINGGIT MALAYSIA : " + dollar.toUpperCase() + " DOLLAR ONLY");
+}else{
+	var total = total_txt.split(".");
+	var dollar = convertTri(total[0],0);
+	if(total[1].length == 1){
+		total[1] *= 10;
+	}
+	var cents = convertTri(total[1],0);
+	$("#total_word").append("RINGGIT MALAYSIA : " + dollar.toUpperCase() + " DOLLAR AND " + cents.toUpperCase() + " CENTS ONLY");
+}
+
+
+{% block javascript%}
+{% endblock %}
+</script>
 {% endblock %}

@@ -1,11 +1,5 @@
 {% extends "product.php.html" %}
 
-{% block left_link %}
-    {% for name,link in main_link.items %}
-            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
-    {% endfor%}
-{% endblock %}
-
 {% block content %}   
 <style type="text/css">
 .innertable {
@@ -35,7 +29,7 @@
 </style> 
 	<div id="content_area_wrapper">  
       <div id="content_area">  
-        <div id="page_title" style="margin-bottom:8px;">Detailed Sales Report
+        <div id="page_title" style="margin-bottom:8px;"><h1>Personal Sales Report</h1>
         </div>
 		
         <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
