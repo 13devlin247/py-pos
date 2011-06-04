@@ -1,0 +1,40 @@
+<html>
+<head>
+{% block extrastyle %}
+    <link rel="stylesheet" href="/static/css/code128.css" type="text/css" media="screen">
+    <link rel="stylesheet" href="/static/js/code128.css" type="text/css" media="print">
+{% endblock %}
+{% block content %}
+    <script type="text/javascript" src="/static/js/base2-jsb-fp.js"></script>
+    <script src="/static/js/code128-base2.js" type="text/javascript"></script>
+    <script>
+		new jsb.Rule(".barcode", base2.Barcode.code128behaviour);
+    </script>    
+</head>    
+<style type="text/css">
+table{
+  width:100%;
+
+}
+td{
+  //border: solid red 1px;
+}
+</style>
+<body>
+                                <table>
+                                    <tr>
+                                      <td>
+                                        <div class="barcode"><label>{{barcode}}</label></div>
+                                      </td>
+                                      <td>
+                                        <div class="barcode"><label>{{barcode}}</label></div>
+                                      </td>
+                                      <td>
+                                        <div class="barcode"><label>{{barcode}}</label></div>
+                                      </td>
+                                    </tr>                                          
+                                </table>
+</body>
+{% endblock %}
+
+</html>
