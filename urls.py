@@ -1,4 +1,5 @@
 from django.conf.urls.defaults import patterns, include, url
+from django.contrib.auth.decorators import login_required
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Counter, Payment
@@ -12,7 +13,6 @@ from pos.kernal.views import SupplierList, CustomerList, ProductList
 from pos.kernal.views import CustomerInfo, SupplierInfo
 from pos.kernal.views import test
 from pos.kernal.views import CategoryInfo
-from django.contrib.auth.decorators import login_required
 from pos.kernal.views import CounterUpdate
 from pos.kernal.views import PersonReport
 from pos.kernal.views import PrintBarcode
@@ -145,6 +145,7 @@ urlpatterns = patterns('',
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
     url(r'^product/ajax/$', login_required(ProductList)),    
+    url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
     url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/list2/$', login_required(direct_to_template),  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
@@ -157,6 +158,7 @@ urlpatterns = patterns('',
     url(r'^out_stock_record/search/$', login_required(list_detail.object_list),  out_stock_record_list_view), 
     url(r'^out_stock_record/save/$', login_required(OutStockRecordSave)), 
     url(r'^sales/order/$', login_required(direct_to_template),  {'template': 'pos.html'}),
+    url(r'^sales/$', login_required(direct_to_template),  {'template': 'sales.html'}),
     url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register'} }),
     url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register'} }),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
@@ -170,8 +172,8 @@ urlpatterns = patterns('',
     url(r'^report/daily/$', login_required(ReportDaily)),                        
     url(r'^report/person/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/person/'} }),                                
     url(r'^report/person/$', PersonReport),                        
-    url(r'^sales/do/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/do/list'} }),                                
-    url(r'^sales/do/list$', login_required(InvoiceReport)), 
+    url(r'^sales/invoice/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/invoice/list'} }),                                
+    url(r'^sales/invoice/list$', login_required(InvoiceReport)), 
     url(r'^sales/cash/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/cash/list'} }),                                
     url(r'^sales/cash/list$', login_required(CashSalesReport)),     
     url(r'^sales/return/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/return/list'} }),                                
@@ -181,14 +183,10 @@ urlpatterns = patterns('',
     
     
     
-    #url(r'^counter/close/$', CloseCounter),         
+
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
-    #url(r'^sales/bill/$', direct_to_template,  {'template': 'bill.html'}),
     url(r'^sales/(?P<displayPage>\w+)*/(?P<billID>\w+)*', login_required(QueryBill)),
-    #url(r'^report/daily/$', direct_to_template,  {'template': 'report_dailySales.html'}),                        
-    #url(r'^sales/confirm/$', printData),
-    (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
     
     url(r'^category/info/$', login_required(CategoryInfo)),
