@@ -13,6 +13,10 @@
  vertical-align: middle;
 }
 
+#sale_details div input{
+	border: solid red 1px;
+}
+
 </style>
 <form action="/sales/confirm" method="get" id="sales">
 <div id="content_area_wrapper">  
@@ -91,33 +95,33 @@
           <div class="clearfix">&nbsp;
           </div>  		 	
           <div id='sale_details'>  		
-            <div class="float_left" style="width:55%;">Sub Total:
+            <div class="float_left" style="width:50%;">Sub Total:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type=text name="subTotal" id="subTotal" value="0.00" readonly=false size="10" style="border: none; background: transparent;"/>
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="subTotal" id="subTotal" value="0.00" readonly=false size="10" style="border: none; background: transparent;"/>
             </div>    				
-            <div class="float_left" style='width:55%;'>Discount:
+            <div class="float_left" style='width:50%;'>Discount:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
             </div>  		 		
-            <div class="float_left" style='width:55%;'>Total:
+            <div class="float_left" style='width:50%;'>Total:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
             </div>  	
 			{% block AmountTendered %}
-            <div class="float_left" style='width:55%;'>Amount Tendered:
+            <div class="float_left" style='width:50%;'>Amount Tendered:
             </div>  		
-            <div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="amountTendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="amountTendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
             </div>  	
 			<div id="change_block">
-				<div class="float_left" style='width:55%;'>Change:
+				<div class="float_left" style='width:50%;'>Change:
 				</div>  		
-				<div class="float_left" style="width:45%;font-weight:bold;">$<input type="text" name="change" value="0.00" id="change" size="10" style="border: none; background: transparent;"/>
+				<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="change" value="0.00" id="change" size="10" style="border: none; background: transparent;"/>
 				</div>  	
 			</div>		
 			<div id="creaditCard_block" style="display: none">
-					<div class="float_left" style='width:55%;'>Transaction No:
+					<div class="float_left" style='width:50%;'>Transaction No:
 					</div>  		
-					<div class="float_left" style="width:45%;font-weight:bold;"><input type="text" name="transactionNo" id="transactionNo" size="10" />
+					<div class="float_left" style="width:50%;font-weight:bold;"><input type="text" name="transactionNo" id="transactionNo" size="10" />
 					</div>  	
 			</div>			
 			{% endblock %}	
