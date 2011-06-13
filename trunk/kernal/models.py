@@ -51,7 +51,7 @@ class Product(models.Model):
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category)
     brand = models.ForeignKey(Brand)
-    type = models.ForeignKey(Type)
+    type = models.ForeignKey(Type, null = True)
     retail_price = models.DecimalField(max_digits=100,  decimal_places=2)
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     uom = models.ForeignKey(UOM)
@@ -138,6 +138,7 @@ class InStockRecord(models.Model):
 class SerialNo(models.Model):
     inStockRecord = models.ForeignKey(InStockRecord)
     serial_no = models.CharField(max_length=100, primary_key=True)
+    active = models.BooleanField("Is Saled", True)
     create_at = models.DateTimeField(auto_now_add = True)
     
     def __unicode__(self):

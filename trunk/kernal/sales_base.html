@@ -244,14 +244,14 @@
     function _genRowByPK(pk, data){
         var IMEI_str = "";
         if (data.imei != undefined){
-            IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=false size=\"18\" style=\"border: none; background: transparent;\"/>";
+            IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
         }
         row = ""+
                 "<tr id=\""+pk+"_tr\">"+
                 "<td><a href='#' id='removeItem' onclick=\"removeItem('"+pk+"')\"><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
                 "<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +"</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
-                "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); readonly style='border:none; background: transparent'/></td>"+
-                "<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"' onChange=resetQuantityField('"+pk+"')) /></td>"+
+                "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
+                "<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
                 "<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data.fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data.pk+"\" /></td>"+
                 "</tr>"
         ;    
