@@ -43,13 +43,15 @@
               <tr>  				
                 <th>Employee
                 </th>  								
-                <th>Price
+                <th>Unit Price
                 </th>  								
+                <th>QTT
+                </th>  					
+                <th>Total Price
+                </th>  												
                 <th>Cost
                 </th>  								
                 <th>Profit
-                </th>  								
-                <th>QTT
                 </th>  								
               </tr>  		
             </thead>  		
@@ -58,9 +60,9 @@
 			{%for user, outStockRecordSet in users.items%}
 				{%for outStockRecord in outStockRecordSet%}
 					{% if forloop.counter == 1%}
-						<tr class="summary"><td>{{outStockRecord.bill.user.username}}</td><td>{{outStockRecord.unit_sell_price}}</td>  <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td>   <td>{{outStockRecord.quantity}}</td> </tr>
+						<tr class="summary"><td>{{outStockRecord.bill.user.username}}</td><td> -- </td><td>{{outStockRecord.quantity}}</td>  <td>{{outStockRecord.amount}}</td> <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td> </tr>
 					{% else %}
-						<tr class="detail"><td>{{outStockRecord.bill.create_at}}</td><td>{{outStockRecord.unit_sell_price}}</td>  <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td>   <td>{{outStockRecord.quantity}}</td> </tr>
+						<tr class="detail"><td>{{outStockRecord.bill.create_at}}</td><td>{{outStockRecord.unit_sell_price}}</td><td>{{outStockRecord.quantity}}</td> <td>{{outStockRecord.amount}}</td> <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td>  </tr>
 					{% endif %}
 				{%endfor%}
 			{%endfor%}

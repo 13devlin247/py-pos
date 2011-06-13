@@ -158,6 +158,25 @@ th,td{
 		  
           <table width="100%">    
             <tbody>
+			<tr>
+				<td colspan=5>
+					<div class="pagination">
+						<span class="step-links">
+							{% if outStockRecordset.has_previous %}
+								<a href="?page={{ outStockRecordset.previous_page_number }}">previous</a>
+							{% endif %}
+
+							<span class="current">
+								Page {{ outStockRecordset.number }} of {{ outStockRecordset.paginator.num_pages }}.
+							</span>
+
+							{% if outStockRecordset.has_next %}
+								<a href="?page={{ outStockRecordset.next_page_number }}">next</a>
+							{% endif %}
+						</span>
+					</div>				
+				</td>
+			</tr>
 			  <tr>
 				<td colspan="5" id="bill_detail">
 					<table>   
@@ -174,7 +193,7 @@ th,td{
 						  <tr>        
 							<td colspan="5" class="border-top"></td>    
 						  </tr>    
-						{% for outStockRecord in outStockRecordset%}
+						{% for outStockRecord in outStockRecordset.object_list %}
 							{{record}}
 							<tr>
 							<td class="Receipt itemno"> {{forloop.counter}} {{outStockRecord.product.name}}</td>

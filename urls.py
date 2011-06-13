@@ -42,6 +42,7 @@ product_list_view = {
     'queryset': Product.objects.filter(active=True),                      
     'allow_empty': True,                      
     'template_name': 'product_list.html', 
+    'paginate_by': 25,
     'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link},    
 }
 
@@ -124,7 +125,7 @@ urlpatterns = patterns('',
     url(r'^product/update/(?P<productID>\w+)', login_required(ProductUpdateView)), 
     url(r'^product/delete/$', login_required(ProductDelete)),    
     url(r'^product/save/(?P<productID>\w+)*', login_required(ProductSave)), # controller
-    url(r'^product/info/(?P<query>\w+)*', login_required(ProductInfo)), # controller
+    url(r'^product/info/(?P<query>[0-9a-zA-Z|-]+)*', login_required(ProductInfo)), # controller
     url(r'^product/inventory/(?P<pk>\w+)*', login_required(ProductInventory)), # controller
 
     url(r'^supplier/create/$', login_required(create_update.create_object), supplier_form), 

@@ -24,6 +24,8 @@ from django.contrib.sessions.models import Session
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import permission_required
 from datetime import date
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 # import the logging library
 import logging
 
@@ -274,6 +276,7 @@ def SalesConfirm(request):
                 outStockRecord.serial_no = serial_no
                 product = serial_no.inStockRecord.product
                 outStockRecord.product = product            
+                
                 logging.info("product found by imei : %s " % barcode)
             except SerialNo.DoesNotExist:
                 product = Product.objects.get(pk=barcode)
@@ -291,8 +294,22 @@ def SalesConfirm(request):
         return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
         
 def QueryBill(request, displayPage, billID):    
+    list_per_page = 25
+    if displayPage == 'bill':
+        list_per_page = 10
+        
     bill = Bill.objects.get(pk=billID)
-    outStockRecordset = OutStockRecord.objects.filter(bill=bill)
+    resultSet = OutStockRecord.objects.filter(bill=bill)
+    paginator = Paginator(resultSet, list_per_page) # Show 25 contacts per page    
+    page = request.GET.get('page','1')
+    try:
+        outStockRecordset = paginator.page(page)
+    except PageNotAnInteger:
+        # If page is not an integer, deliver first page.
+        outStockRecordset = paginator.page(1)
+    except EmptyPage:
+        # If page is out of range (e.g. 9999), deliver last page of results.
+        outStockRecordset = paginator.page(paginator.num_pages)    
     company = Company.objects.all()[0]
     return render_to_response(displayPage+".html",{'bill': bill, 'outStockRecordset':outStockRecordset, 'company': company})
         
@@ -347,6 +364,7 @@ def CategoryInfo(request):
     brands_str = serializers.serialize("json",  brands).replace("[","").replace("]","")
     types_str = serializers.serialize("json",  types).replace("[","").replace("]","")
     json = "["+categorys_str+", "+brands_str+", "+types_str+"]"
+#    json = "["+categorys_str+", "+brands_str+"]"
     return HttpResponse(json, mimetype="application/json")
     
 def ProductInfo(request, query):
@@ -533,7 +551,7 @@ def countInventory(inStockRecordSet, outStockRecord):
     count = 0;
     sellCount = 0
     if inStockRecordSet is None:
-        messages.info(request,"")
+        logging.debug('inStockRecordSet is None')
         return 0;
         
     if outStockRecord is not None:
@@ -559,19 +577,25 @@ def CounterUpdate(request):
     counter.close_amount = totalAmount
     counter.active = False
     counter.save()
-        
-    
     return HttpResponseRedirect('/counter/close/') 
     
 def _update_outStockRecord_set(bill):
     outStockRecordSet = bill.outstockrecord_set.all()
     totalProfit = 0
     for outStockRecord in outStockRecordSet:
-        product = outStockRecord.product
-        sales_index = __find_SalesIdx__(product)
-        totalCost = __find_cost__(sales_index, outStockRecord)
-        outStockRecord.sell_index = sales_index + outStockRecord.quantity
-        logging.info("%s : %s : %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
+        if outStockRecord.serial_no != None:
+            product = outStockRecord.serial_no.inStockRecord.product
+            totalCost = outStockRecord.serial_no.inStockRecord.cost
+            outStockRecord.sell_index = -1
+            outStockRecord.serial_no.active = False
+            outStockRecord.serial_no.save()
+            logging.info("Get price by SerialNo: %s ",totalCost);
+        else:
+            product = outStockRecord.product
+            sales_index = __find_SalesIdx__(product)
+            totalCost = __find_cost__(sales_index, outStockRecord)
+            outStockRecord.sell_index = sales_index + outStockRecord.quantity
+            logging.info("Get cost by FIFO, sales index: %s ,quantity: %s, sell_index: %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
         outStockRecord.profit = outStockRecord.amount - totalCost
         outStockRecord.cost = totalCost
         outStockRecord.save()
@@ -613,11 +637,13 @@ def _build_users_sold_dict(product, startDate, endDate):
             summaryOutStockRecord.cost = 0
             summaryOutStockRecord.quantity = 0
             summaryOutStockRecord.profit = 0
+            summaryOutStockRecord.amount = 0
             users[user] = [summaryOutStockRecord]
         users[user][0].unit_sell_price = users[user][0].unit_sell_price + outStockRecord.unit_sell_price
         users[user][0].cost = users[user][0].cost + outStockRecord.cost
         users[user][0].quantity = users[user][0].quantity + outStockRecord.quantity
         users[user][0].profit = users[user][0].profit + outStockRecord.profit
+        users[user][0].amount = users[user][0].amount + outStockRecord.amount
         users[user].append(outStockRecord)
         logging.info("add %s's  outStockRecord" % user )
     return users
