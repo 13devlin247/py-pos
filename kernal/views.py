@@ -483,16 +483,25 @@ def ProductSave(request, productID=None):
             category_pk = request.GET.get('category','-1')
             brand_pk = request.GET.get('brand','-1')
             type_pk = request.GET.get('type','-1')
+            
+            category = None
+            brand = None
+            type = None
+            
+            
             try:
                 category = Category.objects.get(pk=int(category_pk))
                 brand = Brand.objects.get(pk=int(brand_pk))
                 type = Type.objects.get(pk=int(type_pk))
             except Category.DoesNotExist:
+                logging.error("ProductSave fail: Category.DoesNotExist")
                 return HttpResponseRedirect('/product/search/')    
-            except brand.DoesNotExist:
+            except Brand.DoesNotExist:
+                logging.error("ProductSave fail: Brand.DoesNotExist")
                 return HttpResponseRedirect('/product/search/')    
-            except type.DoesNotExist:
-                return HttpResponseRedirect('/product/search/')                    
+            except Type.DoesNotExist:
+                logging.error("ProductSave fail: Type.DoesNotExist")
+                #return HttpResponseRedirect('/product/search/')                    
                 
             product.category = category
             product.brand = brand
@@ -500,15 +509,17 @@ def ProductSave(request, productID=None):
             
             product.active=True
             product.save()
+            logging.info("ProductSave success")
             return HttpResponseRedirect('/product/search/')
         else:
+            logging.error("ProductSave fail: Form Validate faile")
             return HttpResponseRedirect('/product/search/')
 
 def ProductUpdateView(request, productID):
     product = Product.objects.get(pk=productID)
     form = ProductForm(instance=product)
     barcode = product.barcode
-    return render_to_response('product_form.html',{'form': form, 'submit_form':'/product/save/'+productID, 'form_title': 'Update Product', 'barcode': barcode})
+    return render_to_response('product_form.html',{'form': form, 'submit_form':'/product/save/'+productID, 'form_title': 'Update Product', 'barcode': barcode, 'product': product})
 
 def PrintBarcode(request, barcode):    
     return render_to_response('printBarcode.html',{'barcode': barcode})
