@@ -1,20 +1,9 @@
 {% extends "product.php.html" %}
 
-{% block left_link %}
-    {% for name,link in main_link.items %}
-            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
-    {% endfor%}
-{% endblock %}
-
 {% block content %}
     <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos.css" />  	
     <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos_print.css"  media="print"/>
 <style type=text/css">
-.displayCustomer{
- border: solid red 1px;
- text-align: left;
-}
-
 
 </style>
 <form action="/inventory/confirm" method="get" id="sales">
