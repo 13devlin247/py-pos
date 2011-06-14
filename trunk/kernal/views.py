@@ -30,12 +30,12 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import logging
 
 logging.basicConfig(
-    level = logging.INFO,
-    format = '%(asctime)s %(levelname)s %(message)s',
+    level = logging.WARN,
+    format = '%(asctime)s %(levelname)s %(funcName)s():%(lineno)s %(message)s',
 )
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-
+logger.setLevel(logging.DEBUG)
 """
 Below function for ajax use
 """
@@ -226,6 +226,13 @@ def SalesConfirm(request):
             salesDict[barcode] [attr]= value
         
         customerName = request.GET.get('customer', 'Cash')
+        customerList = Customer.objects.filter(name=customerName)
+        customer = None
+        if customerList.count() == 0:
+            customer = Customer()
+            customer.customer_code = customerName
+            customer.name = customerName
+            customer.save()
         customer = Customer.objects.filter(name=customerName)[0]
         mode = request.GET.get('mode', 'sale')
         bill = Bill()
@@ -238,7 +245,8 @@ def SalesConfirm(request):
         bill.customer = customer
         bill.profit = 0
         bill.counter = counter[0]
-        bill.user = User.objects.get(pk=request.session.get('_auth_user_id'))
+        bill.sales_by = User.objects.get(pk=int(request.GET.get('salesby','-1')))
+        bill.issue_by = User.objects.get(pk=request.session.get('_auth_user_id'))
         bill.fulfill_payment = False
         bill.save()
         
@@ -256,7 +264,7 @@ def SalesConfirm(request):
             
         transactionNo = request.GET.get('transactionNo', '')
         if transactionNo != '': 
-            logging.info("paid by creadit card")
+            logger.info("paid by creadit card")
             payment.term = "CreaditCard"
             payment.transaction_no = transactionNo
         payment.save()
@@ -266,9 +274,9 @@ def SalesConfirm(request):
             outStockRecord = OutStockRecord()
             outStockRecord.bill = bill
             outStockRecord.barcode = barcode
-            logging.info("looking for pk : %s " % barcode)
+            logger.info("looking for pk : %s " % barcode)
             if "-foc-product" in barcode:
-                logging.info("Foc product found !! : %s " % barcode)    
+                logger.info("Foc product found !! : %s " % barcode)    
                 
             try:
                 imei = request.GET.get(barcode+'_imei', 'None')
@@ -277,12 +285,12 @@ def SalesConfirm(request):
                 product = serial_no.inStockRecord.product
                 outStockRecord.product = product            
                 
-                logging.info("product found by imei : %s " % barcode)
+                logger.info("product found by imei : %s " % barcode)
             except SerialNo.DoesNotExist:
                 product = Product.objects.get(pk=barcode)
                 outStockRecord.product = product            
-                logging.info("no imei no. found ")
-                logging.info("product found by pk : %s " % barcode)
+                logger.info("no imei no. found ")
+                logger.info("product found by pk : %s " % barcode)
                 
             outStockRecord.unit_sell_price = salesDict[barcode]['price'][0]
             outStockRecord.quantity = salesDict[barcode]['quantity'] [0]
@@ -317,19 +325,24 @@ def QueryInventory(request, inStockBatchID):
     inStockBatch = InStockBatch.objects.get(pk=inStockBatchID)
     return render_to_response('inventory_result.html',{'inStockBatch': inStockBatch,  'instockrecordSet': inStockBatch.instockrecord_set.all()})
         
-        
-def SupplierList(request):
-    prefix = request.GET.get('q', "")
-    logging.debug("get ajax autocomplete query q: " + prefix)
-    supplierList = Supplier.objects.filter(Q(name__contains=prefix))
+def __autocomplete_wrapper__(querySet):
+    logger.debug("wraping querySet into autocomplete format")
     list = ''
-    for supplier in supplierList:
-        list = list + supplier.name + "\n"
+    for result in querySet:
+        list = list + result.name + "\n"
     return HttpResponse(list, mimetype="text/plain")
+
+def CustomerList(request):
+    querySet = __search__(Customer, Q(name__contains=request.GET.get('q', "")))
+    return __autocomplete_wrapper__(querySet)
+    
+def SupplierList(request):
+    querySet = __search__(Supplier, Q(name__contains=request.GET.get('q', "")))
+    return __autocomplete_wrapper__(querySet)
     
 def ProductList(request):    
     q = request.GET.get('q', "")
-    logging.debug("get ajax autocomplete query q: " + q)
+    logger.debug("get ajax autocomplete query q: " + q)
     prefixs = q.split(",")
     productList = Product.objects.all()
     for prefix in prefixs:
@@ -346,14 +359,6 @@ def ProductList(request):
     
     return HttpResponse(list, mimetype="text/plain")
     
-def CustomerList(request):
-    prefix = request.GET.get('q', "")
-    logging.debug("get ajax autocomplete query q: " + prefix)
-    customerList = Customer.objects.filter(Q(name__contains=prefix)|Q(phone__contains=prefix))
-    list = ''
-    for customer in customerList :
-        list = list + customer.name + "\n"
-    return HttpResponse(list, mimetype="text/plain")    
 
 def CategoryInfo(request):
     categorys = Category.objects.all()
@@ -366,16 +371,22 @@ def CategoryInfo(request):
     json = "["+categorys_str+", "+brands_str+", "+types_str+"]"
 #    json = "["+categorys_str+", "+brands_str+"]"
     return HttpResponse(json, mimetype="application/json")
+
+def __search__(models, query):
+    logger.debug("Search Object: %s by query: %s", models.__name__, query)
+    modelsSet = models.objects.filter(query)
+    logger.debug("Search Result: %s ", str(modelsSet.count()))
+    return modelsSet
     
 def ProductInfo(request, query):
-    logging.info("check product: %s info" % query)
+    logger.info("query product info by query: %s " % query)
 
     # serialNoSet = SerialNo.objects.filter(Q(serial_no__contains=query))
     try:
+        #serialNo = SerialNo.objects.get(serial_no=query)
         serialNo = SerialNo.objects.get(serial_no=query)
-        
         if serialNo:
-            logging.info("SerialNo Found !! %s " % str(serialNo.serial_no))
+            logger.info("SerialNo '%s' Found!! entry serial-no process flow." % str(serialNo.serial_no))
             product = serialNo.inStockRecord.product
             product.cost = serialNo.inStockRecord.cost
             serial_no = serialNo.serial_no
@@ -384,25 +395,25 @@ def ProductInfo(request, query):
             json = serializers.serialize("json",  productSet)
             #newJson = json.replace("\"pk\": "+str(product.pk),"\"pk\": " + "\""+serial_no+"\"")
             newJson = json.replace("\"pk\"","\"imei\": " + "\""+serial_no+"\", \"pk\"")
-            logging.info("Json: %s" % newJson)
+            logger.debug("Json: %s" % newJson)
             return HttpResponse(newJson, mimetype="application/json")    
-        
     except SerialNo.DoesNotExist:
-        logging.info("SerialNo Not Found !! %s, try search product barcode and name " % query)
+        logger.info("SerialNo '%s' Not Found!! try search product barcode and name " % query)
         
-    productSet = Product.objects.filter((Q(barcode__contains=query)|Q(name__contains=query)))
-    if not productSet:
+    productSet = __search__(Product, (Q(barcode__contains=query)|Q(name__contains=query)))
+    if productSet.count() == 0:
+        logger.warn("Query '%s' not found any result, return [] ", query)
         return HttpResponse("[]", mimetype="application/json")    
     json = serializers.serialize("json",  productSet)
     return HttpResponse(json, mimetype="application/json")
     
 def ProductInventory(request, pk):
     outStockRecord = None
-    logging.info("check product: %s  inventory" % pk)
+    logger.info("check product: %s  inventory" % pk)
    
     inStockRecordSet = InStockRecord.objects.filter(product__pk=pk)
     if inStockRecordSet.count() == 0:
-        logging.debug(request, "inStockRecordSet not found")
+        logger.debug(request, "inStockRecordSet not found")
         return HttpResponse(0, mimetype="application/json")    
 
     outStockRecordSet = OutStockRecord.objects.filter(product__pk=pk)
@@ -410,29 +421,29 @@ def ProductInventory(request, pk):
     if outStockRecordSet.count() != 0:
         outStockRecord = outStockRecordSet.order_by('-create_at')[0]
         if outStockRecord is None:
-            logging.debug(request, "outStockRecord not found")        
+            logger.debug(request, "outStockRecord not found")        
         
     inventoryCount = countInventory(inStockRecordSet, outStockRecord)
     json = "[{\"inventory\":"+str(inventoryCount)+"}]"
     return HttpResponse(json, mimetype="application/json")    
 
 def CustomerInfo(request, query):
-    logging.info(request, "check customer: " + query)
+    logger.info("check customer: %s " , query)
    
     customerSet = Customer.objects.filter((Q(name__contains=query)))
     if customerSet.count() == 0:
-        logging.debug(request, "customerSet not found")
+        logger.debug(request, "customerSet not found")
         return HttpResponse(0, mimetype="application/json")    
 
     json = serializers.serialize("json",  customerSet)
     return HttpResponse(json, mimetype="application/json")        
     
 def SupplierInfo(request, query):
-    logging.info(request, "check supplier: " + query)
+    logger.info("check supplier: " + query)
    
     supplierSet = Supplier.objects.filter((Q(name__contains=query)))
     if supplierSet.count() == 0:
-        logging.debug(request, "supplierSet not found")
+        logger.debug(request, "supplierSet not found")
         return HttpResponse(0, mimetype="application/json")    
 
     json = serializers.serialize("json",  supplierSet)
@@ -494,13 +505,13 @@ def ProductSave(request, productID=None):
                 brand = Brand.objects.get(pk=int(brand_pk))
                 type = Type.objects.get(pk=int(type_pk))
             except Category.DoesNotExist:
-                logging.error("ProductSave fail: Category.DoesNotExist")
+                logger.error("ProductSave fail: Category.DoesNotExist")
                 return HttpResponseRedirect('/product/search/')    
             except Brand.DoesNotExist:
-                logging.error("ProductSave fail: Brand.DoesNotExist")
+                logger.error("ProductSave fail: Brand.DoesNotExist")
                 return HttpResponseRedirect('/product/search/')    
             except Type.DoesNotExist:
-                logging.error("ProductSave fail: Type.DoesNotExist")
+                logger.error("ProductSave fail: Type.DoesNotExist")
                 #return HttpResponseRedirect('/product/search/')                    
                 
             product.category = category
@@ -509,10 +520,10 @@ def ProductSave(request, productID=None):
             
             product.active=True
             product.save()
-            logging.info("ProductSave success")
+            logger.info("ProductSave success")
             return HttpResponseRedirect('/product/search/')
         else:
-            logging.error("ProductSave fail: Form Validate faile")
+            logger.error("ProductSave fail: Form Validate faile")
             return HttpResponseRedirect('/product/search/')
 
 def ProductUpdateView(request, productID):
@@ -562,7 +573,7 @@ def countInventory(inStockRecordSet, outStockRecord):
     count = 0;
     sellCount = 0
     if inStockRecordSet is None:
-        logging.debug('inStockRecordSet is None')
+        logger.debug('inStockRecordSet is None')
         return 0;
         
     if outStockRecord is not None:
@@ -583,7 +594,7 @@ def CounterUpdate(request):
     totalAmount = counter.initail_amount
     for bill in bills:
         totalAmount = totalAmount + bill.total_price
-        logging.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
+        logger.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
         _update_outStockRecord_set(bill)
     counter.close_amount = totalAmount
     counter.active = False
@@ -600,20 +611,20 @@ def _update_outStockRecord_set(bill):
             outStockRecord.sell_index = -1
             outStockRecord.serial_no.active = False
             outStockRecord.serial_no.save()
-            logging.info("Get price by SerialNo: %s ",totalCost);
+            logger.info("Get price by SerialNo: %s ",totalCost);
         else:
             product = outStockRecord.product
             sales_index = __find_SalesIdx__(product)
             totalCost = __find_cost__(sales_index, outStockRecord)
             outStockRecord.sell_index = sales_index + outStockRecord.quantity
-            logging.info("Get cost by FIFO, sales index: %s ,quantity: %s, sell_index: %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
+            logger.info("Get cost by FIFO, sales index: %s ,quantity: %s, sell_index: %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
         outStockRecord.profit = outStockRecord.amount - totalCost
         outStockRecord.cost = totalCost
         outStockRecord.save()
         totalProfit = totalProfit + outStockRecord.profit
-        logging.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
+        logger.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
     bill.profit = totalProfit
-    logging.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
+    logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
     bill.save()
 
 def PersonReport(request):
@@ -639,9 +650,9 @@ def _build_users_sold_dict(product, startDate, endDate):
     outStockRecordSet = OutStockRecord.objects.filter(product=product).filter(create_at__range=(startDate,endDate))
     users = {}
     for outStockRecord in outStockRecordSet:
-        user = outStockRecord.bill.user
+        user = outStockRecord.bill.sales_by
         if user not in users:
-            logging.info("create %s in users" % user )
+            logger.info("create %s in users" % user )
             summaryOutStockRecord = OutStockRecord()
             summaryOutStockRecord.bill = outStockRecord.bill
             summaryOutStockRecord.unit_sell_price = 0
@@ -656,7 +667,7 @@ def _build_users_sold_dict(product, startDate, endDate):
         users[user][0].profit = users[user][0].profit + outStockRecord.profit
         users[user][0].amount = users[user][0].amount + outStockRecord.amount
         users[user].append(outStockRecord)
-        logging.info("add %s's  outStockRecord" % user )
+        logger.info("add %s's  outStockRecord" % user )
     return users
 
         
@@ -667,8 +678,8 @@ def __find_SalesIdx__(product):
     if lastOutStockRecordSet.count() != 0:
         lastOutStockRecord = lastOutStockRecordSet.order_by('create_at')[0]
         sales_index = lastOutStockRecord.sell_index
-        logging.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
-    #logging.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
+        logger.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
+    #logger.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
     return sales_index        
 
 def __find_cost__(salesIdx, outStockRecord):
@@ -692,23 +703,23 @@ def __find_cost__(salesIdx, outStockRecord):
     totalproductCost = 0
     cost = historyCost[salesIdxPosision]
     for i in range(outStockRecord.quantity):
-        logging.error("%s, %s",(salesIdx + i + 1) , productQuantity[salesIdxPosision])        
+        logger.error("%s, %s",(salesIdx + i + 1) , productQuantity[salesIdxPosision])        
         if (salesIdx + i + 1) > productQuantity[salesIdxPosision]:
             if salesIdxPosision >= len(historyCost):
-                logging.error("salesIdxPosision over limit: %s" % salesIdxPosision )
+                logger.error("salesIdxPosision over limit: %s" % salesIdxPosision )
                 pass
             else:
                 salesIdxPosision = salesIdxPosision + 1
         cost = historyCost[salesIdxPosision]
-        logging.info("salesIdxPosision: %s", salesIdxPosision)
-        logging.info("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
+        logger.info("salesIdxPosision: %s", salesIdxPosision)
+        logger.info("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
         totalproductCost = totalproductCost + cost
     
     return totalproductCost
     
 def checkCounter(function=None, redirect_field_name=REDIRECT_FIELD_NAME):
     def decorate(view_func):
-        logging.error("here we are");
+        logger.error("here we are");
         return function
         
         #return HttpResponseRedirect('/out_stock_record/create/')

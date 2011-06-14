@@ -60,7 +60,7 @@
 			{%for user, outStockRecordSet in users.items%}
 				{%for outStockRecord in outStockRecordSet%}
 					{% if forloop.counter == 1%}
-						<tr class="summary"><td>{{outStockRecord.bill.user.username}}</td><td> -- </td><td>{{outStockRecord.quantity}}</td>  <td>{{outStockRecord.amount}}</td> <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td> </tr>
+						<tr class="summary"><td>{{outStockRecord.bill.sales_by.username}}</td><td> -- </td><td>{{outStockRecord.quantity}}</td>  <td>{{outStockRecord.amount}}</td> <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td> </tr>
 					{% else %}
 						<tr class="detail"><td>{{outStockRecord.bill.create_at}}</td><td>{{outStockRecord.unit_sell_price}}</td><td>{{outStockRecord.quantity}}</td> <td>{{outStockRecord.amount}}</td> <td>{{outStockRecord.cost}}</td>  <td>{{outStockRecord.profit}}</td>  </tr>
 					{% endif %}
