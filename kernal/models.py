@@ -96,11 +96,11 @@ class Customer(models.Model):
     customer_code = models.CharField(max_length=100, primary_key=True)
     name = models.CharField(max_length=100)
     address = models.TextField(blank=True)
-    contact_person = models.CharField(max_length=100)
+    contact_person = models.CharField(max_length=100, blank=True)
     phone = models.CharField(max_length=100, blank=True) 
     fax = models.CharField(max_length=100, blank=True) 
     email = models.EmailField(max_length=100, blank=True)
-    term = models.CharField(max_length=100)
+    term = models.CharField(max_length=100, blank=True)
     active = models.BooleanField(True)
 
     def __unicode__(self):
@@ -165,7 +165,8 @@ class Bill(models.Model):
     customer = models.ForeignKey(Customer)
     create_at = models.DateTimeField(auto_now_add = True)
     counter = models.ForeignKey(Counter)
-    user = models.ForeignKey(User)
+    sales_by = models.ForeignKey(User, related_name="sales_by")
+    issue_by = models.ForeignKey(User, related_name="issue_by")
     mode = models.CharField(max_length=100)
     def __unicode__(self):
         return self.customer.name 
@@ -246,7 +247,7 @@ class ReportFilterForm(forms.Form):
     end_date =  forms.DateField(widget=AdminDateWidget)    
 
 class BillAdmin(admin.ModelAdmin):
-    list_display=('customer', 'create_at', 'user', 'total_price', 'counter')
+    list_display=('customer', 'create_at', 'sales_by', 'total_price', 'counter')
     ordering = ['-create_at']
     list_per_page = 25
     search_fields = ['customer__name']

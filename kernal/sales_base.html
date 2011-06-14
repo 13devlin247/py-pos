@@ -84,6 +84,17 @@
         </div>      
 
         <div id="overall_sale">  	
+            <label >Issue by: 
+            </label>{{request.user.username}} <br>
+            <label >Sales by: 
+            </label>  		
+			<select name="salesby">
+				<option value="{{request.user.pk}}">{{request.user.username}}</option>
+				{% for user in users %}
+					<option value="{{user.pk}}">{{user.username}}</option>
+				{% endfor %}
+			</select>
+            <br>			
 			{% block Customer %}
             <label id="customer_label" for="customer">Select Customer
             </label>  		

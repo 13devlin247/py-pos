@@ -2,6 +2,7 @@ from django.conf.urls.defaults import patterns, include, url
 from django.contrib.auth.decorators import login_required
 from django.views.generic.simple import direct_to_template
 from django.views.generic import list_detail, date_based, create_update
+from django.contrib.auth.models import User
 from pos.kernal.models import Product,  InStockRecord, OutStockRecord, Counter, Payment
 from pos.kernal.models import ProductForm, InStockRecordForm, OutStockRecordForm, InStockBatchForm
 from pos.kernal.views import ProductInfo, ProductInventory, ProductSave,  ProductDelete,OutStockRecordSave, InStockRecordSave, ProductUpdateView
@@ -122,25 +123,25 @@ urlpatterns = patterns('',
     
     url(r'^product/create/$', login_required(create_update.create_object), product_form), 
     url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
-    url(r'^product/update/(?P<productID>\w+)', login_required(ProductUpdateView)), 
+    url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^product/delete/$', login_required(ProductDelete)),    
-    url(r'^product/save/(?P<productID>\w+)*', login_required(ProductSave)), # controller
-    url(r'^product/info/(?P<query>[0-9a-zA-Z|-]+)*', login_required(ProductInfo)), # controller
-    url(r'^product/inventory/(?P<pk>\w+)*', login_required(ProductInventory)), # controller
+    url(r'^product/save/(?P<productID>[\x20-\x7E]+)*', login_required(ProductSave)), # controller
+    url(r'^product/info/(?P<query>[0-9a-zA-Z|-|_]+)*', login_required(ProductInfo)), # controller
+    url(r'^product/inventory/(?P<pk>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
 
     url(r'^supplier/create/$', login_required(create_update.create_object), supplier_form), 
     url(r'^supplier/search/$', login_required(list_detail.object_list), product_list_view),
-    url(r'^supplier/update/(?P<productID>\w+)', login_required(ProductUpdateView)), 
+    url(r'^supplier/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^supplier/delete/$', login_required(ProductDelete)),    
-    url(r'^supplier/save/(?P<supplierID>\w+)*', login_required(SupplierSave)), # controller
+    url(r'^supplier/save/(?P<supplierID>[\x20-\x7E]+)*', login_required(SupplierSave)), # controller
 
     url(r'^customer/create/$', login_required(create_update.create_object), customer_form), 
     url(r'^customer/search/$', login_required(list_detail.object_list), product_list_view),
-    url(r'^customer/update/(?P<productID>\w+)', login_required(ProductUpdateView)), 
+    url(r'^customer/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^customer/delete/$', login_required(ProductDelete)),    
-    url(r'^customer/save/(?P<customerID>\w+)*', login_required(CustomerSave)), # controller    
-    url(r'^customer/info/(?P<query>\w+)*', login_required(CustomerInfo)),    # customer info json
-    url(r'^supplier/info/(?P<query>\w+)*', login_required(SupplierInfo)),    # supplier info json
+    url(r'^customer/save/(?P<customerID>[\x20-\x7E]+)*', login_required(CustomerSave)), # controller    
+    url(r'^customer/info/(?P<query>[\x20-\x7E]+)*', login_required(CustomerInfo)),    # customer info json
+    url(r'^supplier/info/(?P<query>[\x20-\x7E]+)*', login_required(SupplierInfo)),    # supplier info json
     
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
@@ -149,7 +150,7 @@ urlpatterns = patterns('',
     url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/list2/$', login_required(direct_to_template),  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
-    url(r'^inventory/result/(?P<inStockBatchID>\w+)*', login_required(QueryInventory)),                                
+    url(r'^inventory/result/(?P<inStockBatchID>[\x20-\x7E]+)*', login_required(QueryInventory)),                                
     url(r'^in_stock_record/create/$', login_required(create_update.create_object), in_stock_record_crud_view), 
     url(r'^in_stock_record/search/$', login_required(list_detail.object_list),  in_stock_record_list_view), 
     url(r'^in_stock_record/save/$', login_required(InStockRecordSave)), 
@@ -159,7 +160,7 @@ urlpatterns = patterns('',
     url(r'^out_stock_record/save/$', login_required(OutStockRecordSave)), 
     url(r'^sales/order/$', login_required(direct_to_template),  {'template': 'pos.html'}),
     url(r'^sales/$', login_required(direct_to_template),  {'template': 'sales.html'}),
-    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register'} }),
+    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all() } }),
     url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register'} }),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
     url(r'^sales/confirm/$', login_required(SalesConfirm)),
@@ -186,11 +187,11 @@ urlpatterns = patterns('',
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
-    url(r'^sales/(?P<displayPage>\w+)*/(?P<billID>\w+)*', login_required(QueryBill)),
+    url(r'^sales/(?P<displayPage>[\x20-\x7E]+)*/(?P<billID>[\x20-\x7E]+)*', login_required(QueryBill)),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
     
     url(r'^category/info/$', login_required(CategoryInfo)),
-    url(r'^print/barcode/(?P<barcode>\w+)*', login_required(PrintBarcode)),
+    url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)*', login_required(PrintBarcode)),
 
     
     
