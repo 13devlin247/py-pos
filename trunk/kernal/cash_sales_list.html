@@ -22,7 +22,9 @@
                 </th>  								
                 <th>Customer
                 </th>  								
-                <th>Sold by
+                <th>Cashier
+                </th>  								
+                <th>Total
                 </th>  								
                 <th>Receipts
                 </th>  								
@@ -34,7 +36,8 @@
                   <td>{{payment.bill.pk}}</td>
                   <td>{{payment.bill.create_at}}</td>
                   <td>{{payment.bill.customer.name}}</td>
-                  <td>{{payment.bill.user.username}}</td>
+                  <td>{{payment.bill.sales_by.username}}</td>
+                  <td>{{payment.bill.total_price}}</td>
                   <td><a href="/sales/bill/{{payment.bill.pk}}" target="_blank">Show</a></td>
               </tr>  			
 			{%endfor%}
