@@ -1,0 +1,138 @@
+{% extends "product.php.html" %}
+
+{% block content %}
+    <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos.css" />  	
+    <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos_print.css"  media="print"/>
+<style type=text/css">
+.displayCustomer{
+ text-align: left;
+}
+
+.float_left{
+ border: solid red 1px;
+ vertical-align: middle;
+}
+
+#sale_details div input{
+	border: solid red 1px;
+}
+
+.date{
+	border: solid red 1px;
+	margin: 100em;
+}
+
+</style>
+<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;">{{title}}
+        </div>  
+        <div id="register_wrapper" >  
+{% block searchField %}		  		
+            <label id="item_label" for="item">    Find/Scan Item
+            </label>  
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+{% endblock %}		  			
+          <table id="register">  
+{% block table_head %}		  
+            <thead>  
+              <tr>  
+                <th style="width:auto">Item #
+                </th>  
+                <th style="width:auto">Item Name
+                </th>  
+                <th style="width:11%;">Price
+                </th>  
+                <th style="width:11%;">Qty.
+                </th>  
+                <th style="width:15%;">Amount
+                </th>  
+              </tr>  
+            </thead>  
+{% endblock %}			
+			<tbody id="sell_detail">{% block sell_detail %}{% endblock %}</tbody>			
+			<!--
+            <tfoot>  
+              <tr>  
+                <td style="width:auto"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:auto"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:11%;"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:11%;"><input type="text" name="" style="width: 80%" />
+                </td>  
+                <td style="widtd:15%;"><input type="text" name="" style="width: 80%" />
+                </td>  
+              </tr>  
+              <tr>  
+                <td style="width:auto;text-align: left" colspan="5"><input type="submit" name="Free Of Charge" />
+                </td>  
+              </tr>                
+              
+            </tfoot>  			
+			-->
+          </table>  
+        </div>      
+<script type="text/javascript">
+	var dataTable = new Array();
+	
+	
+  $("#item").autocomplete ("{{autocomplete_url}}", {
+		width: 260,
+		selectFirst: false
+	});
+
+    $("#item").keydown(function(event){
+        if(event.keyCode != '13'){
+            return;
+        }
+		
+            /**
+                query product infor by ajax
+            **/
+            $.ajax({
+                url: "{{json_url}}"+$("#item").val(),
+                type: "JSON",
+                success: function(data){  
+					$('#sell_detail').empty();
+					dataTable = data
+                    if(data.length == 0){   // if product not found in server, entry foc process
+                        return;
+                    } // foc process leave
+                    for (var i = 0; i < data.length; i++){
+						row = _genRowByPK(data[i]);
+						$('#sell_detail').append(row);						
+                    }
+                },
+                error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
+                complete: function(data){ 
+                },
+            });            
+    });
+{% block table_script %}		
+
+{% endblock %}	
+	
+{% block table_content %}	
+    function _genRowByPK(data){
+		var pk = "x";
+        var IMEI_str = "";
+        if (data.imei != undefined){
+            IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
+        }
+        row = ""+
+                "<tr id=\""+pk+"_tr\">"+
+                "<td><a href='#' id='removeItem' onclick=\"removeItem('"+pk+"')\"><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
+                "<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +"</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
+                "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
+                "<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
+                "<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data.fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data.pk+"\" /></td>"+
+                "</tr>"
+        ;    
+        return row;
+    }
+{% endblock %}
+   
+  </script>	
+{% endblock %}	

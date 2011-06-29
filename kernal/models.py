@@ -69,7 +69,7 @@ class Company(models.Model):
     email = models.EmailField(max_length=100, blank=True)
     address = models.TextField(blank=True)
     active = models.BooleanField(True)
-    logo = models.ImageField(upload_to='./12static/images/upload/', max_length=100)
+    logo = models.ImageField(upload_to='./static/images/upload/', max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)    
         
 class Supplier(models.Model):
@@ -119,6 +119,7 @@ class InStockBatch(models.Model):
     do_no = models.CharField(max_length=100)
     user = models.ForeignKey(User)
     mode = models.CharField(max_length=150) 
+    status = models.CharField(max_length=150) 
     create_at = models.DateTimeField(auto_now_add = True)
     
 class InStockRecord(models.Model):
@@ -128,6 +129,8 @@ class InStockRecord(models.Model):
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     create_at = models.DateTimeField(auto_now_add = True)
+    type = models.CharField(max_length=100)
+    status = models.CharField(max_length=100)
     
     def natural_key(self):
         return (self.product.name)    
@@ -154,7 +157,6 @@ class Counter(models.Model):
     def __unicode__(self):
         return str(self.create_at) + " " + str(self.active and  "Open" or "Close")         
         
-
 class Bill(models.Model):
     subtotal_price = models.DecimalField(max_digits=100,  decimal_places=2)
     discount = models.DecimalField(max_digits=100,  decimal_places=2)
@@ -171,17 +173,6 @@ class Bill(models.Model):
     def __unicode__(self):
         return self.customer.name 
 
-class Payment(models.Model):
-    bill = models.ForeignKey(Bill)
-    term = models.CharField(max_length=100)
-    type = models.CharField(max_length=100)
-    status = models.CharField(max_length=100, choices=PAYMENT_STATUS)
-    transaction_no = models.CharField(max_length=100, blank = True)
-    create_at = models.DateTimeField(auto_now_add = True)
-
-    def __unicode__(self):
-        return str(self.bill) + " " + self.type + " " + self.status 
-        
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)
     barcode = models.CharField(max_length=100)
@@ -193,10 +184,44 @@ class OutStockRecord(models.Model):
     sell_index = models.IntegerField(blank=True)
     serial_no = models.ForeignKey(SerialNo, blank=True,  null=True)
     profit = models.DecimalField(max_digits=100,  decimal_places=2, blank=True)
+    type = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)
 
     def __unicode__(self):
         return "barcode: "+self.barcode + " index: " + str(self.sell_index) + " profit: " + str(self.profit)
+
+class Payment(models.Model):
+    bill = models.ForeignKey(Bill)
+    term = models.CharField(max_length=100)
+    type = models.CharField(max_length=100)
+    status = models.CharField(max_length=100, choices=PAYMENT_STATUS)
+    transaction_no = models.CharField(max_length=100, blank = True)
+    create_at = models.DateTimeField(auto_now_add = True)
+
+    def __unicode__(self):
+        return str(self.bill) + " " + self.type + " " + self.status 
+
+class ConsignmentInDetail(models.Model):
+    inStockBatch = models.ForeignKey(InStockBatch)
+    create_at = models.DateTimeField(auto_now_add = True)
+    inStockRecord = models.ForeignKey(InStockRecord)
+    serialNo = models.ForeignKey(SerialNo, null = True)
+    quantity = models.DecimalField(max_digits=100,  decimal_places=0)
+    balance = models.DecimalField(max_digits=100,  decimal_places=0)
+    status = models.CharField(max_length=100)
+    def __unicode__(self):
+        return self.customer.name         
+
+class ConsignmentOutDetail(models.Model):
+    payment = models.ForeignKey(Payment)
+    create_at = models.DateTimeField(auto_now_add = True)
+    outStockRecord = models.ForeignKey(OutStockRecord)
+    serialNo = models.ForeignKey(SerialNo, null = True)
+    quantity = models.DecimalField(max_digits=100,  decimal_places=0)
+    balance = models.DecimalField(max_digits=100,  decimal_places=0)
+    def __unicode__(self):
+        return self.customer.name         
+        
 
 class ProductForm(ModelForm):
     class Meta:
@@ -242,6 +267,16 @@ class InStockBatchForm(forms.Form):
     do_no = forms.CharField(max_length=150)
     inv_no = forms.CharField(max_length=150)
 
+class ConsignmentInBalanceForm(forms.Form):        
+    supplier = forms.CharField(max_length=150)
+    do_date = forms.DateField(widget=AdminDateWidget)
+    
+class ConsignmentOutStockBalanceForm(forms.Form):        
+    customer = forms.CharField(max_length=150)
+    do_date = forms.DateField(widget=AdminDateWidget)
+    do_no = forms.CharField(max_length=150)
+    inv_no = forms.CharField(max_length=150)    
+
 class ReportFilterForm(forms.Form):
     start_date =  forms.DateField(widget=AdminDateWidget)
     end_date =  forms.DateField(widget=AdminDateWidget)    
@@ -263,7 +298,7 @@ class BillAdmin(admin.ModelAdmin):
         return Bill.objects.filter(counter__active = True)
          
 class PaymentAdmin(admin.ModelAdmin):
-    list_display=('bill','create_at', 'term', 'status')
+    list_display=('pk','bill','create_at', 'term', 'status')
     ordering = ['-create_at']
     list_per_page = 25
     search_fields = ['bill__customer__name', 'term', 'status']

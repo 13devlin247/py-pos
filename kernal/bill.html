@@ -54,7 +54,7 @@ tfoot td {
 
 {% block css %}
 #bill_detail{
-	height: 300px;
+	height: 700px;
 	vertical-align:top;
 	margin:0;
 	padding:0;
@@ -412,7 +412,7 @@ var total_txt = $("#total_amount").text();
 if(total_txt.indexOf(".") == -1){
 	var total = parseInt(total_txt);
 	var dollar = convertTri(total,0);
-	$("#total_word").append("RINGGIT MALAYSIA : " + dollar.toUpperCase() + " DOLLAR ONLY");
+	$("#total_word").append("RINGGIT MALAYSIA : " + dollar.toUpperCase() + " ONLY");
 }else{
 	var total = total_txt.split(".");
 	var dollar = convertTri(total[0],0);
@@ -420,7 +420,7 @@ if(total_txt.indexOf(".") == -1){
 		total[1] *= 10;
 	}
 	var cents = convertTri(total[1],0);
-	$("#total_word").append("RINGGIT MALAYSIA : " + dollar.toUpperCase() + " DOLLAR AND " + cents.toUpperCase() + " CENTS ONLY");
+	$("#total_word").append("RINGGIT MALAYSIA : " + dollar.toUpperCase() + " AND " + cents.toUpperCase() + " CENTS ONLY");
 }
 
 
