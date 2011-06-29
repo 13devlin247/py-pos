@@ -72,6 +72,7 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 STATICFILES_DIRS = (
     '/home/zhijian/pos/templates/static', 
     'd:/pos/templates/static', 
+    'd:/pos/templates/', 
     'd:/pos/static', 
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.

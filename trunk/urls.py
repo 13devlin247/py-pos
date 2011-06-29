@@ -10,8 +10,8 @@ from pos.kernal.views import SalesConfirm, InventoryConfirm, QueryBill,  QueryIn
 from pos.kernal.views import ReportDaily
 from pos.kernal.models import Supplier, SupplierForm, Customer, CustomerForm, ReportFilterForm
 from pos.kernal.views import SupplierSave, CustomerSave
-from pos.kernal.views import SupplierList, CustomerList, ProductList
-from pos.kernal.views import CustomerInfo, SupplierInfo
+from pos.kernal.views import SupplierList, CustomerList, ProductList, PaymentList  # for ajax 
+from pos.kernal.views import CustomerInfo, SupplierInfo, PaymentInfo
 from pos.kernal.views import test
 from pos.kernal.views import CategoryInfo
 from pos.kernal.views import CounterUpdate
@@ -21,6 +21,12 @@ from pos.kernal.views import InvoiceReport
 from pos.kernal.views import CashSalesReport
 from pos.kernal.views import SalesReturnReport
 from pos.kernal.views import InventoryReturnReport
+from pos.kernal.views import ConsignmentOutBalance
+from pos.kernal.views import ConsignmentInBalance
+from pos.kernal.models import ConsignmentOutStockBalanceForm
+from pos.kernal.models import ConsignmentInBalanceForm
+from django.db.models import Q
+from datetime import date
 
 #from pos.kernal.views import ajaxProductDetailView
 
@@ -95,6 +101,29 @@ out_stock_record_list_view = {
     'extra_context': {'main_link': main_link},
 }
 
+cashsales_list_view = {
+    'queryset': Payment.objects.filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_payment.html', 
+    'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Cash Sales/', 'display':'bill' }
+}
+
+consignment_list_view = {
+    'queryset': Payment.objects.filter(Q(type__exact='Consignment')|Q(status__exact = 'Incomplete')).order_by('create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_consignment.html', 
+    'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Cash Sales/', 'display':'invoice' }
+}
+
+
+invoice_list_view = {
+    'queryset': Payment.objects.filter(create_at__gt = date.today()).filter(type='Invoice').order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_payment.html', 
+    'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Invoice/' , 'display':'invoice' }
+}
+
+
 sales_do_list_view = {
     'queryset': Payment.objects.filter(type='Invoice').order_by('-create_at'),                      
     'allow_empty': True,                      
@@ -126,8 +155,8 @@ urlpatterns = patterns('',
     url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^product/delete/$', login_required(ProductDelete)),    
     url(r'^product/save/(?P<productID>[\x20-\x7E]+)*', login_required(ProductSave)), # controller
-    url(r'^product/info/(?P<query>[0-9a-zA-Z|-|_]+)*', login_required(ProductInfo)), # controller
-    url(r'^product/inventory/(?P<pk>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
+    url(r'^product/info/(?P<query>[\x20-\x7E]+)*', login_required(ProductInfo)), # controller
+    url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
 
     url(r'^supplier/create/$', login_required(create_update.create_object), supplier_form), 
     url(r'^supplier/search/$', login_required(list_detail.object_list), product_list_view),
@@ -142,13 +171,14 @@ urlpatterns = patterns('',
     url(r'^customer/save/(?P<customerID>[\x20-\x7E]+)*', login_required(CustomerSave)), # controller    
     url(r'^customer/info/(?P<query>[\x20-\x7E]+)*', login_required(CustomerInfo)),    # customer info json
     url(r'^supplier/info/(?P<query>[\x20-\x7E]+)*', login_required(SupplierInfo)),    # supplier info json
-    
+    url(r'^payment/info/(?P<type>[\x20-\x7E]+)/(?P<query>[\x20-\x7E]+)', login_required(PaymentInfo)),    # payment info json
+
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
     url(r'^product/ajax/$', login_required(ProductList)),    
+    url(r'^payment/ajax/$', login_required(PaymentList)),    
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
-    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_form2.html',  'extra_context': {'form': InStockBatchForm} }),
-    url(r'^inventory/list2/$', login_required(direct_to_template),  {'template': 'inventory_form.html',  'extra_context': {'form': InStockBatchForm} }),
+    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
     url(r'^inventory/result/(?P<inStockBatchID>[\x20-\x7E]+)*', login_required(QueryInventory)),                                
     url(r'^in_stock_record/create/$', login_required(create_update.create_object), in_stock_record_crud_view), 
@@ -160,8 +190,14 @@ urlpatterns = patterns('',
     url(r'^out_stock_record/save/$', login_required(OutStockRecordSave)), 
     url(r'^sales/order/$', login_required(direct_to_template),  {'template': 'pos.html'}),
     url(r'^sales/$', login_required(direct_to_template),  {'template': 'sales.html'}),
-    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all() } }),
+    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
     url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register'} }),
+    url(r'^consignment/in/$', login_required(direct_to_template),  {'template': 'consignment_in_form.html',  'extra_context': {'form': InStockBatchForm, 'action':'/inventory/confirm'} }),
+    url(r'^consignment/in/balance/$', login_required(direct_to_template),  {'template': 'consignment_in_balance_form.html',  'extra_context': {'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm'} }),
+    url(r'^consignment/out/$', login_required(direct_to_template),  {'template': 'consignment_out_form.html',  'extra_context': {'title':'Consignment OutStock Register', 'action':'/sales/confirm'} }),
+    url(r'^consignment/out/balance/$', login_required(direct_to_template),  {'template': 'consignment_out_balance_form.html',  'extra_context': {'title':'Consignment OutStock Balance', 'form': InStockBatchForm, 'action':'/consignment/out/balance/confirm/' } }),
+    url(r'^consignment/out/balance/confirm/$', ConsignmentOutBalance),
+    url(r'^consignment/in/balance/confirm/$', ConsignmentInBalance),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
     url(r'^sales/confirm/$', login_required(SalesConfirm)),
     url(r'^underconstructor/$', login_required(direct_to_template),  {
@@ -181,6 +217,11 @@ urlpatterns = patterns('',
     url(r'^sales/return/list$', login_required(SalesReturnReport)),         
     url(r'^inventory/return/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/inventory/return/list'} }),                                
     url(r'^inventory/return/list$', login_required(InventoryReturnReport)),             
+    
+    url(r'^search/basic/$', login_required(direct_to_template),  {'template': 'search.html',  'extra_context': {'autocomplete_url': '/product/ajax/','json_url': '/product/info/' } }),                                
+    url(r'^search/invoice/$', login_required(list_detail.object_list), invoice_list_view),                                    
+    url(r'^search/cashsales/$', login_required(list_detail.object_list), cashsales_list_view),                                        
+    url(r'^search/consignment/$', login_required(list_detail.object_list), consignment_list_view),                                        
     
     
     

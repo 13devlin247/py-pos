@@ -1,18 +1,24 @@
-{% extends "stock_base.html" %}
+{% extends "product.php.html" %}
 
+{% block content %}
+    <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos.css" />  	
+    <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos_print.css"  media="print"/>
+<style type=text/css">
 {% block css %}
 {% endblock %}
-
+</style>
+<form action="{{action}}" method="get" id="sales">
 {% block hiddenValue %}
-    <input type="hidden" name="salesMode" value="cash"/>
 {% endblock %}
-
-{% block title %}
-        <div id="page_title" style="margin-bottom:8px;">Sales Register
+<div id="content_area_wrapper">  
+      <div id="content_area">  
+		{% block title %}
+        <div id="page_title" style="margin-bottom:8px;">Title here
         </div>  
-{% endblock %}
-
-{% block mode_form %}
+		{% endblock %}
+        <div id="register_wrapper" >  
+		<div id="error_msg" style="background-color: red; font-weight:bolder;color: white;text-align:center">{{error_msg}}</div>
+		{% block mode_form %}
           <div id="mode_form">
             <span>Register Mode
             </span>  
@@ -25,15 +31,15 @@
               </option>  
             </select>
           </div>  
-{% endblock %}
-
-{% block search_bar %}
+        {% endblock %}  
+		{% block search_bar %}
             <label id="item_label" for="item">    Find/Scan Item
             </label>  
             <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
-{% endblock %}
-
-{% block table_header %}
+			
+		{% endblock %}			
+          <table id="register">  
+		{% block table_header %}
             <thead>  
               <tr>  
                 <th style="width:auto">Item #
@@ -48,9 +54,13 @@
                 </th>  
               </tr>  
             </thead> 
-{% endblock %}
+		{% endblock %}			
+			<tbody id="sell_detail"></tbody>			
+          </table>  
+        </div>      
 
-{% block bill_infor %}
+        <div id="overall_sale">  	
+		{% block bill_infor %}
             <label >Issue by: 
             </label>{{request.user.username}} <br>
             <label >Sales by: 
@@ -66,36 +76,8 @@
             <label id="customer_label" for="customer">Select Customer
             </label>  		
             <input type="text" name="customer" value="Cash" id="customer" size="30"  />		
-            <script type="text/javascript">
-                $("#customer").autocomplete("/customer/ajax/", {
-                    width: 260,
-                    selectFirst: false
-                });
-                $("#customer").result(function(event, data, formatted)
-                {
-                    customerName = $("#customer").val();
-                    $("#supplierDetail").html(customerName);
-                        $.ajax({
-                            url: "/customer/info/"+customerName,
-                            type: "JSON",
-                            success: function(data){  
-                                var customerShow = '<div style="text-align: left">';
-                                customerShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
-                                customerShow += "<div>Term: "+data[0].fields.term+"</div>";
-                                customerShow += "<div>phone: "+data[0].fields.phone+"</div>";
-                                customerShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
-                                customerShow += "</div>";
-                                
-                                $("#supplierDetail").html(customerShow);
-                            },
-                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
-                            complete: function(data){},
-                        });            
-                });              
-            </script>
-            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
 			{% endblock %}
-          
+          <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
             		
           </div>  		
           <div class="clearfix">&nbsp;
@@ -159,42 +141,101 @@
 				</div>  		             
 			  </div>    		     	           
 			</div>    	
-            <script type="text/javascript">
-                $("#creadit_card").click(function(){
-                    calcTotalPrice();
-                    $("#amount_tendered").attr("value",$("#total").val());
-                    calcChange();
-                    $("#creadit_card").css("display","none");
-                    $("#cash").css("display","block");
-                    $("#change_block").css("display","none");
-                    $("#creaditCard_block").css("display","block");
-
-                });  
-
-                $("#cash").click(function(){
-                    $("#creadit_card").css("display","block");
-                    $("#cash").css("display","none");
-                    $("#change_block").css("display","block");
-                    $("#creaditCard_block").css("display","none");
-                });  
-            </script>            
 			{% endblock %}
         </div>  
         <div class="clearfix" style="margin-bottom:30px;">&nbsp;
         </div>      
       </div>  
-{% endblock %}
+	  {% endblock %}
+    </div>  
+</form>    
+<script type="text/javascript">
+	var productTable = new Array();
+
+	$("#item").autocomplete ("/product/ajax/", {
+		width: 260,
+        selectFirst: false
+    });      
+
+	function _checkInputData(){
+		{% block ajaxSubmitCheck %}
+			return true;
+		{% endblock %}
+	}
+    $("#item").keydown(function(event){
+        if(event.keyCode != '13'){ return; }
+		if(_checkInputData() == false){ return; }
+            /**
+                query product infor by ajax
+            **/
+            $.ajax({
+                url: "/product/info/"+$("#item").val(),
+                type: "JSON",
+                success: function(data){  
+                    if(data.length == 0){   // if product not found in server, entry foc process
+                        var foc = $("#item").val();
+                        var foc_pk = foc.replace(/\s/g,"-")+"-foc-product";
+                        var focJSON = "[{\"pk\": \""+foc_pk+"\", \"model\": \"kernal.foc\", \"fields\": {\"name\": \""+foc+"\", \"barcode\": \""+foc+"\", \"tag\": \""+foc+"\", \"cost\": \"0\", \"active\": true, \"retail_price\": \"0\", \"uom\": 1, \"description\": \""+foc+"\"}}]";
+                        var focObject = jQuery.parseJSON(focJSON);
+                        _localProductStore(foc_pk, focObject[0]);                        
+                        return;
+                    } // foc process leave
+                    for (var i = 0; i < data.length; i++){
+                        var barcode = data[i].fields.barcode;
+						var pk = data[i].pk;
+                        if('imei' in data[i]){
+                            pk = data[i].imei;
+                        }
+                        _localProductStore(pk, data[i]);
+                    }
+                },
+                error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
+                complete: function(data){ 
+                    calcSubTotalPrice();
+                    calcTotalPrice();
+                },
+            });            
+    });                	
 
 
-{% block ajaxSubmitCheck %}
-    if($("#customer").val()==''){
-        alert("Please fulfill customer field.");
-		return false;
-    }        
-	return true;
-{% endblock %}
-
-{% block ajaxGenTableBody %}
+    
+    function _localProductStore(pk, data){
+        if ( productTable[pk] == undefined){
+            // row = $('#sell_detail').html();
+            productTable[pk] = data;       
+            row = _genRowByPK(pk, data);
+            $('#sell_detail').append(row);
+            if(data.model == "kernal.foc"){ // foc product no stock
+                return;
+            }
+            _queryInventory(data);
+        }else{
+            quantityPlugOne(pk);
+            calcAmount(pk);
+            calcSubTotalPrice();
+            calcTotalPrice();
+        }    
+    }
+    
+    function _queryInventory(data){
+        /**
+            query product inventory by ajax
+        **/
+        $.ajax({
+            url: "/product/inventory/"+data.pk,
+            type: "JSON",
+            success: function(data){  
+                $("#"+data[0].pk+"_stockCount").html(data[0].inventory);
+            },
+            error: function(data){ 
+                alert("Product Not found! please check your query: " + $("#item").val()) 
+            },
+            complete: function(data){},
+        });    
+    }
+    
+    function _genRowByPK(pk, data){
+		{% block ajaxGenTableBody %}
 			var IMEI_str = "";
 			if (data.imei != undefined){
 				IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
@@ -209,9 +250,75 @@
 					"</tr>"
 			;    
 			return row;
-{% endblock %}
+		{% endblock %}
+    }
+	function _build_serial_input_textfield_by_pk_and_quantity(pk, quantity){
+		var inputField = '';
+        for (var i = 0 ; i < quantity ; i ++){
+            inputField += "<input name="+pk+"_serial-"+i+"></input> <br/>";
+        }
+		return inputField;
+	}
+    function quantityPlugOne(pk){
+            var quantityField = $("#"+pk+"_quantity");
+            var currentQuantity = parseInt(quantityField.val());
+            quantityField.attr("value", currentQuantity+1);
+    }
+    function calcAmount(pk){
+        var currentQuantity = parseInt($("#"+pk+"_quantity").val());
+        var price = $("#"+pk+"_price").val();
+        $("#"+pk+"_amount").html(currentQuantity* price);
+    }
+    function calcSubTotalPrice(){
+        var total = 0;
+        for (var key in productTable){
+            total += parseFloat($("#"+key+"_amount").html());
+        }
+        $("#subTotal").attr("value",total);
+    }
+    function calcTotalPrice(){
+        subTotal = $("#subTotal").val();
+        discount = $("#discount").val();
+        $("#total").attr("value", (subTotal-discount));
+    }
+    function calcChange(){
+        total = $("#total").val();
+        amount_tendered = $("#amount_tendered").val();
+        $("#change").attr("value", (amount_tendered-total));
+    }
 
-{% block ajaxCheckBeforeSend %}
+    function recalcAll(pk){
+        calcAmount(pk);
+        calcSubTotalPrice();
+        calcTotalPrice();
+    }
+
+	function lowerCostDetact(pk){
+        var price = parseFloat($("#"+pk+"_price").val());
+		var cost = parseFloat(productTable[pk].fields.cost);
+		if(cost > price){
+			alert(productTable[pk].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n');
+			
+		}
+	}
+	
+	function resetQuantityField(pk){
+		$("#"+pk+"_serial").html();
+		var quantity = $("#"+pk+"_quantity").val();
+		var inputField = _build_serial_input_textfield_by_pk_and_quantity(pk, quantity);
+		$("#"+pk+"_serial").html(inputField);		
+	}
+	
+    function removeItem(pk){
+        delete productTable[pk];
+		$("#"+pk+"_serial_tr").remove();
+        $("#"+pk+"_tr").remove();
+        calcSubTotalPrice();
+        calcTotalPrice();
+    }
+
+    $("#confirm").click(function(){
+		{% block ajaxCheckBeforeSend %}
 		var msg = '';
 		for(var pk in productTable){
 			var price = parseFloat($("#"+pk+"_price").val());
@@ -222,4 +329,13 @@
 		}
 		ans = confirm(msg + " \n Are you sure?");
 		if(!ans){ return; }
-{% endblock %}
+		{% endblock %}
+		
+		$("#sales").submit();
+		
+    });
+	
+{% block extendJavascript %}
+{% endblock %}	
+  </script>	
+{% endblock %}	
