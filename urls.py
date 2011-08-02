@@ -245,7 +245,5 @@ urlpatterns = patterns('',
 
     
     
-    # testing
-    url(r'^test/$', login_required(test)),
 
 )
