@@ -8,7 +8,7 @@
 </style> 
 	<div id="content_area_wrapper">  
       <div id="content_area">  
-        <div id="page_title" style="margin-bottom:8px;"><h1>Invoice and Delivery Order</h1>
+        <div id="page_title" style="margin-bottom:8px;"><h1>STOCK BALANCE</h1>
         </div>  
         <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
         </div>  
@@ -16,29 +16,32 @@
           <table class="tablesorter report" id="sortable_table">  		
             <thead>  			
               <tr>  				
-                <th>Sale ID
+                <th>ITEM NO.
                 </th>  								
-                <th>Date
+                <th>ITEM DESP
                 </th>  								
-                <th>Customer
+                <th>B/F
                 </th>  								
-                <th>Sold by
+                <th>IN
                 </th>  								
-                <th>Invoice
+                <th>OUT
                 </th>  								
-                <th>Do
-                </th>  												
+                <th>ON HAND UNIT
+                </th>  								                
+                <th>ON HAND Values
+                </th>  								                                
               </tr>  		
             </thead>  		
-            <tbody>  						
-			{% for payment in payments %}
+            <tbody>
+			{% for value in stockList %}
               <tr>
-                  <td>{{payment.bill.pk}}</td>
-                  <td>{{payment.bill.create_at}}</td>
-                  <td>{{payment.bill.customer.name}}</td>
-                  <td>{{payment.bill.sales_by.username}}</td>
-                  <td><a href="/sales/invoice/{{payment.bill.pk}}" target="_blank">Show</a></td>
-                  <td><a href="/sales/do/{{payment.bill.pk}}" target="_blank">Show</a></td>
+                  <td>{{value.0}}</td>
+                  <td>{{value.1}}</td>
+                  <td>{{value.2}}</td>
+                  <td>{{value.3}}</td>
+                  <td>{{value.4}}</td>
+                  <td>{{value.5}}</td>
+                  <td>{{value.6}}</td>
               </tr>  			
 			{%endfor%}
             </tbody>  	

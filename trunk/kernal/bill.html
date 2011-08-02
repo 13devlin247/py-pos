@@ -21,22 +21,22 @@ tfoot td {
 
 #CompanyProfile{
 	text-align: left;
-	
 }
 
 #CompanyProfile .logo{
 	float: left;
+    margin: 0 2em 0 0;    
 }
 .logo img{
-	width: 100px;
-	height:  70px;
+	width: 150px;
+	height:  150px;
 }
 
 
 
 
 #CompanyProfile .company{
-	font-size: 14pt;
+	font-size: 22pt;
 }
 
 #CompanyProfile .address{
@@ -101,16 +101,11 @@ th,td{
 
 </style>
 
-
 <table width="100%" cellpadding="0" cellspacing="0" height="100%">    
   <tbody>
     <tr>                 
       <td valign="center">            
-        <form id="f" method="post" name="frmDataEntry">
-          <input id="idId" name="Id" value="00067" type="hidden">
-          <input id="idAttendant" name="Attendant" value="0" type="hidden">
-          <input id="idDId" name="DId" value="" type="hidden">
-          <input id="idEmployeePurchase" name="EmployeePurchase" value="" type="hidden">
+
           <table width="100%">    
             <tbody>
               <tr>        
@@ -135,7 +130,7 @@ th,td{
 			  {% block BillTitle %}
               <tr>        
                 <td class="Receipt label">            Bill No<span>:</span>         </td>        
-                <td class="Receipt">            <b>{{bill.pk}}        </b></td>    
+                <td class="Receipt">            <b>{{bill}}        </b></td>    
                 <td class="Receipt label">            Date<span>:</span>         </td>        
                 <td class="Receipt">            <b>{{bill.create_at}}</b>        </td>    				
               </tr>    
@@ -149,9 +144,10 @@ th,td{
               <tr>        
                 <td class="Receipt label">            TO<span>:</span>         </td>        
                 <td class="Receipt">            <b>{{bill.customer}}                    </b></td>        
-                <td class="Receipt">                    </td>        
-                <td class="Receipt">                    </td>    
+                <td class="Receipt label">          Mode<span>:</span>         </td>        
+                <td class="Receipt">           <b>{{bill.mode}}</b>         </td>    
               </tr>    
+              
 			  {% endblock %}
             </tbody>
           </table>
@@ -160,6 +156,7 @@ th,td{
             <tbody>
 			<tr>
 				<td colspan=5>
+                    {% block paging%}
 					<div class="pagination">
 						<span class="step-links">
 							{% if outStockRecordset.has_previous %}
@@ -175,10 +172,12 @@ th,td{
 							{% endif %}
 						</span>
 					</div>				
+                    {% endblock %}
 				</td>
 			</tr>
 			  <tr>
 				<td colspan="5" id="bill_detail">
+                {% block bill_detail %}
 					<table>   
 						  <tr>        
 							<td colspan="5" class="border-bottom"></td>    
@@ -204,6 +203,7 @@ th,td{
 							</tr>
 						{% endfor %}			  
 					</table>				
+                {% endblock %}
 				</td>
 			  </tr>
 				<tr>
@@ -211,6 +211,7 @@ th,td{
 				</tr>                
             
             </tbody>
+            {% block bill_summary%}
             <tfoot>
               <tr id="bill_summary">        
 				<td class="summary Receipt" id="total_word" colspan=3></td>        
@@ -252,7 +253,30 @@ th,td{
                 <td colspan="10">            
                   <hr>        </td>    
               </tr>        
+                {% if perms.kernal.change_bill %}
+                <tr>
+                <form action="/bill/void/" id="void_bill_form">
+                <input type="hidden" name="bill_id" value="{{bill.pk}}"/>
+                <table style="border: solid black 1px; width: 30%; background-color: #CCC">
+                    <tr><th colspan=2 style="text-align: center"> Void this Bill</th></tr>
+                    {{form}}
+                    <tr><td colspan=2><input type="submit" value="VOID" onclick="checkField();return false;"/></td></tr>
+                 </table>
+                 </form>
+                 </tr>
+                 <script type="text/javascript">
+                    function checkField(){
+                        reason = $("#id_reason").val();
+                        if(reason == ""){
+                            alert("Please fulfill reason ");
+                            return false;
+                        }
+                        $("#void_bill_form").submit();
+                    }
+                 </script>
+                {% endif %}                     
             </tfoot>
+            {% endblock %}
           </table>
 		  
 <script type="text/javascript">

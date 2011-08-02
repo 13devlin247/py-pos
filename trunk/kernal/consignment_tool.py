@@ -94,7 +94,7 @@ def __query_consignment_cost_qty__(consignmentOutDetail):
     logger.debug("consignment '%s' cost: '%s', quantity: '%s' ", consignmentOutDetail.pk, cost, quantity)
     return [cost, quantity]
 
-    
+  
 def __close_consignment__(request):
     logger.debug("check and close all balance consignment")
     customer = __query_customer__(request, 'supplier')
@@ -170,6 +170,21 @@ def __check_consignment_out_balance_input__(request, inventoryDict, customer):
     """ 
     return error_msg      
 
+def __retriever_original_cost_by_serial_no__(product, dict, inStockRecord):
+    for value in dict[str(product.pk)] :
+        if 'serial-' in value:
+            serialNO = dict[str(product.pk)][value] [0]
+            if serialNO == '':
+                continue
+            # look up from serial no table
+            try:
+                serial = SerialNo.objects.get(serial_no = serialNO)
+                inStockRecord.cost = serial.inStockRecord.cost
+                inStockRecord.save()
+                logger.debug("replace 2rd InStockRecord.cost with serial no '%s''s original cost '%s'", serialNO, inStockRecord.cost)
+            except SerialNo.DoesNotExist:
+                logger.error("serial no: '%s' not found", serialNO)    
+    
 def __retriever_original_cost__(request, inStockRecords, dict, customer):   
     logger.debug("retriever original cost")
     for inRecord in inStockRecords:
@@ -184,7 +199,7 @@ def __retriever_original_cost__(request, inStockRecords, dict, customer):
             inRecord.save()
         # if product cost count by Serial No
         else:
-            __retriever_original_cost_by_serial_no__(product, dict)
+            __retriever_original_cost_by_serial_no__(product, dict, inRecord)
     return inStockRecords                    
 
 def __find_serial__(inStockRecord, serials):

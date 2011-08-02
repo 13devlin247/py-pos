@@ -4,11 +4,11 @@
 {% endblock %}
 
 {% block hiddenValue %}
-    <input type="hidden" name="salesMode" value="cash"/>
+    <input type="hidden" name="salesMode" value="adjust"/>
 {% endblock %}
 
 {% block title %}
-        <div id="page_title" style="margin-bottom:8px;">Sales Register
+        <div id="page_title" style="margin-bottom:8px;">Stock Adjust
         </div>  
 {% endblock %}
 
@@ -17,11 +17,7 @@
             <span>Register Mode
             </span>  
             <select name="mode" onchange="$('#mode_form').submit();">  
-              <option value="sale" selected="selected">Sale
-              </option>  
-              <option value="trade-in">Trade-in
-              </option>  			  
-              <option value="warranty">Warranty
+              <option value="adjust" selected="selected">Adjust
               </option>  
             </select>
           </div>  

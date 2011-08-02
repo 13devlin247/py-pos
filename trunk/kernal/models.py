@@ -7,6 +7,7 @@ import datetime
 from django.contrib.localflavor.us.models import PhoneNumberField
 from django.contrib.auth.models import User
 from django.contrib import admin
+from django.core.files.storage import FileSystemStorage
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),  
@@ -46,8 +47,8 @@ class UOM(models.Model):
         return self.name    
 
 class Product(models.Model):
-    barcode = models.CharField(max_length=100)
-    name = models.CharField(max_length=100)
+    barcode = models.CharField(max_length=100, blank=True)
+    name = models.CharField("code",max_length=100)
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category)
     brand = models.ForeignKey(Brand)
@@ -69,7 +70,7 @@ class Company(models.Model):
     email = models.EmailField(max_length=100, blank=True)
     address = models.TextField(blank=True)
     active = models.BooleanField(True)
-    logo = models.ImageField(upload_to='./static/images/upload/', max_length=100)
+    logo = models.ImageField(upload_to='static/images/upload/', max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)    
         
 class Supplier(models.Model):
@@ -171,7 +172,8 @@ class Bill(models.Model):
     issue_by = models.ForeignKey(User, related_name="issue_by")
     mode = models.CharField(max_length=100)
     def __unicode__(self):
-        return self.customer.name 
+        # return self.customer.name 
+        return str(self.pk).zfill(6)
 
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)
@@ -201,6 +203,22 @@ class Payment(models.Model):
     def __unicode__(self):
         return str(self.bill) + " " + self.type + " " + self.status 
 
+class DisableStock(models.Model):
+    inStockRecord = models.ForeignKey(InStockRecord)
+    outStockRecord = models.ForeignKey(OutStockRecord)
+    type = models.CharField(max_length=100)    
+    serialNo = models.ForeignKey(SerialNo, null = True)
+    quantity = models.DecimalField(max_digits=100,  decimal_places=0)
+    index = models.DecimalField(max_digits=100,  decimal_places=0)
+    create_at = models.DateTimeField(auto_now_add = True)
+
+class VoidBill(models.Model):
+    bill = models.ForeignKey(Bill)
+    reason = models.CharField(max_length=1500)    
+    user = models.ForeignKey(User)
+    create_at = models.DateTimeField(auto_now_add = True)
+    
+    
 class ConsignmentInDetail(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
     create_at = models.DateTimeField(auto_now_add = True)
@@ -209,8 +227,6 @@ class ConsignmentInDetail(models.Model):
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
     status = models.CharField(max_length=100)
-    def __unicode__(self):
-        return self.customer.name         
 
 class ConsignmentOutDetail(models.Model):
     payment = models.ForeignKey(Payment)
@@ -219,9 +235,6 @@ class ConsignmentOutDetail(models.Model):
     serialNo = models.ForeignKey(SerialNo, null = True)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
-    def __unicode__(self):
-        return self.customer.name         
-        
 
 class ProductForm(ModelForm):
     class Meta:
@@ -266,6 +279,11 @@ class InStockBatchForm(forms.Form):
     do_date = forms.DateField(widget=AdminDateWidget)
     do_no = forms.CharField(max_length=150)
     inv_no = forms.CharField(max_length=150)
+    
+class VoidBillForm(ModelForm):        
+    class Meta:
+        model = VoidBill
+        exclude = ('user','bill',)
 
 class ConsignmentInBalanceForm(forms.Form):        
     supplier = forms.CharField(max_length=150)
@@ -281,6 +299,20 @@ class ReportFilterForm(forms.Form):
     start_date =  forms.DateField(widget=AdminDateWidget)
     end_date =  forms.DateField(widget=AdminDateWidget)    
 
+class CounterAdmin(admin.ModelAdmin):
+    list_display=('create_at', 'initail_amount', 'close_amount', 'active', 'user')
+    exclude = ('close_amount','active','user',)
+    initail_amount = models.DecimalField(max_digits=100,  decimal_places=2)
+    close_amount = models.DecimalField(max_digits=100,  decimal_places=2, null=True)
+    active = models.BooleanField("counter actived", True)
+    user = models.ForeignKey(User)
+    create_at = models.DateTimeField(auto_now_add = True)    
+    def save_model(self, request, obj, form, change):
+        obj.user = request.user
+        obj.close_amount = 0
+        obj.active = True
+        obj.save()    
+    
 class BillAdmin(admin.ModelAdmin):
     list_display=('customer', 'create_at', 'sales_by', 'total_price', 'counter')
     ordering = ['-create_at']
@@ -305,9 +337,9 @@ class PaymentAdmin(admin.ModelAdmin):
     date_hierarchy = 'create_at'        
     
 class ProductAdmin(admin.ModelAdmin):
-    list_display=('barcode','name', 'description', 'category', 'brand', 'type')
+    list_display=('barcode','name', 'description', 'category', 'brand')
     ordering = ['-name']
     list_per_page = 25
-    search_fields = ['name', 'description', 'category', 'brand', 'type']
+    search_fields = ['name', 'description', 'category__category_name', 'brand__brand_name']
     
     
