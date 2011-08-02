@@ -44,10 +44,17 @@
 			{%for bill in bills%}
               <tr>  				
                 <td>
-                  <a href="/sales/bill/{{bill.pk}}" target="_blank">{{bill.pk}}</a></td>  								<td>{{bill.create_at}}</td>  								<td>{{bill.customer.name}}</td>  								<td>{{bill.user.username}}</td>  								<td>{{bill.subtotal_price}}</td>  								<td>{{bill.discount}}</td>  								<td>{{bill.total_price}}</td> 								<td>{{bill.profit}}</td>  								
+                  <a href="/sales/bill/{{bill.pk}}" target="_blank">{{bill.pk}}</a></td>  								<td>{{bill.create_at}}</td>  								<td>{{bill.customer.name}}</td>  								<td>{{bill.sales_by.username}}</td>  								<td>{{bill.subtotal_price}}</td>  								<td>{{bill.discount}}</td>  								<td>{{bill.total_price}}</td> 								<td>{{bill.profit}}</td>  								
               </tr>  			
 			{%endfor%}
             </tbody>  	
+            <tfoot>
+                <th>
+                    <td colspan=5>Total:</td>
+                    <td>{{total_amount}}</td>
+                    <td>{{total_profit}}</td>
+                </th>
+            </tfoot>
           </table>  
         </div>  
       </div>  

@@ -15,6 +15,7 @@ from pos.kernal.models import Category
 from pos.kernal.models import Brand
 from pos.kernal.models import Type, TypeForm
 from pos.kernal.models import Counter
+from pos.kernal.models import CounterAdmin
 from pos.kernal.models import Company
 
 admin.site.register(Product, ProductAdmin)
@@ -30,6 +31,6 @@ admin.site.register(SerialNo)
 admin.site.register(Category)
 admin.site.register(Brand)
 admin.site.register(Type)
-admin.site.register(Counter)
+admin.site.register(Counter, CounterAdmin)
 admin.site.register(Company)
 

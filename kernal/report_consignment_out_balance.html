@@ -1,0 +1,55 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Consignment Out Balance Report</h1>
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder">  	
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>ConsignmentOutDetail ID
+                </th>  								
+                <th>Date
+                </th>  								
+                <th>Customer
+                </th>  								
+                <th>Quantity
+                </th>  								
+                <th>Balance
+                </th>  								
+                <th>Status
+                </th>  												
+              </tr>  		
+            </thead>  		
+            <tbody>  						
+			{%for consignmentOutDetail in consignmentOutDetails%}
+              <tr>  				
+                <td>
+                  <a href="/sales/bill/{{consignmentOutDetail.payment.bill.pk}}">{{consignmentOutDetail.pk}}</a></td>  								<td>{{consignmentOutDetail.create_at}}</td>  								<td>{{consignmentOutDetail.payment.bill.customer.name}}</td>  								<td>{{consignmentOutDetail.quantity}}</td>  								<td>{{consignmentOutDetail.balance}}</td>  								<td>{{consignmentOutDetail.payment.status}}</td>  								
+              </tr>  			
+			{%endfor%}
+            </tbody>  	
+          </table>  
+        </div>  
+      </div>  
+    </div>
+
+{% endblock %}
+
+
+	

@@ -66,7 +66,7 @@
     {% for product in object_list %}
             <div class="span-24" style="border-bottom:1px solid gray;">
                 <div class="span-5">
-                    <input name="delete_product[]" value="{{product.barcode}}" type="checkbox"/>{{product.name}}
+                    <input name="delete_product[]" value="{{product.name}}" type="checkbox"/>{{product.name}}
                 </div>
 
                 <div class="span-3">

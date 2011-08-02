@@ -18,13 +18,13 @@
           </th>                    {{form}}                              
         </table> 
         <script type="text/javascript">
-             $("#id_customer").autocomplete("/customer/ajax/", {
+             $("#id_supplier").autocomplete("/customer/ajax/", {
                 width: 260,
                 selectFirst: false
             });
-            $("#id_customer").result(function(event, data, formatted)
+            $("#id_supplier").result(function(event, data, formatted)
             {
-                supplierName = $("#id_customer").val();
+                supplierName = $("#id_supplier").val();
                 $("#supplierDetail").html(supplierName);
                     $.ajax({
                         url: "/customer/info/"+supplierName,
@@ -38,7 +38,7 @@
                             
                             $("#supplierDetail").html(supplierShow);
                         },
-                        error: function(data){ alert("Product Not found! please check your barcode: " + $("#id_customer").val()) },
+                        error: function(data){ alert("Product Not found! please check your barcode: " + $("#id_supplier").val()) },
                         complete: function(data){},
                     });            
             });              
