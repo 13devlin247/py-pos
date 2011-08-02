@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<django-objects version="1.0">
+  <object pk="1" model="kernal.category">
+    <field type="CharField" name="category_name">HP</field>
+  </object>
+  <object pk="2" model="kernal.category">
+    <field type="CharField" name="category_name">Earphone</field>
+  </object>
+  <object pk="3" model="kernal.category">
+    <field type="CharField" name="category_name">Battery</field>
+  </object>
+  <object pk="1" model="kernal.brand">
+    <field to="kernal.category" name="category" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="brand_name">Nokia</field>
+  </object>
+  <object pk="2" model="kernal.brand">
+    <field to="kernal.category" name="category" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="brand_name">Sonic</field>
+  </object>
+  <object pk="3" model="kernal.brand">
+    <field to="kernal.category" name="category" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="brand_name">HTC</field>
+  </object>
+  <object pk="1" model="kernal.type">
+    <field to="kernal.brand" name="brand" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="type_name">3310</field>
+  </object>
+  <object pk="2" model="kernal.type">
+    <field to="kernal.brand" name="brand" rel="ManyToOneRel">1</field>
+    <field type="CharField" name="type_name">8250</field>
+  </object>
+  <object pk="3" model="kernal.type">
+    <field to="kernal.brand" name="brand" rel="ManyToOneRel">3</field>
+    <field type="CharField" name="type_name">HTC Desire S</field>
+  </object>
+  <object pk="1" model="kernal.uom">
+    <field type="CharField" name="name">unit</field>
+  </object>
+  <object pk="2" model="kernal.uom">
+    <field type="CharField" name="name">pcs</field>
+  </object>
+  <object pk="3" model="kernal.uom">
+    <field type="CharField" name="name">pack</field>
+  </object>
+  <object pk="1" model="kernal.product">
+    <field type="CharField" name="barcode">BR00545650001</field>
+    <field type="CharField" name="name">IPad2</field>
+    <field type="TextField" name="description">To say Apple's iPad 2 is an easy tablet to review is somewhat of an understatement. The device, a follow up to last year's wildly successful (and currently market-defining) iPad, is nearly identical when it comes to software, and though improved, closely related on the hardware side as well. With a 9.7-inch, 1024 x 768 display, the general size and shape of the device has remained the same, and though inside there's a new dual core A5 CPU, more memory, and a pair of new cameras, most of the iPad 2's changes are cosmetic. Still, the previous tablet soared far above most of its competitors when it came to the quality of both the hardware (if not its raw specs) and its software selection -- something Apple still stands head and shoulders over its adversaries on. So this new model, a thinner, sleeker, faster variant of the original may not be breaking lots of new ground, but it's already at the front of the pack. But is the iPad 2 worth an upgrade for those that took the plunge on the first generation? More importantly, does the device have what it takes to bring new owners into the fold? Those questions -- and more -- are all about to be answered in the full Engadget review, so read on!</field>
+    <field type="CharField" name="category">Iphone</field>
+    <field type="CharField" name="brand">Iphone</field>
+    <field type="CharField" name="type">Iphone</field>
+    <field type="DecimalField" name="retail_price">1499</field>
+    <field type="DecimalField" name="cost">1000</field>
+    <field to="kernal.uom" name="uom" rel="ManyToOneRel">1</field>
+    <field type="BooleanField" name="active">False</field>
+  </object>
+  <object pk="2" model="kernal.product">
+    <field type="CharField" name="barcode">BR00545650002</field>
+    <field type="CharField" name="name">Samsung Galaxy S</field>
+    <field type="TextField" name="description">The Samsung Galaxy S is an Android smartphone that was announced by Samsung in March 2010. It features a 1 GHz "Hummingbird" processor along with 8–16 GB internal Flash memory, a 4-inch 480×800 pixel Super AMOLED (PenTile) capacitive touchscreen display, a 5-megapixel camera and on select models, a VGA front-facing camera.[2][3] The base version of the phone, the GT-I9000, was quickly followed by variant models for the US carriers, including the Epic 4G, Vibrant, Captivate, and Fascinate. The Samsung Galaxy S has a PowerVR graphics processor yielding 20 million triangles per second,[4] making it the fastest graphics processing unit in any Smart phone at the time of release.[5] It was the first Android phone to be certified for DivX HD,[6] and at 9.9 mm it was the thinnest Smart phone at the time of release.[7] As of January 2011, Samsung had sold 10 million Galaxy S phones globally.[8] The Galaxy S was named the European Smartphone of the Year at the European Imaging and Sound Association (EISA) Awards 2010-2011.[9]</field>
+    <field type="CharField" name="category">Motorola</field>
+    <field type="CharField" name="brand">Motorola</field>
+    <field type="CharField" name="type">Motorola</field>
+    <field type="DecimalField" name="retail_price">1499</field>
+    <field type="DecimalField" name="cost">1000</field>
+    <field to="kernal.uom" name="uom" rel="ManyToOneRel">1</field>
+    <field type="BooleanField" name="active">False</field>
+  </object>
+  <object pk="Return001" model="kernal.supplier">
+    <field type="CharField" name="name">Return</field>
+    <field type="CharField" name="contact_person">Return</field>
+    <field type="CharField" name="phone_office"></field>
+    <field type="CharField" name="phone_mobile"></field>
+    <field type="CharField" name="fax"></field>
+    <field type="CharField" name="email"></field>
+    <field type="TextField" name="address"></field>
+    <field type="BooleanField" name="active">False</field>
+  </object>
+  <object pk="Supplier01" model="kernal.supplier">
+    <field type="CharField" name="name">Super-Link Station (M) Sdn Bhd</field>
+    <field type="CharField" name="contact_person">Mr. KM Chew</field>
+    <field type="CharField" name="phone_office"></field>
+    <field type="CharField" name="phone_mobile"></field>
+    <field type="CharField" name="fax"></field>
+    <field type="CharField" name="email"></field>
+    <field type="TextField" name="address">5, Lorong 6A / 91, Taman Shamelin Perkasa</field>
+    <field type="BooleanField" name="active">False</field>
+  </object>
+  <object pk="Cash0001" model="kernal.customer">
+    <field type="CharField" name="name">Cash</field>
+    <field type="TextField" name="address"></field>
+    <field type="CharField" name="contact_person">Cash</field>
+    <field type="CharField" name="phone"></field>
+    <field type="CharField" name="fax"></field>
+    <field type="CharField" name="email"></field>
+    <field type="CharField" name="term">Cash</field>
+    <field type="BooleanField" name="active">False</field>
+  </object>
+  <object pk="Return" model="kernal.customer">
+    <field type="CharField" name="name">Return</field>
+    <field type="TextField" name="address"></field>
+    <field type="CharField" name="contact_person">Return</field>
+    <field type="CharField" name="phone"></field>
+    <field type="CharField" name="fax"></field>
+    <field type="CharField" name="email"></field>
+    <field type="CharField" name="term">Cash</field>
+    <field type="BooleanField" name="active">False</field>
+  </object>
+  <object pk="customer001" model="kernal.customer">
+    <field type="CharField" name="name">J.B Electronic SDN BHD</field>
+    <field type="TextField" name="address">Lot 3 and 448 Block 14 Jalan Pantai, Kota Kinabalu, Sabah, Malaysia</field>
+    <field type="CharField" name="contact_person">Mr. Jubril Khalid</field>
+    <field type="CharField" name="phone"></field>
+    <field type="CharField" name="fax"></field>
+    <field type="CharField" name="email"></field>
+    <field type="CharField" name="term">30 Days</field>
+    <field type="BooleanField" name="active">False</field>
+  </object>
+</django-objects>

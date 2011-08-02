@@ -1,0 +1,98 @@
+{% extends "sales_base.html" %}
+
+
+{% block hiddenValue %}
+    <input type="hidden" name="salesMode" value="Consignment_in_balance"/>
+{% endblock %}
+
+{% block title%}
+	<div id="page_title" style="margin-bottom:8px;">Consignment Return Issue
+    </div>  
+{% endblock %}
+
+{% block mode_form %}
+		<!--
+          <div id="mode_form">
+            <span>Receiving Mode
+            </span>  
+            <select name="mode" onchange="$('#mode_form').submit();">  
+			  <option value="consignment" selected="selected">Consignment
+              </option>  
+            </select>
+          </div>  -->
+		  <input type="hidden" name="mode" value="Consignment_IN"/>
+{% endblock %}
+
+{% block Supplier %}		
+	<label id="item_label" for="item">    Find/Scan Item
+    </label>  
+    <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+{% endblock %}	
+
+{% block bill_infor %}
+			<input type="hidden" name="salesby" value="{{user.pk}}"/>
+            <label >Issue by: 
+            </label>{{request.user.username}} <br>
+            <br>			
+			{% block Customer %}
+            <label id="customer_label" for="customer">Select Supplier
+            </label>  		
+            <input type="text" name="supplier" value="Cash" id="supplier" size="30"  />		
+            <script type="text/javascript">
+                $("#supplier").autocomplete("/supplier/ajax/", {
+                    width: 260,
+                    selectFirst: false
+                });
+                $("#supplier").result(function(event, data, formatted)
+                {
+                    customerName = $("#supplier").val();
+                    $("#supplierDetail").html(customerName);
+                        $.ajax({
+                            url: "/supplier/info/"+customerName,
+                            type: "JSON",
+                            success: function(data){  
+                                var customerShow = '<div style="text-align: left">';
+                                customerShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
+                                customerShow += "<div>Term: "+data[0].fields.term+"</div>";
+                                customerShow += "<div>phone: "+data[0].fields.phone+"</div>";
+                                customerShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
+                                customerShow += "</div>";
+                                
+                                $("#supplierDetail").html(customerShow);
+                            },
+                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#supplier").val()) },
+                            complete: function(data){},
+                        });            
+                });              
+            </script>
+            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
+			{% endblock %}
+          
+            		
+          </div>  		
+          <div class="clearfix">&nbsp;
+          </div>  		 	
+          <div id='sale_details'>  		
+			<input type="hidden" name="subTotal" id="subTotal" value="0.00" readonly=false size="10" style="border: none; background: transparent;"/>
+			<input type="hidden" name="discount" id="discount" value="0.00"/>
+            <div class="float_left" style='width:50%;'>Total:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
+            </div>  	
+
+          </div>          	     	
+          <div class="clearfix" style="margin-bottom:1px;">&nbsp;
+          </div>  		    
+          <div id="Payment_Types" >    		
+            <div style="">    			
+              <div id="add_payment_form">			
+                <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				
+                  <span>Confirm
+                  </span>  			
+                </div>  		
+            </div>  		
+        </div>  
+        <div class="clearfix" style="margin-bottom:30px;">&nbsp;
+        </div>      
+      </div>  
+{% endblock %}

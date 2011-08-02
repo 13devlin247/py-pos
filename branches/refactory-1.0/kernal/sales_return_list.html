@@ -1,0 +1,47 @@
+{% extends "product.php.html" %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Return List</h1>
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder">  	
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>Sale ID
+                </th>  								
+                <th>Date
+                </th>  								
+                <th>Customer
+                </th>  								
+                <th>Sold by
+                </th>  								
+                <th>Receipts
+                </th>  								
+              </tr>  		
+            </thead>  		
+            <tbody>  						
+			{% for bill in bills %}
+              <tr>
+                  <td>{{bill.pk}}</td>
+                  <td>{{bill.create_at}}</td>
+                  <td>{{bill.customer.name}}</td>
+                  <td>{{bill.user.username}}</td>
+                  <td><a href="/sales/bill/{{bill.pk}}" target="_blank">Show</a></td>
+              </tr>  			
+			{%endfor%}
+            </tbody>  	
+          </table>  
+        </div>  
+      </div>  
+    </div>
+
+{% endblock %}
