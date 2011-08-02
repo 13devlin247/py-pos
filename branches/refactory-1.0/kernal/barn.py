@@ -11,6 +11,62 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+class BarnMouse:
+    def __init__(self, product):
+        self.product = product
+        self.is_serialable = self._check_serial()
+     
+    def _check_serial(self):
+        serials = SerialNo.objects.filter(inStockRecord__product = self.product)
+        if serials.count() > 0:
+            logger.debug("Product: '%s' is serial product" , self.product.name)
+            return True
+        logger.debug("Product: '%s' is NOT serial product", self.product.name)
+        return False
+    
+    def InStock(self, inStockBatch, qty, cost, reason):
+        inStockRecord = InStockRecord()
+        inStockRecord.inStockBatch = inStockBatch
+        inStockRecord.product = self.product
+        inStockRecord.cost = cost
+        inStockRecord.quantity = qty
+        inStockRecord.status = reason
+        inStockRecord.save()
+        
+        if self.is_serialable:
+            self.__build_serial_no__()
+            
+        logger.debug("instock '%s' build success, cost: '%s', quantity:'%s' ", self.product.name, inStockRecord.cost, inStockRecord.quantity)
+        return inStockRecord
+        
+    def __build_serial_no__(self, request, inStockRecords, dict):   
+        logger.debug("build Serial Numbs ")
+        serials = []
+        for inStockRecord in inStockRecords:
+            product = inStockRecord.product
+            for value in dict[str(product.pk)] :
+                if 'serial-' in value:
+                    serialNO = request.GET.get(str(product.pk)+"_"+value, '') 
+                    if serialNO == '':
+                        continue
+                    # look up from serial no table
+                    try:
+                        serial = SerialNo.objects.get(serial_no = serialNO)
+                        serial.inStockRecord = inStockRecord
+                        serial.active = True
+                        serial.save()
+                        serials.append(serial)
+                        logger.debug("Serial no: %s found, unlock it", serialNO)
+                    except SerialNo.DoesNotExist:
+                        serial = SerialNo()
+                        serial.inStockRecord = inStockRecord
+                        serial.serial_no = serialNO
+                        serial.active = True
+                        serial.save()  
+                        serials.append(serial)
+                        logger.debug("build serial no: '%s' for product: '%s'", serialNO, product.name)
+        return serials  
+    
 class BarnOwl:
     def __init__(self):
         self.purchase = "purchase"
@@ -33,7 +89,37 @@ class BarnOwl:
              }
      }
     """
+    def __filter_serial_by_product__(self, productDict):
+        serials = []
+        for item in productDict:
+            if item.startswith("serial-"):
+                serials.append(productDict[item])
+        logger.debug("serials count: '%s' ", len(serials))
+        return serials
     
+    def __build_instock_records__(self, inStockBatch, inventoryDict, reason):
+        logger.debug("build InStock records")
+        inStockRecords = []
+        # build OutStockRecord to save data
+        for pk in inventoryDict :
+            product = None
+            try:
+                product = Product.objects.get(pk=pk)
+            except Product.DoesNotExist:
+                logger.error("Product primary key: '%s' not found, this round fail, continue. ", pk)
+                continue
+            except ValueError:
+                logger.error("Product primary key: '%s' not valid, this round fail, continue. ", pk)
+                continue        
+            cost = float(inventoryDict [pk]['cost'][0])
+            qty = int(inventoryDict [pk]['quantity'] [0])
+            mouse = BarnMouse(product)
+            inStockRecord = mouse.InStock(inStockBatch, qty, cost, reason)
+            inStockRecords.append(inStockRecord)
+            logger.debug("filter serial no by product: '%s'",  product.name)
+            serials = self.__filter_serial_by_product__(inventoryDict[pk])
+        return inStockRecords
+        
     def __build_instock_batch__(self, request):
         mode = request.get('mode', 'purchase')
         today = date.today()
@@ -79,6 +165,7 @@ class BarnOwl:
     def InStock(self, reason, in_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, in_stock_batch_dict)
         inStockBatch = self.__build_instock_batch__(in_stock_batch_dict)
+        self.__build_instock_records__(inStockBatch, in_stock_batch_dict, reason)
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
         return []
         

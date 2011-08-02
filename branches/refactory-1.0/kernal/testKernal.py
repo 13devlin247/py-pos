@@ -11,6 +11,12 @@ import unittest
 from barn import BarnOwl
 
 class TestBarnOwl(unittest.TestCase):    
+    def test__filter_serial_by_product__(self):
+        owl = BarnOwl()        
+        dict = self._build_input_dict()
+        serials = owl.__filter_serial_by_product__(dict[u'111'])        
+        assert len(serials) == 3
+        
     def testInStock(self):
         owl = BarnOwl()        
         dict = self._build_input_dict()
