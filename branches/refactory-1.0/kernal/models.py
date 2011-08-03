@@ -61,6 +61,14 @@ class Product(models.Model):
     def __unicode__(self):
         return self.name
 
+class StockCost(models.Model):
+    product = models.ForeignKey(Product, primary_key=True)    
+    avg_cost = models.DecimalField(max_digits=100,  decimal_places=2)
+    create_at = models.DateTimeField(auto_now_add = True)
+    
+    def natural_key(self):
+        return (self.avg_cost)    
+
 class Company(models.Model):
     name = models.CharField(max_length=100)
     contact_person = models.CharField(max_length=100)

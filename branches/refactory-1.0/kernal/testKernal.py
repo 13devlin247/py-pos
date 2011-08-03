@@ -9,7 +9,13 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'pos.settings'
 
 import unittest
 from barn import BarnOwl
+from barn import BarnMouse
 
+class TestBarnMouse(unittest.TestCase):    
+    def test_cost_by_product__(self):
+        # mouse = BarnMouse()
+        pass
+    
 class TestBarnOwl(unittest.TestCase):    
     def test__filter_serial_by_product__(self):
         owl = BarnOwl()        
