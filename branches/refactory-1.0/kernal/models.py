@@ -66,8 +66,8 @@ class StockCost(models.Model):
     product = models.ForeignKey(Product, primary_key=True)    
     qty = models.DecimalField(max_digits=100,  decimal_places=2) 
     avg_cost = models.DecimalField(max_digits=100,  decimal_places=2)
-    instock_create_at = models.DateTimeField()
-    outstock_create_at = models.DateTimeField()
+    instock_create_at = models.DateTimeField(null = True)
+    outstock_create_at = models.DateTimeField(null = True)
 
     def natural_key(self):
         return (self.avg_cost)    
