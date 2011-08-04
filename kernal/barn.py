@@ -1,7 +1,6 @@
 from datetime import date, datetime
 from django.contrib.auth.models import User
-from kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch
-from pos.kernal.models import SerialNo #@UnresolvedImport
+from kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo
 import logging
 
 
@@ -84,6 +83,26 @@ class BarnMouse:
         if result.count() > 0:
             return result.order_by("-create_at")[0].create_at
         return None
+
+    def Cost(self, serial):
+        if serial:
+            try:
+                cost = SerialNo.objects.get(serial_no=serial).avg_cost
+                logger.debug("product:'%s', Serial no: '%s' cost: '%s'", self.product, serial, cost)
+                return cost
+            except SerialNo.DoesNotExist:
+                cost = StockCost.objects.get(product=self.product).avg_cost
+                logger.debug("product:'%s', Serial no: '%s' NOT found, return avg cost: '%s' ", self.product, serial, cost)
+                return cost
+        cost = 0
+        try:
+            query = StockCost.objects.get(product=self.product)
+            cost = query.avg_cost
+        except SerialNo.DoesNotExist:
+            logger.warn("Product: '%s' not found on StockCount table, return avg cost: 0")
+            return 0
+        logger.debug("product:'%s', avg cost: '%s' ", self.product, serial, cost)
+        return cost
     
     def _recalc_cost(self):
         startDate = str(date.min)+" 00:00:00"
@@ -193,8 +212,8 @@ class BarnOwl:
             except ValueError:
                 logger.error("Product primary key: '%s' not valid, this round fail, continue. ", pk)
                 continue        
-            cost = float(inventoryDict [pk]['cost'][0])
-            qty = int(inventoryDict [pk]['quantity'] [0])
+            cost = inventoryDict [pk]['cost'][0]
+            qty = inventoryDict [pk]['quantity'] [0]
             mouse = BarnMouse(product)
             serials = self.__filter_serial_by_product__(inventoryDict[pk])
             inStockRecord = mouse.InStock(inStockBatch, qty, cost, reason, serials)
