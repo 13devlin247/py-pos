@@ -62,10 +62,13 @@ class Product(models.Model):
         return self.name
 
 class StockCost(models.Model):
+    on_hand_value = models.DecimalField(max_digits=100,  decimal_places=2) 
     product = models.ForeignKey(Product, primary_key=True)    
+    qty = models.DecimalField(max_digits=100,  decimal_places=2) 
     avg_cost = models.DecimalField(max_digits=100,  decimal_places=2)
-    create_at = models.DateTimeField(auto_now_add = True)
-    
+    instock_create_at = models.DateTimeField()
+    outstock_create_at = models.DateTimeField()
+
     def natural_key(self):
         return (self.avg_cost)    
 

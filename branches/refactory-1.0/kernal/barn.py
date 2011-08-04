@@ -1,7 +1,9 @@
+from datetime import date, datetime
+from django.contrib.auth.models import User
+from kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch
+from pos.kernal.models import SerialNo #@UnresolvedImport
 import logging
-from datetime import date
-from datetime import datetime
-from pos.kernal.models import *
+
 
 logging.basicConfig(
     level = logging.WARN,
@@ -41,8 +43,7 @@ class BarnMouse:
          
     def __count_inventory_stock__(self, starttime, endtime, product):
         result = []
-        inStockSummary = []
-        outStockSummary = []
+
         inStockRecords = InStockRecord.objects.filter(product = product)
         outStockRecords = OutStockRecord.objects.filter(product = product)
         inStockSummary = self.__count_product_stock__(starttime, endtime, inStockRecords, product)
@@ -78,21 +79,38 @@ class BarnMouse:
         logger.debug("Product: '%s' count: '%s' ", product.name, result)
         return result
 
-    def _get_cost(self):
+    def _query_last_record_datetime(self, models):
+        result = models.objects.filter(product = self.product)
+        if result.count() > 0:
+            return result.order_by("-create_at")[0].create_at
+        return None
     
     def _recalc_cost(self):
         startDate = str(date.min)+" 00:00:00"
         endDate = str(date.max)+" 23:59:59"
-        starttime = datetime.datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
-        endtime = datetime.datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')    
+        starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
+        endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')    
         inventory_summary = self.__count_inventory_stock__(starttime, endtime, self.product)
         qty = inventory_summary[5]
         cost = inventory_summary[6]
-        avg_cost = float(cost)/float(qty)
+        avg_cost = cost / qty
+        on_hand_value = qty * avg_cost
         logger.debug("Product: '%s' avarage cost: '%s'",self.product.name, avg_cost)
-        stockCost = StockCost()
+        
+        stockCosts = StockCost.objects.filter(product = self.product)
+        stockCost = None
+        if stockCosts.count() == 0:
+            logger.debug("Create StockCosts: '%s'", self.product.name)
+            stockCost = StockCost()
+        else:
+            logger.debug("update StockCosts '%s'", self.product.name)
+            stockCost = stockCosts[0] 
+        stockCost.on_hand_value = on_hand_value
         stockCost.product = self.product
+        stockCost.qty = qty
         stockCost.avg_cost = avg_cost
+        stockCost.instock_create_at = self._query_last_record_datetime(InStockRecord)
+        stockCost.outstock_create_at = self._query_last_record_datetime(OutStockRecord)
         stockCost.save()
         
     
@@ -120,17 +138,17 @@ class BarnMouse:
         logger.debug("build Serial Numbs ")
         for serialNo in serials:
             try:
-               serial = SerialNo.objects.get(serial_no = serialNo)
-               logger.debug("Serial no: %s found, unlock it", serialNo)
+                serial = SerialNo.objects.get(serial_no = serialNo)
+                logger.debug("Serial no: %s found, unlock it", serialNo)
             except SerialNo.DoesNotExist:
-               serial = SerialNo()
-               logger.debug("build serial no: '%s' for product: '%s'", serialNo, inStockRecord.product.name)    
+                serial = SerialNo()
+                logger.debug("build serial no: '%s' for product: '%s'", serialNo, inStockRecord.product.name)    
             serial.inStockRecord = inStockRecord
             serial.active = True
             serial.serial_no = serialNo
-            serial.save()  
-               
-   
+            serial.save()
+
+
 class BarnOwl:
     def __init__(self):
         self.purchase = "purchase"
@@ -184,11 +202,11 @@ class BarnOwl:
             logger.debug("filter serial no by product: '%s'",  product.name)
         return inStockRecords
         
-    def __build_instock_batch__(self, request):
-        mode = request.get('mode', 'purchase')
+    def __build_instock_batch__(self, dict):
+        mode = dict.get('mode', 'purchase')
         today = date.today()
-        do_date = request.get('do_date', today.strftime("%d/%m/%y"))
-        supplier_name = request.get('supplier', "")
+        do_date = dict.get('do_date', today.strftime("%d/%m/%y"))
+        supplier_name = dict.get('supplier', "")
         supplier = None
         try:
             supplier = Supplier.objects.filter(name=supplier_name)[0:1].get()
@@ -217,10 +235,10 @@ class BarnOwl:
         inStockBatch = InStockBatch()
         inStockBatch.mode = mode
         inStockBatch.supplier = supplier
-        inStockBatch.user = User.objects.get(pk=request.get('_auth_user_id'))
+        inStockBatch.user = User.objects.get(pk=dict.get('_auth_user_id'))
         inStockBatch.do_date = do_date
-        inStockBatch.invoice_no = request.get('inv_no', "-")
-        inStockBatch.do_no = request.get('do_no', "-")
+        inStockBatch.invoice_no = dict.get('inv_no', "-")
+        inStockBatch.do_no = dict.get('do_no', "-")
         inStockBatch.status = 'Incomplete'
         inStockBatch.save();
         logger.debug("InStockBatch: '%s' build", inStockBatch.pk)
@@ -233,8 +251,58 @@ class BarnOwl:
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
         return inStockRecords
         
+#    def __build_outstock_record__(self.request, bill, payment, dict , type):
+#        outStockRecords = []
+#        # build OutStockRecord to save data
+#        for barcode in dict:
+#            logger.debug("build OutStockRecord by: '%s'", barcode)
+#            outStockRecord = OutStockRecord()
+#            outStockRecord.bill = bill
+#            outStockRecord.barcode = barcode
+#            logger.info("looking for pk : %s " % barcode)
+#            if "-foc-product" in barcode:
+#                logger.info("Foc product !! : %s " % barcode)    
+#                products = Product.objects.filter(name=barcode)
+#                if products.count() == 0:
+#                    logger.info("Foc product NOT found in DB !! : %s , create it" % barcode)    
+#                    outStockRecord.product =  __build_FOC_product__(barcode)
+#                else:
+#                    outStockRecord.product = products[0]
+#            else:
+#                serial_no = __lock_serial_no__(request, barcode)
+#                outStockRecord.serial_no = serial_no
+#                if serial_no:
+#                    logger.info("product found by imei : %s " % barcode)
+#                    outStockRecord.product = serial_no.inStockRecord.product
+#                else:
+#                    logger.info("product found by pk : %s " % barcode)
+#                    outStockRecord.product = Product.objects.get(pk=barcode)
+#            outStockRecord.unit_sell_price = dict[barcode]['price'][0]
+#            outStockRecord.quantity = dict[barcode]['quantity'] [0]
+#            outStockRecord.amount = str(float(dict[barcode]['price'][0]) * float(dict[barcode]['quantity'] [0])) 
+#            outStockRecord.sell_index = 0;
+#            outStockRecord.profit = 0;
+#            outStockRecord.cost = -1;
+#            outStockRecord.type = type
+#            outStockRecord.save()
+#            outStockRecords.append(OutStockRecord.objects.get(pk=outStockRecord.pk))
+#            if payment.type == "Consignment":
+#                consignmentOut = ConsignmentOutDetail()
+#                consignmentOut.payment = payment
+#                consignmentOut.outStockRecord = outStockRecord
+#                consignmentOut.serialNo = serial_no
+#                consignmentOut.quantity = outStockRecord.quantity
+#                consignmentOut.balance = 0
+#                consignmentOut.save()
+#                logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
+#            return outStockRecords
+#        
     def OutStock(self, reason, out_stock_batch_dict):
-        return False
+        logger.debug("Reason: '%s', dict: %s", reason, out_stock_batch_dict)
+        bill = self.__build_instock_batch__(out_stock_batch_dict)
+        outStockRecords = self.__build_instock_records__(bill, out_stock_batch_dict, reason)
+        logger.debug("InStockBatch '%s' build", outStockRecords.pk)
+        return outStockRecords
         
     def Cost(self, reason, out_stock_batch_dict):
         return False

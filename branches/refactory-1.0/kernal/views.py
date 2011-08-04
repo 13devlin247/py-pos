@@ -1,14 +1,14 @@
-from pos.kernal.models import *
-from pos.kernal.consignment_tool import __query_consignment_cost_qty__
-from pos.kernal.consignment_tool import __close_consignment__
-from pos.kernal.consignment_tool import __query_customer__
-from pos.kernal.consignment_tool import __query_supplier__
-from pos.kernal.consignment_tool import __consignment_out_balance_by_serials_no__
-from pos.kernal.consignment_tool import __check_consignment_out_balance_input__
-from pos.kernal.consignment_tool import __check_consignment_in_balance_input__
-from pos.kernal.consignment_tool import __retriever_original_cost__
-from pos.kernal.consignment_tool import __retriever_original_cost_by_FIFO__
-from pos.kernal.consignment_tool import __build_consignment_in_by_instockrecords__
+from kernal.models import *
+from kernal.consignment_tool import __query_consignment_cost_qty__
+from kernal.consignment_tool import __close_consignment__
+from kernal.consignment_tool import __query_customer__
+from kernal.consignment_tool import __query_supplier__
+from kernal.consignment_tool import __consignment_out_balance_by_serials_no__
+from kernal.consignment_tool import __check_consignment_out_balance_input__
+from kernal.consignment_tool import __check_consignment_in_balance_input__
+from kernal.consignment_tool import __retriever_original_cost__
+from kernal.consignment_tool import __retriever_original_cost_by_FIFO__
+from kernal.consignment_tool import __build_consignment_in_by_instockrecords__
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
 from django.views.generic import list_detail, date_based, create_update
