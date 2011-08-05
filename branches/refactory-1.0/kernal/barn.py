@@ -1,12 +1,12 @@
 from datetime import date, datetime
 from django.contrib.auth.models import User
-from kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo
+from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo
 import logging
 
 
 logging.basicConfig(
     level = logging.WARN,
-    format = '%(asctime)s %(levelname)s %(funcName)s():%(lineno)s %(message)s',
+    format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
 )
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
@@ -14,6 +14,7 @@ logger.setLevel(logging.DEBUG)
 
 class BarnMouse:
     def __init__(self, product):
+        logger.debug("BarnMose '%s' build", product.name)
         self.product = product
         self.is_serialable = self._check_serial()
      
@@ -84,10 +85,11 @@ class BarnMouse:
             return result.order_by("-create_at")[0].create_at
         return None
 
-    def Cost(self, serial):
+    def Cost(self, serial=None):
         if serial:
             try:
-                cost = SerialNo.objects.get(serial_no=serial).avg_cost
+                serial = SerialNo.objects.get(serial_no=serial)
+                cost = serial.inStockRecord.cost
                 logger.debug("product:'%s', Serial no: '%s' cost: '%s'", self.product, serial, cost)
                 return cost
             except SerialNo.DoesNotExist:
@@ -96,12 +98,13 @@ class BarnMouse:
                 return cost
         cost = 0
         try:
+            logger.debug("look up Product: '%s' stockCost", self.product.pk)
             query = StockCost.objects.get(product=self.product)
             cost = query.avg_cost
-        except SerialNo.DoesNotExist:
+        except StockCost.DoesNotExist:
             logger.warn("Product: '%s' not found on StockCount table, return avg cost: 0")
             return 0
-        logger.debug("product:'%s', avg cost: '%s' ", self.product, serial, cost)
+        logger.debug("product:'%s', avg cost: '%s' ", self.product, cost)
         return cost
     
     def _recalc_cost(self):
@@ -131,7 +134,6 @@ class BarnMouse:
         stockCost.instock_create_at = self._query_last_record_datetime(InStockRecord)
         stockCost.outstock_create_at = self._query_last_record_datetime(OutStockRecord)
         stockCost.save()
-        
     
     def InStock(self, inStockBatch, qty, cost, reason, serials):
         inStockRecord = InStockRecord()
@@ -150,7 +152,7 @@ class BarnMouse:
         
         self._recalc_cost()
         
-        logger.debug("instock '%s' build success, cost: '%s', quantity:'%s' ", self.product.name, inStockRecord.cost, inStockRecord.quantity)
+        logger.debug("Product '%s' instock build success, cost: '%s', quantity:'%s' ", self.product.name, inStockRecord.cost, inStockRecord.quantity)
         return inStockRecord
         
     def __build_serial_no__(self, inStockRecord, serials):   
@@ -166,7 +168,29 @@ class BarnMouse:
             serial.active = True
             serial.serial_no = serialNo
             serial.save()
+    
+    def StockValue(self):
+        try:
+            logger.debug("look up Product: '%s' stockCost", self.product.pk)
+            query = StockCost.objects.get(product=self.product)
+            cost = query.on_hand_value
+        except StockCost.DoesNotExist:
+            logger.warn("Product: '%s' not found on StockCount table, return avg cost: 0")
+            return 0
+        logger.debug("Product: '%s' On hand value: '%s'", self.product, cost)
+        return cost
 
+    
+    def QTY(self):
+        try:
+            logger.debug("look up Product: '%s' QTY", self.product.pk)
+            query = StockCost.objects.get(product=self.product)
+            qty = query.qty
+        except StockCost.DoesNotExist:
+            logger.warn("Product: '%s' not found on StockCount table, return QTY: 0")
+            return 0
+        logger.debug("Product: '%s' QTY: '%s'", self.product, qty)
+        return qty
 
 class BarnOwl:
     def __init__(self):
@@ -212,8 +236,8 @@ class BarnOwl:
             except ValueError:
                 logger.error("Product primary key: '%s' not valid, this round fail, continue. ", pk)
                 continue        
-            cost = inventoryDict [pk]['cost'][0]
-            qty = inventoryDict [pk]['quantity'] [0]
+            cost = inventoryDict [pk]['cost']
+            qty = inventoryDict [pk]['quantity']
             mouse = BarnMouse(product)
             serials = self.__filter_serial_by_product__(inventoryDict[pk])
             inStockRecord = mouse.InStock(inStockBatch, qty, cost, reason, serials)
@@ -318,10 +342,11 @@ class BarnOwl:
 #        
     def OutStock(self, reason, out_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, out_stock_batch_dict)
-        bill = self.__build_instock_batch__(out_stock_batch_dict)
-        outStockRecords = self.__build_instock_records__(bill, out_stock_batch_dict, reason)
-        logger.debug("InStockBatch '%s' build", outStockRecords.pk)
-        return outStockRecords
+#        bill = self.__build_instock_batch__(out_stock_batch_dict)
+#        outStockRecords = self.__build_instock_records__(bill, out_stock_batch_dict, reason)
+#        logger.debug("InStockBatch '%s' build", outStockRecords.pk)
+#        return outStockRecords
+        pass
         
     def Cost(self, reason, out_stock_batch_dict):
         return False
