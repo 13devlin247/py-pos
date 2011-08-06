@@ -54,7 +54,29 @@ class TestBarnMouse(unittest.TestCase):
         assert mouse.Cost() == 1750
         assert mouse.Cost('NKPPL006') == 1500
         assert mouse.Cost('NKPPL003') == 2000
-
+    
+    def test_delete__(self):
+        logger.debug("Test DELETE Product instock record")
+        mouse = BarnMouse(self.products[0])
+        assert mouse.QTY() == 6
+        owl = BarnOwl()
+        inStockRecords = owl.InStock(owl.purchase, self._build_input_dict())
+        for inStockRecord in inStockRecords:
+            mouse.Delete("ForTestOnly", InStockRecord, inStockRecord.pk)
+        assert mouse.QTY() == 3
+        
+    
+    def test_update_cost__(self):
+        logger.debug("Test UPDATE Product Cost")
+        mouse = BarnMouse(self.products[0])
+        assert mouse.Cost() == 1750
+        assert mouse.Cost('NKPPL006') == 1500
+        owl = BarnOwl()
+        inStockRecords = owl.InStock(owl.purchase, self._build_input_dict_emypt_cost())
+        for inStockRecord in inStockRecords:
+            mouse.UpdateCost(inStockRecord.pk, 1590)
+        self.assertAlmostEqual(float(mouse.Cost()), 1696.67)
+    
     def test_qty_by_product__(self):
         logger.debug("Test Product QTY")
         mouse = BarnMouse(self.products[0])
@@ -166,7 +188,32 @@ class TestBarnMouse(unittest.TestCase):
         inputDict[u'65536'] [u'cost'] = u'1500'
         inputDict[u'65536'] [u'quantity'] = u'3'                    
         return inputDict
+    
+    def _build_input_dict_emypt_cost(self):
+        inputDict  = {}
+        inputDict[u'do_date'] = u'2011-06-22'
+        inputDict[u'do_no'] = u'BC1655'
+        inputDict[u'inv_no'] = u'BC1654'
+        inputDict[u'salesMode'] = u'cash'
+        inputDict[u'item'] = u'NK1280PPL'
+        inputDict[u'mode'] = u'purchase'
+        inputDict[u'supplier'] = u'Super-Link Station [M) Sdn Bhd'
+        inputDict[u'_auth_user_id'] = 1
         
+        inputDict[u'65535'] = {}
+        inputDict[u'65535'] [u'serial-2'] = u'NK1280PPL003'
+        inputDict[u'65535'] [u'serial-1'] = u'NK1280PPL002'
+        inputDict[u'65535'] [u'serial-0'] = u'NK1280PPL001'    
+        inputDict[u'65535'] [u'cost'] = u''    
+        inputDict[u'65535'] [u'quantity'] = u'3'            
+        
+        inputDict[u'65536'] = {}
+        inputDict[u'65536'] [u'serial-2'] = u'NKPPL003'
+        inputDict[u'65536'] [u'serial-1'] = u'NKPPL002'
+        inputDict[u'65536'] [u'serial-0']= u'NKPPL001'    
+        inputDict[u'65536'] [u'cost'] = u''    
+        inputDict[u'65536'] [u'quantity'] = u'3'                    
+        return inputDict        
 class TestBarnOwl(unittest.TestCase):    
     def setUp(self):
         logger.debug("TestBarnOwl.Setup")
