@@ -205,9 +205,8 @@ class BarnMouse:
             self._recalc_cost()
         except InStockRecord.DoesNotExist:
             logger.warn("instance '%s' , Cost: '%s' does NOT update correctly", pk, cost)
-
     
-    def Delete(self, reason, InStockRecord, pk):
+    def Delete(self, reason, Models, pk):
         
         pass
     

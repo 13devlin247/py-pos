@@ -143,7 +143,8 @@ class InStockRecord(models.Model):
     create_at = models.DateTimeField(auto_now_add = True)
     type = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
-    
+    active = models.BooleanField(True)
+            
     def natural_key(self):
         return (self.product.name)    
         
@@ -199,7 +200,8 @@ class OutStockRecord(models.Model):
     profit = models.DecimalField(max_digits=100,  decimal_places=2, blank=True)
     type = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)
-
+    active = models.BooleanField(True)
+    
     def __unicode__(self):
         return "barcode: "+self.barcode + " index: " + str(self.sell_index) + " profit: " + str(self.profit)
 
