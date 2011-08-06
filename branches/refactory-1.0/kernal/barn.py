@@ -136,6 +136,9 @@ class BarnMouse:
         stockCost.save()
     
     def InStock(self, inStockBatch, qty, cost, reason, serials):
+        if cost == "":
+            logger.debug("Cost not define, use avg cost") 
+            cost = self.Cost()
         inStockRecord = InStockRecord()
         inStockRecord.inStockBatch = inStockBatch
         inStockRecord.product = self.product
@@ -191,6 +194,24 @@ class BarnMouse:
             return 0
         logger.debug("Product: '%s' QTY: '%s'", self.product, qty)
         return qty
+
+    
+    def UpdateCost(self, pk, cost):
+        try:
+            instance = InStockRecord.objects.get(pk = pk)
+            instance.cost = cost
+            instance.save()
+            logger.debug("instance '%s' , Cost: '%s' update SUCCESS", pk, cost)
+            self._recalc_cost()
+        except InStockRecord.DoesNotExist:
+            logger.warn("instance '%s' , Cost: '%s' does NOT update correctly", pk, cost)
+
+    
+    def Delete(self, reason, InStockRecord, pk):
+        
+        pass
+    
+    
 
 class BarnOwl:
     def __init__(self):
