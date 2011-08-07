@@ -261,7 +261,10 @@ class TestBarnOwl(unittest.TestCase):
         assert len(inStockResult) == 2
         
     def testOutStock(self):
-        pass
+        owl = BarnOwl()        
+        dict = self._build_output_dict()
+        outStockResult = owl.OutStock(owl.cash , dict)        
+        assert len(outStockResult) == 2
         
     def testStockCount(self):
         pass
