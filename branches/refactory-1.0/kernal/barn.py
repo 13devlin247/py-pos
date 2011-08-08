@@ -14,6 +14,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+class SerialRequiredException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
 class BarnMouse:
     def __init__(self, product):
         logger.debug("BarnMose '%s' build", product.name)
@@ -193,8 +199,8 @@ class BarnMouse:
         
         if self.is_serialable:
             if not serials:
-                logger.error("Product: '%s' is serial product, please the input serial no.")
-                return 
+                logger.error("Product: '%s' is serial product, please the input serial no.", self.product.name)
+                raise SerialRequiredException(self.product.name) 
             self.__build_serial_no__(inStockRecord, serials)
         
         self._recalc_cost()
@@ -421,7 +427,6 @@ class BarnOwl:
             serials = self.__filter_serial_by_product__(inventoryDict[pk])
             inStockRecord = mouse.InStock(inStockBatch, qty, cost, reason, serials)
             inStockRecords.append(inStockRecord)
-            logger.debug("filter serial no by product: '%s'",  product.name)
         return inStockRecords
     
     def __query_customer__(self, customerName):
@@ -607,10 +612,14 @@ class BarnOwl:
         logger.debug("InStockBatch: '%s' build", inStockBatch.pk)
         return inStockBatch    
     
-    def InStock(self, reason, in_stock_batch_dict):
+    def InStock(self, reason, inStockBatch_dict, in_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, in_stock_batch_dict)
-        inStockBatch = self.__build_instock_batch__(in_stock_batch_dict)
-        inStockRecords = self.__build_instock_records__(inStockBatch, in_stock_batch_dict, reason)
+        inStockBatch = self.__build_instock_batch__(inStockBatch_dict)
+        try:
+            inStockRecords = self.__build_instock_records__(inStockBatch, in_stock_batch_dict, reason)
+        except SerialRequiredException:
+            self.DeleteInStockBatch(inStockBatch.pk, "InStockRecord build fail, serial no required")
+            raise SerialRequiredException("Serial Required") 
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
         return inStockRecords
     

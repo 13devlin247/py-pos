@@ -32,8 +32,8 @@ class TestBarnMouse(unittest.TestCase):
         self.products = self._build_moc_product()
         logger.debug("Build MOC OWL")
         owl = BarnOwl()
-        owl.InStock(owl.purchase, self._build_input_dict())
-        owl.InStock(owl.purchase, self._build_input_dict_2())
+        owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict())
+        owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict_2())
                     
     def tearDown(self):
         logger.debug("TestBarnMouse.TearDown")
@@ -47,7 +47,7 @@ class TestBarnMouse(unittest.TestCase):
     def test_instock(self):
         mouse = BarnMouse(self.products[1])
         owl = BarnOwl()
-        inStockBatch = owl.__build_instock_batch__(self._build_input_dict())
+        inStockBatch = owl.__build_instock_batch__(self._build_inStockBatch_dict())
         mouse.InStock(inStockBatch, 3, 3, owl.purchase, None)
         assert InStockRecord.objects.filter(inStockBatch = inStockBatch).count() > 0 
         
@@ -83,7 +83,7 @@ class TestBarnMouse(unittest.TestCase):
         assert mouse.Cost() == 1750
         owl = BarnOwl()
         
-        inStockRecords = owl.InStock(owl.purchase, self._build_input_dict())
+        inStockRecords = owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict())
         for inStockRecord in inStockRecords:
             mouse.Delete("ForTestOnly", InStockRecord, inStockRecord.pk)
         assert mouse.QTY() == 6
@@ -95,7 +95,7 @@ class TestBarnMouse(unittest.TestCase):
         assert mouse.Cost() == 1750
         assert mouse.Cost('NKPPL006') == 1500
         owl = BarnOwl()
-        inStockRecords = owl.InStock(owl.purchase, self._build_input_dict_emypt_cost())
+        inStockRecords = owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict_emypt_cost())
         for inStockRecord in inStockRecords:
             mouse.UpdateCost(inStockRecord.pk, 1590)
         self.assertAlmostEqual(float(mouse.Cost()), 1696.67)
@@ -162,8 +162,8 @@ class TestBarnMouse(unittest.TestCase):
                 outStockRecord.delete()                
             logger.debug("delete product: '%s'", product.name)
             product.delete()
-        
-    def _build_input_dict(self):
+
+    def _build_inStockBatch_dict(self):
         inputDict  = {}
         inputDict[u'do_date'] = u'2011-06-22'
         inputDict[u'do_no'] = u'BC1655'
@@ -173,7 +173,10 @@ class TestBarnMouse(unittest.TestCase):
         inputDict[u'mode'] = u'purchase'
         inputDict[u'supplier'] = u'Super-Link Station [M) Sdn Bhd'
         inputDict[u'_auth_user_id'] = 1
+        return inputDict
         
+    def _build_input_dict(self):
+        inputDict  = {}
         inputDict[u'65535'] = {}
         inputDict[u'65535'] [u'serial-2'] = u'NK1280PPL003'
         inputDict[u'65535'] [u'serial-1'] = u'NK1280PPL002'
@@ -191,17 +194,7 @@ class TestBarnMouse(unittest.TestCase):
 
     def _build_input_dict_2(self):
         inputDict  = {}
-        inputDict[u'do_date'] = u'2011-06-22'
-        inputDict[u'do_no'] = u'BC1655'
-        inputDict[u'inv_no'] = u'BC1654'
-        inputDict[u'salesMode'] = u'cash'
-        inputDict[u'item'] = u'NK1280PPL'
-        inputDict[u'mode'] = u'purchase'
-        inputDict[u'supplier'] = u'Super-Link Station [M) Sdn Bhd'
-        inputDict[u'_auth_user_id'] = 1
-        
         inputDict[u'65535'] = {}
-
         inputDict[u'65535'] [u'serial-2']=u'NK1280PPL008'
         inputDict[u'65535'] [u'serial-1']=u'NK1280PPL007'
         inputDict[u'65535'] [u'serial-0']=u'NK1280PPL006'    
@@ -218,15 +211,6 @@ class TestBarnMouse(unittest.TestCase):
     
     def _build_input_dict_emypt_cost(self):
         inputDict  = {}
-        inputDict[u'do_date'] = u'2011-06-22'
-        inputDict[u'do_no'] = u'BC1655'
-        inputDict[u'inv_no'] = u'BC1654'
-        inputDict[u'salesMode'] = u'cash'
-        inputDict[u'item'] = u'NK1280PPL'
-        inputDict[u'mode'] = u'purchase'
-        inputDict[u'supplier'] = u'Super-Link Station [M) Sdn Bhd'
-        inputDict[u'_auth_user_id'] = 1
-        
         inputDict[u'65535'] = {}
         inputDict[u'65535'] [u'serial-2'] = u'NK1280PPL003'
         inputDict[u'65535'] [u'serial-1'] = u'NK1280PPL002'
@@ -249,7 +233,7 @@ class TestBarnOwl(unittest.TestCase):
         self.products = self._build_moc_product()
         logger.debug("Build MOC OWL")
         owl = BarnOwl()
-        owl.InStock(owl.purchase, self._build_input_dict())        
+        owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict())        
         
     def tearDown(self):
         logger.debug("TestBarnOwl.TearDown")
@@ -264,8 +248,7 @@ class TestBarnOwl(unittest.TestCase):
         
     def testInStock(self):
         owl = BarnOwl()        
-        dict = self._build_input_dict()
-        inStockResult = owl.InStock(owl.purchase , dict)        
+        inStockResult = owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict())        
         assert len(inStockResult) == 2
         
     def testOutStock(self):
@@ -324,8 +307,7 @@ class TestBarnOwl(unittest.TestCase):
     
     def test_delete_instock_batch(self):
         owl = BarnOwl()        
-        dict = self._build_input_dict()
-        inStockResult = owl.InStock(owl.purchase , dict)        
+        inStockResult = owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict())        
         assert len(inStockResult) == 2        
         for inStockRecord in inStockResult:
             owl.DeleteInStockBatch(inStockRecord.inStockBatch.pk, "for test")
@@ -390,7 +372,7 @@ class TestBarnOwl(unittest.TestCase):
             logger.debug("delete product: '%s'", product.name)
             product.delete()
         
-    def _build_input_dict(self):
+    def _build_inStockBatch_dict(self):
         inputDict  = {}
         inputDict[u'do_date'] = u'2011-06-22'
         inputDict[u'do_no'] = u'BC1655'
@@ -400,7 +382,10 @@ class TestBarnOwl(unittest.TestCase):
         inputDict[u'mode'] = u'purchase'
         inputDict[u'supplier'] = u'Super-Link Station [M) Sdn Bhd'
         inputDict[u'_auth_user_id'] = 1
-        
+        return inputDict
+    
+    def _build_input_dict(self):
+        inputDict  = {}
         inputDict[u'65535'] = {}
         inputDict[u'65535'] [u'serial-2'] = u'NK1280PPL003'
         inputDict[u'65535'] [u'serial-1'] = u'NK1280PPL002'
