@@ -3,6 +3,7 @@ import os
 import sys
 import unittest
 import datetime
+from django.contrib.auth.models import User
 p1 = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 p2 = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
 
@@ -14,7 +15,7 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'pos.settings'
 import logging
 from barn import BarnMouse, BarnOwl
 from pos.kernal.models import Product, Category, Brand, Type, UOM, InStockRecord,\
-    Bill, StockCost, Counter
+    Bill, StockCost, Counter, OutStockRecord, Payment
 
 logging.basicConfig(
     level = logging.WARN,
@@ -155,6 +156,10 @@ class TestBarnMouse(unittest.TestCase):
             for inStockRecord in inStockRecords:
                 logger.debug("delete instockRecord: '%s'", inStockRecord.pk)
                 inStockRecord.delete()
+            outStockRecords = OutStockRecord.objects.filter(product = product)
+            for outStockRecord in outStockRecords:
+                logger.debug("delete outStockRecord: '%s'", outStockRecord.pk)
+                outStockRecord.delete()                
             logger.debug("delete product: '%s'", product.name)
             product.delete()
         
@@ -242,6 +247,9 @@ class TestBarnOwl(unittest.TestCase):
         logger.debug("TestBarnOwl.Setup")
         unittest.TestCase.setUp(self)
         self.products = self._build_moc_product()
+        logger.debug("Build MOC OWL")
+        owl = BarnOwl()
+        owl.InStock(owl.purchase, self._build_input_dict())        
         
     def tearDown(self):
         logger.debug("TestBarnOwl.TearDown")
@@ -261,14 +269,68 @@ class TestBarnOwl(unittest.TestCase):
         assert len(inStockResult) == 2
         
     def testOutStock(self):
-        owl = BarnOwl()        
-        dict = self._build_output_dict()
-        outStockResult = owl.OutStock(owl.cash , dict)        
-        assert len(outStockResult) == 2
+        c = Counter()
+        c.initail_amount = 0
+        c.close_amount = -1
+        c.active = True
+        c.user = User.objects.get(pk = 1)
+        c.pk = 9999
+        c.create_at = datetime.datetime.today()
+        c.save()
         
-    def testStockCount(self):
-        pass
+        owl = BarnOwl()        
+        bill_dict = self._build_bill_dict()
+        outStock_dict = self._build_output_dict()
+        outStockResult = owl.OutStock(owl.cash , bill_dict, outStock_dict)
+        assert len(outStockResult) == 2
+        c.delete()
+        
+    def testStockValue(self):
+        owl = BarnOwl()
+        assert owl.StockValue(self.products[0]) == 6000
 
+    def testCost(self):
+        owl = BarnOwl()
+        assert owl.Cost(self.products[0]) == 2000
+    
+    def testQty(self):
+        owl = BarnOwl()
+        assert owl.QTY(self.products[0]) == 3
+    
+    def _test_delete_bill(self):
+        c = Counter()
+        c.initail_amount = 0
+        c.close_amount = -1
+        c.active = True
+        c.user = User.objects.get(pk = 1)
+        c.pk = 9999
+        c.create_at = datetime.datetime.today()
+        c.save()
+        
+        owl = BarnOwl()        
+        bill_dict = self._build_bill_dict()
+        outStock_dict = self._build_output_dict()
+        outStockResult = owl.OutStock(owl.cash , bill_dict, outStock_dict)
+        assert len(outStockResult) == 2
+        owl.DeleteBill(outStockResult[0].bill.pk, "for Testing")
+        assert Bill.objects.get(pk = outStockResult[0].bill.pk).active == False
+        payments = Payment.objects.filter(bill = outStockResult[0].bill)
+        for payment in payments: 
+            assert payment.active == False
+        outStockRecords = OutStockRecord.objects.filter(bill = outStockResult[0].bill)
+        for outStockRecord in outStockRecords:
+            assert outStockRecord.active == False
+        c.delete()        
+    
+    def test_delete_instock_batch(self):
+        owl = BarnOwl()        
+        dict = self._build_input_dict()
+        inStockResult = owl.InStock(owl.purchase , dict)        
+        assert len(inStockResult) == 2        
+        for inStockRecord in inStockResult:
+            owl.DeleteInStockBatch(inStockRecord.inStockBatch.pk, "for test")
+        assert inStockResult[0].inStockBatch.active == False
+            
     def _build_moc_product(self):
         logger.debug("Build MOC product")
         products = []
@@ -319,8 +381,12 @@ class TestBarnOwl(unittest.TestCase):
         for product in products:
             inStockRecords = InStockRecord.objects.filter(product = product)
             for inStockRecord in inStockRecords:
-                logger.debug("delete instockRecord: '%s'", inStockRecord.pk)
+                logger.debug("delete inStockRecord: '%s'", inStockRecord.pk)
                 inStockRecord.delete()
+            outStockRecords = OutStockRecord.objects.filter(product = product)
+            for outStockRecord in outStockRecords:
+                logger.debug("delete outStockRecord: '%s'", outStockRecord.pk)
+                outStockRecord.delete()
             logger.debug("delete product: '%s'", product.name)
             product.delete()
         
@@ -348,6 +414,38 @@ class TestBarnOwl(unittest.TestCase):
         inputDict[u'65536'] [u'serial-0'] = u'NK1280PPL001'    
         inputDict[u'65536'] [u'cost'] = u'2000'    
         inputDict[u'65536'] [u'quantity'] = u'3'                    
+        return inputDict
+
+    def _build_bill_dict(self):
+        inputDict  = {}
+        inputDict[u'customer'] = u'Cash'
+        inputDict[u'salesby'] = 1
+        inputDict[u'_auth_user_id'] = 1
+        inputDict[u'amountTendered'] = u'300'
+        inputDict[u'salesMode'] = u'cash'
+        inputDict[u'item'] = u'NK1280PPL'
+        inputDict[u'mode'] = u'sale'
+        inputDict[u'discount'] = u'0.00'
+        inputDict[u'total'] = u'300'
+        inputDict[u'subTotal'] = u'300'
+        inputDict[u'change'] = u'0'
+        inputDict[u'transactionNo'] = u''
+        return inputDict
+    
+    def _build_output_dict(self):
+        inputDict  = {}
+        inputDict[u'65535'] = {}
+        inputDict[u'65535'] [u'imei'] = u'serial-0'
+        inputDict[u'65535'] [u'pk'] = 65535
+        inputDict[u'65535'] [u'price'] = 300    
+        inputDict[u'65535'] [u'quantity'] = 1            
+        
+        inputDict[u'65536'] = {}
+        inputDict[u'65536'] [u'imei'] = u'serial-1'
+        inputDict[u'65536'] [u'pk'] = 65536
+        inputDict[u'65536'] [u'price'] = 300    
+        inputDict[u'65536'] [u'quantity'] = 1            
+                    
         return inputDict
         
 if __name__=="__main__":
