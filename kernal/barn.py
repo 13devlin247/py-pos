@@ -361,15 +361,24 @@ class BarnOwl:
                 product = Product.objects.get(pk = product_key)
         return product
     
-    def __build_outstock_record__(self, request, bill, payment, dict , type):
+
+    def _is_serial_no(self, serial):
+        try:
+            serial_no = SerialNo.objects.get(serial_no = serial)
+            return True
+        except SerialNo.DoesNotExist:
+            return False
+    
+    
+    def __build_outstock_record__(self, bill, payment, dict , type):
         outStockRecords = []
         # build OutStockRecord to save data
         for barcode in dict:
             logger.debug("build OutStockRecord by: '%s'", barcode)
             product = self._query_product(barcode)
             bill = bill
-            qty = dict[barcode]['quantity'] [0]
-            unit_sell_price = dict[barcode]['price'][0]
+            qty = dict[barcode]['quantity']
+            unit_sell_price = dict[barcode]['price']
             reason = type
             isSerial = self._is_serial_no(barcode)
             serial = None
@@ -389,7 +398,7 @@ class BarnOwl:
                 consignmentOut.save()
                 logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
             """                
-            return outStockRecords
+        return outStockRecords
     
     
     def __build_instock_records__(self, inStockBatch, inventoryDict, reason):
@@ -551,7 +560,10 @@ class BarnOwl:
         customer = self.__query_customer__(customer_name)
         bill = self.__build_bill__(dict, customer, counter)
         payment = self.__build_payment__(dict, bill, customer)
-        return bill
+        result = []
+        result.append(bill)
+        result.append(payment)
+        return result
             
     def __build_instock_batch__(self, dict):
         mode = dict.get('mode', 'purchase')
@@ -602,20 +614,69 @@ class BarnOwl:
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
         return inStockRecords
     
-    def OutStock(self, reason, out_stock_batch_dict):
+    def OutStock(self, reason, bill_dict, out_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, out_stock_batch_dict)
-        bill = self.__build_bill_batch__(out_stock_batch_dict)
-        outStockRecords = self.__build_instock_records__(bill, out_stock_batch_dict, reason)
+        x = self.__build_bill_batch__(bill_dict)
+        bill = x[0]
+        payment = x[1]
+        outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , type)
         return outStockRecords
         
-    def Cost(self, reason, out_stock_batch_dict):
-        return False
+    def Cost(self, product, serial=None):
+        mouse = BarnMouse(product)
+        return mouse.Cost(serial)
         
-    def Qty(self, reason, start, end):
-        return 0
+    def QTY(self, product):
+        mouse = BarnMouse(product)
+        return mouse.QTY()
+    
+    def StockValue(self, product):
+        mouse = BarnMouse(product)
+        return mouse.StockValue()
 
-    def Catch(self, reason, start, end):
-        return 0        
+    def DeleteBill(self, bill_pk, reason):
+        if not reason:
+            logger.error("Delete have fulfill reason")
+            return 
+        try:
+            logger.info("Delete Bill: '%s', reason: '%s'", bill_pk, reason)
+            bill = Bill.objects.get(pk = bill_pk)
+            bill.active = False
+            bill.reason = reason
+            bill.save()
+            
+            payments = Payment.objects.filter(bill = bill)
+            for payment in payments:
+                logger.info("Delete Payment: '%s', reason: '%s'", payment.pk, reason)
+                payment.active = False
+                payment.reason = reason
+                payment.save()
+                
+            outStockRecords = OutStockRecord.objects.filter(bill = bill)
+            for outStockRecord in outStockRecords:
+                product = outStockRecord.product
+                mouse = BarnMouse(product)
+                mouse.Delete(reason, OutStockRecord, outStockRecord.pk)
+        except Bill.DoesNotExist:
+            logger.error("Delete Error")
+            
+    def DeleteInStockBatch(self, inStockBatch_pk, reason):
+        if not reason:
+            logger.error("Delete have fulfill reason")
+            return 
+        try:
+            inStockBatch = InStockBatch.objects.get(pk = inStockBatch_pk)
+            inStockBatch.active = False
+            inStockBatch.reason = reason
+            inStockBatch.save()
+            logger.info("Delete InStockBatch '%s' ", inStockBatch.pk)
+            inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
+            for inStockRecord in inStockRecords:
+                product = inStockRecord.product
+                mouse = BarnMouse(product)
+                mouse.Delete(reason, InStockRecord, inStockRecord.pk)
+        except InStockBatch.DoesNotExist:
+            logger.error("Delete Error")
 
 class Hermes:
     def Cost(self, product):

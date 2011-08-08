@@ -133,6 +133,8 @@ class InStockBatch(models.Model):
     mode = models.CharField(max_length=150) 
     status = models.CharField(max_length=150) 
     create_at = models.DateTimeField(auto_now_add = True)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)    
     
 class InStockRecord(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
@@ -144,6 +146,7 @@ class InStockRecord(models.Model):
     type = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
     active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
             
     def natural_key(self):
         return (self.product.name)    
@@ -183,6 +186,9 @@ class Bill(models.Model):
     sales_by = models.ForeignKey(User, related_name="sales_by")
     issue_by = models.ForeignKey(User, related_name="issue_by")
     mode = models.CharField(max_length=100)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
     def __unicode__(self):
         # return self.customer.name 
         return str(self.pk).zfill(6)
@@ -201,6 +207,7 @@ class OutStockRecord(models.Model):
     type = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)
     active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
     
     def __unicode__(self):
         return "barcode: "+self.barcode + " index: " + str(self.sell_index) + " profit: " + str(self.profit)
@@ -212,7 +219,9 @@ class Payment(models.Model):
     status = models.CharField(max_length=100, choices=PAYMENT_STATUS)
     transaction_no = models.CharField(max_length=100, blank = True)
     create_at = models.DateTimeField(auto_now_add = True)
-
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
     def __unicode__(self):
         return str(self.bill) + " " + self.type + " " + self.status 
 
@@ -231,7 +240,6 @@ class VoidBill(models.Model):
     user = models.ForeignKey(User)
     create_at = models.DateTimeField(auto_now_add = True)
     
-    
 class ConsignmentInDetail(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
     create_at = models.DateTimeField(auto_now_add = True)
@@ -240,7 +248,9 @@ class ConsignmentInDetail(models.Model):
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
     status = models.CharField(max_length=100)
-
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
 class ConsignmentOutDetail(models.Model):
     payment = models.ForeignKey(Payment)
     create_at = models.DateTimeField(auto_now_add = True)
@@ -248,7 +258,9 @@ class ConsignmentOutDetail(models.Model):
     serialNo = models.ForeignKey(SerialNo, null = True)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
-
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
 class ProductForm(ModelForm):
     class Meta:
         model = Product
