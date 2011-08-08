@@ -20,6 +20,13 @@ class SerialRequiredException(Exception):
     def __str__(self):
         return repr(self.value)
 
+class CounterNotReadyException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+
 class BarnMouse:
     def __init__(self, product):
         logger.debug("BarnMose '%s' build", product.name)
@@ -175,7 +182,8 @@ class BarnMouse:
         outStockRecord.sell_index = 0;
         outStockRecord.profit = 0;
         outStockRecord.cost = -1;
-        outStockRecord.type = type
+        outStockRecord.type = reason
+        outStockRecord.active = True
         outStockRecord.save()
         logger.info("Product: '%s' OutStockRecord build: '%s' , bill pk: '%s', qty: '%s', price: '%s', reason: '%s', serials: '%s' ", self.product.name, outStockRecord.pk, bill.pk, qty, price, reason, serials)
         
@@ -260,12 +268,16 @@ class BarnMouse:
             logger.debug("Delete '%s', pk:'%s', reason:'%s'", Models, pk, reason)
             model = Models.objects.get(pk = pk)
             model.active = False
+            model.reason = reason
             model.save()
             if Models == InStockRecord:
                 logger.debug("InStockRecord '%s' has been delete, recalc cost", pk)
                 self._recalc_cost()
         except model.DoesNotExist:
             logger.error("Delete '%s', pk:'%', reason:'%s' Fail, Does Not Exist",Models, pk, reason)
+
+
+
 
 class BarnOwl:
     def __init__(self):
@@ -347,6 +359,7 @@ class BarnOwl:
         return product    
 
     def _query_product(self, product_key):
+        logger.debug("query product by: '%s'", product_key)
         product = None
         if "-foc-product" in product_key:
             logger.debug("Foc product !! : %s ", product_key)    
@@ -360,7 +373,7 @@ class BarnOwl:
             serial_no = None
             try:
                 serial_no = SerialNo.objects.get(serial_no = product_key)
-                product = serial_no.product
+                product = serial_no.inStockRecord.product
                 logger.debug("product found by imei : %s ", product_key)
             except SerialNo.DoesNotExist:
                 logger.debug("no imei no '%s'. found", product_key)
@@ -368,28 +381,24 @@ class BarnOwl:
         return product
     
 
-    def _is_serial_no(self, serial):
+    def _is_serial_no(self, serial_key):
         try:
-            serial_no = SerialNo.objects.get(serial_no = serial)
-            return True
+            serial_no = SerialNo.objects.get(serial_no = serial_key)
+            return serial_no.serial_no
         except SerialNo.DoesNotExist:
-            return False
+            return None
     
     
-    def __build_outstock_record__(self, bill, payment, dict , type):
+    def __build_outstock_record__(self, bill, payment, dict , reason):
         outStockRecords = []
         # build OutStockRecord to save data
         for barcode in dict:
             logger.debug("build OutStockRecord by: '%s'", barcode)
             product = self._query_product(barcode)
-            bill = bill
-            qty = dict[barcode]['quantity']
-            unit_sell_price = dict[barcode]['price']
-            reason = type
-            isSerial = self._is_serial_no(barcode)
-            serial = None
-            if isSerial:
-                serial = SerialNo.objects.get(serial_no = serial)
+            qty = int(dict[barcode]['quantity'])
+            unit_sell_price = float(dict[barcode]['price'])
+            imei = dict[barcode].get('imei', 'None')
+            serial = self._is_serial_no(imei)
             mouse = BarnMouse(product)
             outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial)
             outStockRecords.append(outStockRecord)
@@ -457,12 +466,14 @@ class BarnOwl:
         bill.sales_by = User.objects.get(pk=int(dict.get('salesby','-1')))
         bill.issue_by = User.objects.get(pk=dict.get('_auth_user_id'))
         bill.fulfill_payment = False
+        bill.active = True
         bill.save()
         logging.info("Bill '%s' create, customer: '%s', counter: '%s '", bill.pk, customer, counter)
         return bill
     
     def __build_payment__(self, dict, bill, customer):    
         payment = Payment()
+        payment.active = True
         payment.bill = bill
         salesMode = dict.get('salesMode', '')
         logger.debug("SalesMode: %s", salesMode)
@@ -559,16 +570,13 @@ class BarnOwl:
             counter = counters.order_by('-create_at')[0]
         else:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
-            return False
+            raise CounterNotReadyException("Counter Not Found")
         # process Request parameter
         customer_name = dict.get("customer")
         customer = self.__query_customer__(customer_name)
         bill = self.__build_bill__(dict, customer, counter)
         payment = self.__build_payment__(dict, bill, customer)
-        result = []
-        result.append(bill)
-        result.append(payment)
-        return result
+        return [bill, payment]
             
     def __build_instock_batch__(self, dict):
         mode = dict.get('mode', 'purchase')
@@ -617,19 +625,19 @@ class BarnOwl:
         inStockBatch = self.__build_instock_batch__(inStockBatch_dict)
         try:
             inStockRecords = self.__build_instock_records__(inStockBatch, in_stock_batch_dict, reason)
-        except SerialRequiredException:
+        except SerialRequiredException as srException:
             self.DeleteInStockBatch(inStockBatch.pk, "InStockRecord build fail, serial no required")
-            raise SerialRequiredException("Serial Required") 
+            raise srException 
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
         return inStockRecords
     
     def OutStock(self, reason, bill_dict, out_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, out_stock_batch_dict)
-        x = self.__build_bill_batch__(bill_dict)
-        bill = x[0]
-        payment = x[1]
-        outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , type)
-        return outStockRecords
+        result = self.__build_bill_batch__(bill_dict)
+        bill = result[0]
+        payment = result[1]
+        outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , reason)
+        return [bill, payment, outStockRecords]
         
     def Cost(self, product, serial=None):
         mouse = BarnMouse(product)

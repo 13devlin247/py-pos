@@ -27,7 +27,7 @@ from django.template import RequestContext
 from barn import BarnOwl 
 # import the logging library
 import logging
-from pos.kernal.barn import SerialRequiredException
+from pos.kernal.barn import SerialRequiredException, CounterNotReadyException
 
 logging.basicConfig(
     level = logging.WARN,
@@ -267,8 +267,7 @@ def __convert_inventory_URL_2_inStockBatch_dict__(request):
             dict[key] ={}
         dict[key] = value
         
-    user = request.session.get('_auth_user_id')
-    dict [u'_auth_user_id'] = user
+    dict [u'_auth_user_id'] = request.session.get('_auth_user_id')
     dict [u'do_no'] = request.GET.get('do_no')
     dict [u'inv_no'] = request.GET.get('inv_no')
     dict [u'do_date'] = request.GET.get('do_date')
@@ -404,8 +403,9 @@ def InventoryConfirm(request):
         inStockRecords = None
         try:
             inStockRecords = owl.InStock(request.GET.get("mode"), inStockBatchDict, inventoryDict)
-        except SerialRequiredException:
-            pass
+        except SerialRequiredException as srException:
+            error_msg = srException.value + " Required Serial Number"
+            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
         logger.info("InventoryConfirm finish")
         inStockBatch = inStockRecords[0].inStockBatch
         return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
@@ -455,7 +455,7 @@ def __convert_sales_URL_2_dict__(request):
         attr = key.split("_")[1]
         if pk not in salesDict:
             salesDict[pk] ={}
-        salesDict[pk] [attr]= value
+        salesDict[pk] [attr]= value[0]
     return salesDict
 
 def __build_bill__(request, customer, counter):
@@ -614,22 +614,34 @@ def __build_outstock_record__(request, bill, payment, dict , type):
             logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
         return outStockRecords
 
+def __convert_sales_URL_2_bill_dict__(request):
+    dict = {}
+    sales_item = request.GET.lists()
+    logger.debug("instock items url parameters: %s", sales_item)    
+    for key,  value in sales_item:
+        if '_' in key:
+            continue
+        if key not in dict :
+            dict[key] ={}
+        dict[key] = value[0]
+    dict [u'_auth_user_id'] = request.session.get('_auth_user_id')
+    logger.debug("Bill Dict: %s", dict)        
+    return dict
+
 def SalesConfirm(request):
     salesDict = {}
     if request.method == 'GET':
-        # check Counter 
-        counters = None
-        counters = Counter.objects.filter(active=True).order_by('-create_at')
-        if counters.count() == 0:
+        bill_dict = __convert_sales_URL_2_bill_dict__(request)
+        salesDict = __convert_sales_URL_2_dict__(request)
+        owl = BarnOwl()
+        try:
+            results = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+        except CounterNotReadyException as e:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
             return HttpResponseRedirect('/admin/kernal/counter/add/')    
         # process Request parameter
-        salesDict = __convert_sales_URL_2_dict__(request)
-        logger.debug("sales dict: %s" , salesDict)
-        customer = __query_customer__(request, 'customer')
-        bill = __build_bill__(request, customer, counters[0])
-        payment = __build_payment__(request, bill, customer)
-        __build_outstock_record__(request, bill, payment, salesDict, 'sales')      
+        bill = results[0]
+        payment = results[1]
         if payment.type == 'Invoice':
             logger.debug("Invoice bill, direct to invoice interface")
             return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
@@ -1324,11 +1336,11 @@ def _update_outStockRecord_set(bill):
     logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
     bill.save()
 
-def VoidBill(request):
+def DeleteBill(request):
+    logger.info("Void Bill")
     pk = request.GET.get('bill_id','')
-    bill = Bill.objects.get(pk = pk)
-    bill.mode = "void_" + bill.mode
-    bill.save()
+    owl = BarnOwl()
+    owl.DeleteBill(pk, request.GET.get("reason",""))
     return HttpResponseRedirect('/report/daily/')
     
 def PersonReport(request):
