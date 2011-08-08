@@ -23,9 +23,11 @@ from django.contrib.sessions.models import Session
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.template import RequestContext 
+from django.template import RequestContext
+from barn import BarnOwl 
 # import the logging library
 import logging
+from pos.kernal.barn import SerialRequiredException
 
 logging.basicConfig(
     level = logging.WARN,
@@ -255,6 +257,24 @@ def printData(request):
              }
      }
 """
+def __convert_inventory_URL_2_inStockBatch_dict__(request):
+    dict = {}
+    sales_item = request.GET.lists()
+    for key,  value in sales_item:
+        if key.find("_") != -1:
+            continue
+        if key not in dict :
+            dict[key] ={}
+        dict[key] = value
+        
+    user = request.session.get('_auth_user_id')
+    dict [u'_auth_user_id'] = user
+    dict [u'do_no'] = request.GET.get('do_no')
+    dict [u'inv_no'] = request.GET.get('inv_no')
+    dict [u'do_date'] = request.GET.get('do_date')
+    logger.debug("InStockBatch parameters: %s", dict)        
+    return dict
+
 def __convert_inventory_URL_2_dict__(request):
     dict = {}
     sales_item = request.GET.lists()
@@ -272,7 +292,7 @@ def __convert_inventory_URL_2_dict__(request):
         attr = key.split("_")[1]
         if pk not in dict :
             dict[pk] ={}
-        dict[pk][attr]= value
+        dict[pk][attr]= value[0]
     return dict
 
 def __build_instock_batch__(request):
@@ -377,17 +397,17 @@ def InventoryConfirm(request):
     inventoryDict = {}
     if request.method == 'GET':
         # process Request parameter
+        inStockBatchDict = __convert_inventory_URL_2_inStockBatch_dict__(request)
         inventoryDict = __convert_inventory_URL_2_dict__(request)
         logger.debug("inventory dict build success: %s", inventoryDict)
-        inStockBatch = __build_instock_batch__(request)
-        inStockRecords = __build_instock_records__(inStockBatch, inventoryDict, inStockBatch.mode)
-        serials = __build_serial_no__(request, inStockRecords, inventoryDict)  
+        owl = BarnOwl()
+        inStockRecords = None
+        try:
+            inStockRecords = owl.InStock(request.GET.get("mode"), inStockBatchDict, inventoryDict)
+        except SerialRequiredException:
+            pass
         logger.info("InventoryConfirm finish")
-        if inStockBatch.mode == "Consignment_IN":
-            logger.debug("Consignment IN batch found, build consignemnt details.")
-            __build_consignment_in_by_instockrecords__(inStockRecords, serials)
-        else:
-            logger.debug("InStock mode: %s", inStockBatch.mode)
+        inStockBatch = inStockRecords[0].inStockBatch
         return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
 """
     __convert_sales_URL_2_dict__(): 
