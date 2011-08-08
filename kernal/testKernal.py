@@ -265,7 +265,7 @@ class TestBarnOwl(unittest.TestCase):
         bill_dict = self._build_bill_dict()
         outStock_dict = self._build_output_dict()
         outStockResult = owl.OutStock(owl.cash , bill_dict, outStock_dict)
-        assert len(outStockResult) == 2
+        assert len(outStockResult[2]) == 2
         c.delete()
         
     def testStockValue(self):

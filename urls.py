@@ -210,7 +210,7 @@ urlpatterns = patterns('',
     url(r'^report/daily/$', login_required(ReportDaily)),                        
     url(r'^report/stocktake/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/stock/take/'} }),                                    
     url(r'^stock/take/$', login_required(CountInventory)),             
-    url(r'^bill/void/$', login_required(VoidBill)),             
+    url(r'^bill/void/$', login_required(DeleteBill)),             
     
     url(r'^report/daily/category/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/category/'} }),                                    
     url(r'^report/daily/category/$', login_required(ReportDailyCategory)),                            
