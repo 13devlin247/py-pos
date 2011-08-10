@@ -27,7 +27,8 @@ from django.template import RequestContext
 from barn import BarnOwl 
 # import the logging library
 import logging
-from pos.kernal.barn import SerialRequiredException, CounterNotReadyException
+from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
+    BarnMouse
 
 logging.basicConfig(
     level = logging.WARN,
@@ -97,7 +98,7 @@ def ReportInventoryReceipt(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    inStockBatch = InStockBatch.objects.all().filter(create_at__range=(startDate,endDate))
+    inStockBatch = InStockBatch.objects.all().filter(create_at__range=(startDate,endDate)).order_by("-create_at")
     return render_to_response('report_inventory_receipt.html',{'inStockBatch': inStockBatch, 'dateRange': str(startDate)+" to "+str(endDate)}, )    
 
 def ReportConsignmentInBalance(request):
@@ -130,7 +131,7 @@ def ReportDaily(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='sale'))
+    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='sale')).filter(active = True)
     profitTable = {}
     total_amount = 0
     total_profit = 0
@@ -265,7 +266,7 @@ def __convert_inventory_URL_2_inStockBatch_dict__(request):
             continue
         if key not in dict :
             dict[key] ={}
-        dict[key] = value
+        dict[key] = value[0]
         
     dict [u'_auth_user_id'] = request.session.get('_auth_user_id')
     dict [u'do_no'] = request.GET.get('do_no')
@@ -614,6 +615,17 @@ def __build_outstock_record__(request, bill, payment, dict , type):
             logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
         return outStockRecords
 
+def ProductCostUpdate(request):
+    inStockBatch_pk = request.GET.get("inStockBatch_pk")
+    inStockBatch = InStockBatch.objects.get(pk=int(inStockBatch_pk))
+    inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
+    counters = {}
+    for inStockRecord in inStockRecords:
+        cost = float(request.GET.get("inStockRecord_" + str(inStockRecord.pk), "0"))
+        mouse = BarnMouse(inStockRecord.product)
+        mouse.UpdateCost(inStockRecord.pk, cost)
+    return HttpResponseRedirect('/inventory/result/'+inStockBatch_pk)
+
 def __convert_sales_URL_2_bill_dict__(request):
     dict = {}
     sales_item = request.GET.lists()
@@ -955,7 +967,22 @@ def CountInventory(request):
     products = Product.objects.filter(Q(active=True)).order_by("name")
     list = []
     for product in products:
-        list.append(__count_inventory_stock__(starttime, endtime, product)) 
+        stockCost = None
+        try:
+            stockCost = StockCost.objects.get(product = product)
+        except StockCost.DoesNotExist:
+            mouse = BarnMouse(product)
+            stockCost = StockCost.objects.get(product = product)
+        result = []
+        result.append(product.name)
+        result.append(product.description)
+        result.append(0) #old_Stock
+        result.append(0) #current_inStock
+        result.append(0) # current_outStock
+        result.append(stockCost.qty)
+        result.append(stockCost.qty * stockCost.avg_cost)        
+        list.append(result) 
+#        list.append(__count_inventory_stock__(starttime, endtime, product)) 
     return render_to_response('stock_take.html',{'stockList': list, 'dateRange': str(startDate)+" to "+str(endDate)}, )
     
 """
