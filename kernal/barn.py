@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo,\
     Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter
 import logging
+from django.db.models.query_utils import Q
 
 
 
@@ -33,6 +34,10 @@ class BarnMouse:
         self.product = product
         self.is_serialable = self._check_serial()
         self.foc_product = self._check_foc_product()
+        try:
+            stockCost = StockCost.objects.get(product = product)
+        except StockCost.DoesNotExist:
+            self._recalc_cost()
 
     def _check_foc_product(self):
         if "-foc-product" in self.product.name:
@@ -158,7 +163,7 @@ class BarnMouse:
         stockCost.instock_create_at = self._query_last_record_datetime(InStockRecord)
         stockCost.outstock_create_at = self._query_last_record_datetime(OutStockRecord)
         stockCost.save()
-        
+
     def __lock_serial_no__(self, imei):
         serial_no = None
         try:
@@ -169,6 +174,26 @@ class BarnMouse:
         except SerialNo.DoesNotExist:
             logger.debug("no imei no '%s'. found", imei)
         return serial_no    
+    
+    def _count_sales_index(self):
+        startIDX = 0
+        endIDX = 0
+        
+        disableList = []
+        
+        inStockRecords = InStockRecord.objects.filter(product = self.product).filter(active = True)
+        if inStockRecords.count() > 0:
+            inStockRecords = inStockRecords.order_by("create_at")
+            startIDX = inStockRecords[0].startIDX
+            endIDX = inStockRecords[len(inStockRecords-1)].startIDX + inStockRecords[len(inStockRecords-1)].quantity
+        
+        outStockRecords = OutStockRecord.objects.filter(product = self.product).filter(active = True)
+        for outStockRecord in outStockRecords:
+            sales_idx = outStockRecord.sell_index
+            qty =  outStockRecord.quantity
+            for i in [sales_idx: sales_idx + qty]:
+                disableList.append(i)
+        return 0
     
     def OutStock(self, bill, qty, price, reason, serials):
         outStockRecord = OutStockRecord()
@@ -196,6 +221,13 @@ class BarnMouse:
         if cost == "":
             logger.debug("Cost not define, use avg cost") 
             cost = self.Cost()
+            
+        index = 1
+        inStockRecords = InStockRecord.objects.filter(product = self.product)
+        if inStockRecords.count() > 0:
+            instockrecord = inStockRecords.order_by("-startIDX")[0] 
+            index = instockrecord.startIDX + instockrecord.quantity 
+        
         inStockRecord = InStockRecord()
         inStockRecord.inStockBatch = inStockBatch
         inStockRecord.product = self.product
@@ -203,6 +235,7 @@ class BarnMouse:
         inStockRecord.quantity = qty
         inStockRecord.status = reason
         inStockRecord.active = True
+        inStockRecord.startIDX = index
         inStockRecord.save()
         
         if self.is_serialable:
@@ -251,7 +284,6 @@ class BarnMouse:
             return 0
         logger.debug("Product: '%s' QTY: '%s'", self.product, qty)
         return qty
-
     
     def UpdateCost(self, pk, cost):
         try:
@@ -262,6 +294,23 @@ class BarnMouse:
             self._recalc_cost()
         except InStockRecord.DoesNotExist:
             logger.warn("instance '%s' , Cost: '%s' does NOT update correctly", pk, cost)
+    
+    def _effect_counter(self, inStockRecord):
+        logger.debug("look up effect count with inStockRecord: '%s'", inStockRecord.pk)
+        counters = {}
+        startIDX = inStockRecord.startIDX
+        endIDX = int(inStockRecord.startIDX) + int(inStockRecord.quantity)
+        outStockRecords = OutStockRecord.objects.filter(Q(product = self.product)&Q(sell_index__lte = endIDX))
+        logger.debug("outStockRecords found: '%s' item", len(outStockRecords))
+        for outStockRecord in outStockRecords:
+            outStockRecord_endIndex = outStockRecord.sell_index + outStockRecord.quantity
+            logger.debug("outStockRecord_endIndex: '%s' , outStockRecord.sell_index: '%s', outStockRecord.quantity: '%s'", outStockRecord_endIndex, outStockRecord.sell_index, outStockRecord.quantity)
+            if outStockRecord_endIndex < startIDX:
+                continue
+            counter = outStockRecord.bill.counter
+            counters[counter] = counter
+            logger.debug("Counter: '%s' add", counter)
+        return counters
     
     def Delete(self, reason, Models, pk):
         try:

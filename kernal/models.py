@@ -147,6 +147,7 @@ class InStockRecord(models.Model):
     status = models.CharField(max_length=100)
     active = models.BooleanField(True)
     reason = models.CharField(max_length=100, null = True)
+    startIDX = models.DecimalField(max_digits=100,  decimal_places=0)
             
     def natural_key(self):
         return (self.product.name)    

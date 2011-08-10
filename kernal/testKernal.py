@@ -48,7 +48,7 @@ class TestBarnMouse(unittest.TestCase):
         mouse = BarnMouse(self.products[1])
         owl = BarnOwl()
         inStockBatch = owl.__build_instock_batch__(self._build_inStockBatch_dict())
-        mouse.InStock(inStockBatch, 3, 3, owl.purchase, None)
+        mouse.InStock(inStockBatch, 3, 3, owl.purchase, ['111'])
         assert InStockRecord.objects.filter(inStockBatch = inStockBatch).count() > 0 
         
     def test_outstock(self):
@@ -105,6 +105,65 @@ class TestBarnMouse(unittest.TestCase):
         mouse = BarnMouse(self.products[0])
         assert mouse.QTY() == 6
         
+    def test_effect_counter(self):
+        logger.debug("Test Effect Counter")
+        c = Counter()
+        c.initail_amount = 0
+        c.close_amount = -1
+        c.active = True
+        c.user = User.objects.get(pk = 1)
+        c.pk = 9999
+        c.create_at = datetime.datetime.today()
+        c.save()
+        
+        owl = BarnOwl()        
+        inStockRecords = owl.InStock(owl.purchase, self._build_inStockBatch_dict(), self._build_input_dict())
+        
+        bill_dict = self._build_bill_dict()
+        outStock_dict = self._build_output_dict()
+        outStockResult = owl.OutStock(owl.cash , bill_dict, outStock_dict)
+        outStockResult = owl.OutStock(owl.cash , bill_dict, outStock_dict)
+        outStockResult = owl.OutStock(owl.cash , bill_dict, outStock_dict)
+        assert len(outStockResult[2]) == 2
+
+        mouse = BarnMouse(self.products[0])
+        for inStockRecord in inStockRecords:
+            counters = mouse._effect_counter(inStockRecord)
+            assert len(counters) == 1
+        c.delete()
+        
+    def _build_bill_dict(self):
+        inputDict  = {}
+        inputDict[u'customer'] = u'Cash'
+        inputDict[u'salesby'] = 1
+        inputDict[u'_auth_user_id'] = 1
+        inputDict[u'amountTendered'] = u'300'
+        inputDict[u'salesMode'] = u'cash'
+        inputDict[u'item'] = u'NK1280PPL'
+        inputDict[u'mode'] = u'sale'
+        inputDict[u'discount'] = u'0.00'
+        inputDict[u'total'] = u'300'
+        inputDict[u'subTotal'] = u'300'
+        inputDict[u'change'] = u'0'
+        inputDict[u'transactionNo'] = u''
+        return inputDict
+    
+    def _build_output_dict(self):
+        inputDict  = {}
+        inputDict[u'65535'] = {}
+        inputDict[u'65535'] [u'imei'] = u'serial-0'
+        inputDict[u'65535'] [u'pk'] = 65535
+        inputDict[u'65535'] [u'price'] = 300    
+        inputDict[u'65535'] [u'quantity'] = 1            
+        
+        inputDict[u'65536'] = {}
+        inputDict[u'65536'] [u'imei'] = u'serial-1'
+        inputDict[u'65536'] [u'pk'] = 65536
+        inputDict[u'65536'] [u'price'] = 300    
+        inputDict[u'65536'] [u'quantity'] = 1            
+                    
+        return inputDict    
+    
     def _build_moc_product(self):
         logger.debug("Build MOC product")
         products = []
