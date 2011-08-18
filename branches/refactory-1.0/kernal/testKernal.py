@@ -6,12 +6,11 @@ import datetime
 from django.contrib.auth.models import User
 p1 = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 p2 = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
-
-
 sys.path.append(p1)
 sys.path.append(p2)
 sys.stdout = sys.stderr
 os.environ['DJANGO_SETTINGS_MODULE'] = 'pos.settings' 
+
 import logging
 from barn import BarnMouse, BarnOwl
 from pos.kernal.models import Product, Category, Brand, Type, UOM, InStockRecord,\

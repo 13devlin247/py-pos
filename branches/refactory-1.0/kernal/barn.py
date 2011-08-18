@@ -20,6 +20,12 @@ class SerialRequiredException(Exception):
         self.value = value
     def __str__(self):
         return repr(self.value)
+    
+class SerialRejectException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)    
 
 class CounterNotReadyException(Exception):
     def __init__(self, value):
@@ -32,7 +38,7 @@ class BarnMouse:
     def __init__(self, product):
         logger.debug("BarnMose '%s' build", product.name)
         self.product = product
-        self.is_serialable = self._check_serial()
+        self.is_serialable = self._check_serial() # mouse.is_serialable == None that mean this is initial product, still dont know is serial product or not
         self.foc_product = self._check_foc_product()
         try:
             stockCost = StockCost.objects.get(product = product)
@@ -50,8 +56,10 @@ class BarnMouse:
         if serials.count() > 0:
             logger.debug("Product: '%s' is serial product" , self.product.name)
             return True
+        elif InStockRecord.objects.filter(Q(product = self.product)&Q(active = True)).count() == 0:
+            return None
         logger.debug("Product: '%s' is NOT serial product", self.product.name)
-        return True
+        return False
 
     def __count_product_stock__(self, starttime, endtime, stockRecords, product):
         summary = [0, 0, 0, 0] #  statistic less than starttime, statistic fall in time, total statistic, cost
@@ -191,8 +199,8 @@ class BarnMouse:
         for outStockRecord in outStockRecords:
             sales_idx = outStockRecord.sell_index
             qty =  outStockRecord.quantity
-            for i in [sales_idx: sales_idx + qty]:
-                disableList.append(i)
+#            for i in [sales_idx: sales_idx + qty]:
+#                disableList.append(i)
         return 0
     
     def OutStock(self, bill, qty, price, reason, serials):
@@ -238,12 +246,10 @@ class BarnMouse:
         inStockRecord.startIDX = index
         inStockRecord.save()
         
-        if self.is_serialable:
-            if not serials:
-                logger.error("Product: '%s' is serial product, please the input serial no.", self.product.name)
-                raise SerialRequiredException(self.product.name) 
+        if serials:
+            logger.debug("Product: '%s' build serial numbers", self.product)
             self.__build_serial_no__(inStockRecord, serials)
-        
+            
         self._recalc_cost()
         
         logger.debug("Product '%s' instock build success, cost: '%s', quantity:'%s' ", self.product.name, inStockRecord.cost, inStockRecord.quantity)
@@ -483,6 +489,17 @@ class BarnOwl:
             qty = inventoryDict [pk]['quantity']
             mouse = BarnMouse(product)
             serials = self.__filter_serial_by_product__(inventoryDict[pk])
+            
+            if mouse.is_serialable != None:  
+                if mouse.is_serialable:
+                    if not serials:
+                        logger.error("Product: '%s' is serial product, please the input serial no.", product.name)
+                        raise SerialRequiredException(product.name) 
+                else:
+                    if serials:
+                        logger.error("Product: '%s' is NOT serial product, please DONT input serial no.", product.name)
+                        raise SerialRejectException(product.name)
+            
             inStockRecord = mouse.InStock(inStockBatch, qty, cost, reason, serials)
             inStockRecords.append(inStockRecord)
         return inStockRecords
@@ -665,6 +682,7 @@ class BarnOwl:
         inStockBatch.invoice_no = dict.get('inv_no', "-")
         inStockBatch.do_no = dict.get('do_no', "-")
         inStockBatch.status = 'Incomplete'
+        inStockBatch.active = True
         inStockBatch.save();
         logger.debug("InStockBatch: '%s' build", inStockBatch.pk)
         return inStockBatch    
@@ -676,6 +694,9 @@ class BarnOwl:
             inStockRecords = self.__build_instock_records__(inStockBatch, in_stock_batch_dict, reason)
         except SerialRequiredException as srException:
             self.DeleteInStockBatch(inStockBatch.pk, "InStockRecord build fail, serial no required")
+            raise srException 
+        except SerialRejectException as srException:
+            self.DeleteInStockBatch(inStockBatch.pk, "InStockRecord build fail, serial NOT Required, please remove it")
             raise srException 
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
         return inStockRecords
@@ -745,8 +766,63 @@ class BarnOwl:
             logger.error("Delete Error")
 
 class Hermes:
-    def Cost(self, product):
-        return False
+    def _counter_check(self):
+        counters = Counter.objects.filter(active = True)
+        if counters.count() > 0:
+            return False
+        return True
+    
+    def __init__(self):
+        self.is_all_close = self._counter_check()
+        
+    def _update_outStockRecord_set(self, bill):
+        outStockRecordSet = bill.outstockrecord_set.all()
+        totalProfit = 0
+        for outStockRecord in outStockRecordSet:
+            if outStockRecord.serial_no != None:
+                product = outStockRecord.serial_no.inStockRecord.product
+                totalCost = outStockRecord.serial_no.inStockRecord.cost
+                outStockRecord.sell_index = -1
+                outStockRecord.serial_no.active = False
+                outStockRecord.serial_no.save()
+                logger.info("Get price by SerialNo: %s ",totalCost);
+            else:
+                product = outStockRecord.product
+                sales_index = __find_SalesIdx__(product)
+                totalCost = __find_cost__(sales_index, outStockRecord)
+                outStockRecord.sell_index = __count_sales_index__(product, sales_index, outStockRecord.quantity) 
+                logger.info("Get cost by FIFO, sales index: %s ,quantity: %s, sell_index: %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
+            outStockRecord.profit = outStockRecord.amount - totalCost
+            outStockRecord.cost = totalCost
+            outStockRecord.save()
+            totalProfit = totalProfit + outStockRecord.profit
+            logger.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
+        bill.profit = totalProfit
+        logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
+        bill.save()
+
+    def _CounterCalc(self, counterID):
+        counter = Counter.objects.get(pk=counterID)
+        bills = Bill.objects.filter(counter=counter)
+        totalAmount = counter.initail_amount
+        for bill in bills:
+            totalAmount = totalAmount + bill.total_price
+            logger.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
+            self._update_outStockRecord_set(bill)
+        counter.close_amount = totalAmount
+        counter.active = False
+        counter.save()
+        logger.debug("Counter '%s', '%s' update", counter.pk, counter.create_at)    
+
+    def ReCalc(self, date):
+        new_date = str(datetime.today()).split(" ")[0] + " 23:59:59"
+        logger.debug("create_at__range=(%s,%s)", date, new_date)
+        counters = Counter.objects.filter(create_at__range=(date, new_date)).order_by('create_at')
+        logger.debug("%s Counters waiting update", counters.count())
+        for counter in counters:
+            counter.active = True
+            counter.save()
+            self._CounterCalc(counter.pk)
         
     def Profit(self, product):
         return False

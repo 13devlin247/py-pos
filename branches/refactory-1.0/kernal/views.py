@@ -28,7 +28,7 @@ from barn import BarnOwl
 # import the logging library
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
-    BarnMouse
+    BarnMouse, SerialRejectException
 
 logging.basicConfig(
     level = logging.WARN,
@@ -98,7 +98,7 @@ def ReportInventoryReceipt(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    inStockBatch = InStockBatch.objects.all().filter(create_at__range=(startDate,endDate)).order_by("-create_at")
+    inStockBatch = InStockBatch.objects.all().filter(create_at__range=(startDate,endDate)).filter(active = True).order_by("-create_at")
     return render_to_response('report_inventory_receipt.html',{'inStockBatch': inStockBatch, 'dateRange': str(startDate)+" to "+str(endDate)}, )    
 
 def ReportConsignmentInBalance(request):
@@ -407,6 +407,9 @@ def InventoryConfirm(request):
         except SerialRequiredException as srException:
             error_msg = srException.value + " Required Serial Number"
             return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
+        except SerialRejectException as srException:
+            error_msg = srException.value + " Serial Number NOT required"
+            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
         logger.info("InventoryConfirm finish")
         inStockBatch = inStockRecords[0].inStockBatch
         return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
@@ -617,13 +620,30 @@ def __build_outstock_record__(request, bill, payment, dict , type):
 
 def ProductCostUpdate(request):
     inStockBatch_pk = request.GET.get("inStockBatch_pk")
+    
+    counters = Counter.objects.filter(active = True)
+    if counters.count() > 0:
+        error_msg = "Cost update fail, reason: Counter Not Close"
+        return QueryInventory(request, inStockBatch_pk, error_msg)
+    
     inStockBatch = InStockBatch.objects.get(pk=int(inStockBatch_pk))
     inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
-    counters = {}
+    
     for inStockRecord in inStockRecords:
         cost = float(request.GET.get("inStockRecord_" + str(inStockRecord.pk), "0"))
         mouse = BarnMouse(inStockRecord.product)
         mouse.UpdateCost(inStockRecord.pk, cost)
+        
+    date = inStockBatch.create_at
+    new_date = str(datetime.today()).split(" ")[0] + " 23:59:59"
+    logger.debug("create_at__range=(%s,%s)", date, new_date)
+    counters = Counter.objects.filter(create_at__range=(date, new_date)).order_by('create_at')
+    logger.debug("%s Counters waiting update", counters.count())
+    for counter in counters:
+        counter.active = True
+        counter.save()
+        _CounterCalc(counter.pk)
+        
     return HttpResponseRedirect('/inventory/result/'+inStockBatch_pk)
 
 def __convert_sales_URL_2_bill_dict__(request):
@@ -882,7 +902,7 @@ def QueryBill(request, displayPage, billID):
     user = request.user
     return render_to_response(displayPage+".html",{'bill': bill, 'outStockRecordset':outStockRecordset, 'company': company, 'user': user, 'form':VoidBillForm()}, context_instance=RequestContext(request))
         
-def QueryInventory(request, inStockBatchID):    
+def QueryInventory(request, inStockBatchID, error_msg = None):    
     list_per_page = 25
     inStockBatch = InStockBatch.objects.get(pk=inStockBatchID)
     resultSet = InStockRecord.objects.filter(inStockBatch = inStockBatch)
@@ -897,7 +917,9 @@ def QueryInventory(request, inStockBatchID):
         # If page is out of range (e.g. 9999), deliver last page of results.
         inStockRecordSet = paginator.page(paginator.num_pages)    
     company = Company.objects.all()[0]    
-    return render_to_response('inventory_result.html',{'inStockBatch': inStockBatch ,  'inStockRecordset': inStockRecordSet})
+    if not error_msg:
+        error_msg = ""
+    return render_to_response('inventory_result.html',{'inStockBatch': inStockBatch ,  'inStockRecordset': inStockRecordSet, 'error_msg': error_msg})
 
 def __count_product_stock__(starttime, endtime, stockRecords, product):
     summary = [0, 0, 0, 0] #  statistic less than starttime, statistic fall in time, total statistic, cost
@@ -1286,10 +1308,7 @@ def countInventory(inStockRecordSet, outStockRecord):
     logger.debug("Inventory '%s' count: %s", inStockRecord.product.name, count)
     return count
 
-@permission_required('kernal.change_counter', login_url='/accounts/login/')
-def CounterUpdate(request):
-    counterID =  request.GET.get('counterID', "")
-    # count close amount
+def _CounterCalc(counterID):
     counter = Counter.objects.get(pk=counterID)
     bills = Bill.objects.filter(counter=counter)
     totalAmount = counter.initail_amount
@@ -1300,6 +1319,12 @@ def CounterUpdate(request):
     counter.close_amount = totalAmount
     counter.active = False
     counter.save()
+    logger.debug("Counter '%s', '%s' update", counter.pk, counter.create_at)    
+
+@permission_required('kernal.change_counter', login_url='/accounts/login/')
+def CounterUpdate(request):
+    counterID =  int(request.GET.get('counterID', ""))
+    _CounterCalc(counterID)
     return HttpResponseRedirect('/counter/close/') 
 
 def __check_available_inStock_qty__(inStockRecord):
