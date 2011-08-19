@@ -28,7 +28,7 @@ from barn import BarnOwl
 # import the logging library
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
-    BarnMouse, SerialRejectException
+    BarnMouse, SerialRejectException, Hermes
 
 logging.basicConfig(
     level = logging.WARN,
@@ -401,9 +401,9 @@ def InventoryConfirm(request):
         inventoryDict = __convert_inventory_URL_2_dict__(request)
         logger.debug("inventory dict build success: %s", inventoryDict)
         owl = BarnOwl()
-        inStockRecords = None
+        result = None
         try:
-            inStockRecords = owl.InStock(request.GET.get("mode"), inStockBatchDict, inventoryDict)
+            result = owl.InStock(request.GET.get("mode"), inStockBatchDict, inventoryDict)
         except SerialRequiredException as srException:
             error_msg = srException.value + " Required Serial Number"
             return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
@@ -411,8 +411,11 @@ def InventoryConfirm(request):
             error_msg = srException.value + " Serial Number NOT required"
             return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
         logger.info("InventoryConfirm finish")
-        inStockBatch = inStockRecords[0].inStockBatch
-        return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
+
+        hermes = Hermes()
+        hermes.ConsignmentIn(result[0])
+
+        return HttpResponseRedirect('/inventory/result/'+str(result[0].pk))
 """
     __convert_sales_URL_2_dict__(): 
     
@@ -620,30 +623,19 @@ def __build_outstock_record__(request, bill, payment, dict , type):
 
 def ProductCostUpdate(request):
     inStockBatch_pk = request.GET.get("inStockBatch_pk")
-    
-    counters = Counter.objects.filter(active = True)
-    if counters.count() > 0:
+    hermes = Hermes()
+    if not hermes.is_all_close:
         error_msg = "Cost update fail, reason: Counter Not Close"
         return QueryInventory(request, inStockBatch_pk, error_msg)
     
     inStockBatch = InStockBatch.objects.get(pk=int(inStockBatch_pk))
     inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
-    
+
     for inStockRecord in inStockRecords:
         cost = float(request.GET.get("inStockRecord_" + str(inStockRecord.pk), "0"))
         mouse = BarnMouse(inStockRecord.product)
         mouse.UpdateCost(inStockRecord.pk, cost)
-        
-    date = inStockBatch.create_at
-    new_date = str(datetime.today()).split(" ")[0] + " 23:59:59"
-    logger.debug("create_at__range=(%s,%s)", date, new_date)
-    counters = Counter.objects.filter(create_at__range=(date, new_date)).order_by('create_at')
-    logger.debug("%s Counters waiting update", counters.count())
-    for counter in counters:
-        counter.active = True
-        counter.save()
-        _CounterCalc(counter.pk)
-        
+    hermes.ReCalcCounters(inStockBatch.create_at)
     return HttpResponseRedirect('/inventory/result/'+inStockBatch_pk)
 
 def __convert_sales_URL_2_bill_dict__(request):
@@ -668,6 +660,11 @@ def SalesConfirm(request):
         owl = BarnOwl()
         try:
             results = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            hermes = Hermes()
+            payment = results[1]
+            outStockRecords = results[2]
+            hermes.ConsignmentOut(payment, outStockRecords)
+            hermes.BalanceConsignmentIN(outStockRecords)
         except CounterNotReadyException as e:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
             return HttpResponseRedirect('/admin/kernal/counter/add/')    
@@ -1308,23 +1305,11 @@ def countInventory(inStockRecordSet, outStockRecord):
     logger.debug("Inventory '%s' count: %s", inStockRecord.product.name, count)
     return count
 
-def _CounterCalc(counterID):
-    counter = Counter.objects.get(pk=counterID)
-    bills = Bill.objects.filter(counter=counter)
-    totalAmount = counter.initail_amount
-    for bill in bills:
-        totalAmount = totalAmount + bill.total_price
-        logger.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
-        _update_outStockRecord_set(bill)
-    counter.close_amount = totalAmount
-    counter.active = False
-    counter.save()
-    logger.debug("Counter '%s', '%s' update", counter.pk, counter.create_at)    
-
 @permission_required('kernal.change_counter', login_url='/accounts/login/')
 def CounterUpdate(request):
     counterID =  int(request.GET.get('counterID', ""))
-    _CounterCalc(counterID)
+    hermes = Hermes()
+    hermes.ReCalcCounterByPK(counterID)
     return HttpResponseRedirect('/counter/close/') 
 
 def __check_available_inStock_qty__(inStockRecord):
@@ -1340,53 +1325,53 @@ def __check_available_inStock_qty__(inStockRecord):
     logger.debug("inStockRecord '%s' recornized, available '%s', unAvailable: '%s' ", inStockRecord.pk, availableQTY, unAvailableQTY)        
     return [availableQTY, unAvailableQTY]
 
-def __count_sales_index__(product, sales_index, quantity):
-    logger.debug("Count '%s' sales index, last idx: '%s', QTY: '%s' ", product.pk, sales_index, quantity)
-    inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')
-    currentQuantity = 0
-    disableCount = 0
-    countdown = quantity
-    for inStockRecord in inStockRecordSet:
-        currentQuantity = currentQuantity + inStockRecord.quantity
-        if sales_index <= currentQuantity:
-            logger.debug("inStockRecord '%s' match, processing...", inStockRecord.pk)
-            qtys = __check_available_inStock_qty__(inStockRecord)
-            availableQty = qtys[0]
-            disableCount += qtys[1]
-            countdown = countdown - availableQty
-            if countdown <= 0:
-                break
-        else:
-            logger.debug("inStockRecord '%s' saled, skip", inStockRecord.pk)
-    new_idx = sales_index + quantity + disableCount
-    logger.debug("sales idx : '%s', Disable Stock: '%s' ", new_idx, disableCount)
-    return new_idx
+#def __count_sales_index__(product, sales_index, quantity):
+#    logger.debug("Count '%s' sales index, last idx: '%s', QTY: '%s' ", product.pk, sales_index, quantity)
+#    inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')
+#    currentQuantity = 0
+#    disableCount = 0
+#    countdown = quantity
+#    for inStockRecord in inStockRecordSet:
+#        currentQuantity = currentQuantity + inStockRecord.quantity
+#        if sales_index <= currentQuantity:
+#            logger.debug("inStockRecord '%s' match, processing...", inStockRecord.pk)
+#            qtys = __check_available_inStock_qty__(inStockRecord)
+#            availableQty = qtys[0]
+#            disableCount += qtys[1]
+#            countdown = countdown - availableQty
+#            if countdown <= 0:
+#                break
+#        else:
+#            logger.debug("inStockRecord '%s' saled, skip", inStockRecord.pk)
+#    new_idx = sales_index + quantity + disableCount
+#    logger.debug("sales idx : '%s', Disable Stock: '%s' ", new_idx, disableCount)
+#    return new_idx
     
-def _update_outStockRecord_set(bill):
-    outStockRecordSet = bill.outstockrecord_set.all()
-    totalProfit = 0
-    for outStockRecord in outStockRecordSet:
-        if outStockRecord.serial_no != None:
-            product = outStockRecord.serial_no.inStockRecord.product
-            totalCost = outStockRecord.serial_no.inStockRecord.cost
-            outStockRecord.sell_index = -1
-            outStockRecord.serial_no.active = False
-            outStockRecord.serial_no.save()
-            logger.info("Get price by SerialNo: %s ",totalCost);
-        else:
-            product = outStockRecord.product
-            sales_index = __find_SalesIdx__(product)
-            totalCost = __find_cost__(sales_index, outStockRecord)
-            outStockRecord.sell_index = __count_sales_index__(product, sales_index, outStockRecord.quantity) 
-            logger.info("Get cost by FIFO, sales index: %s ,quantity: %s, sell_index: %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
-        outStockRecord.profit = outStockRecord.amount - totalCost
-        outStockRecord.cost = totalCost
-        outStockRecord.save()
-        totalProfit = totalProfit + outStockRecord.profit
-        logger.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
-    bill.profit = totalProfit
-    logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
-    bill.save()
+#def _update_outStockRecord_set(bill):
+#    outStockRecordSet = bill.outstockrecord_set.all()
+#    totalProfit = 0
+#    for outStockRecord in outStockRecordSet:
+#        if outStockRecord.serial_no != None:
+#            product = outStockRecord.serial_no.inStockRecord.product
+#            totalCost = outStockRecord.serial_no.inStockRecord.cost
+#            outStockRecord.sell_index = -1
+#            outStockRecord.serial_no.active = False
+#            outStockRecord.serial_no.save()
+#            logger.info("Get price by SerialNo: %s ",totalCost);
+#        else:
+#            product = outStockRecord.product
+#            sales_index = __find_SalesIdx__(product)
+#            totalCost = __find_cost__(sales_index, outStockRecord)
+#            outStockRecord.sell_index = __count_sales_index__(product, sales_index, outStockRecord.quantity) 
+#            logger.info("Get cost by FIFO, sales index: %s ,quantity: %s, sell_index: %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
+#        outStockRecord.profit = outStockRecord.amount - totalCost
+#        outStockRecord.cost = totalCost
+#        outStockRecord.save()
+#        totalProfit = totalProfit + outStockRecord.profit
+#        logger.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
+#    bill.profit = totalProfit
+#    logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
+#    bill.save()
 
 def DeleteBill(request):
     logger.info("Void Bill")
@@ -1436,51 +1421,51 @@ def _build_users_sold_dict(product, startDate, endDate):
         logger.info("add %s's  outStockRecord" % user )
     return users
         
-def __find_SalesIdx__(product):
-    sales_index = 0
-    #find last time sell record
-    lastOutStockRecordSet = OutStockRecord.objects.filter(Q(product=product)&(Q(type="sales")|Q(type="ConsignmentOutSales")))
-    if lastOutStockRecordSet.count() != 0:
-        lastOutStockRecord = lastOutStockRecordSet.order_by('create_at')[0]
-        sales_index = lastOutStockRecord.sell_index
-        logger.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
-    #logger.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
-    return sales_index        
+#def __find_SalesIdx__(product):
+#    sales_index = 0
+#    #find last time sell record
+#    lastOutStockRecordSet = OutStockRecord.objects.filter(Q(product=product)&(Q(type="sales")|Q(type="ConsignmentOutSales")))
+#    if lastOutStockRecordSet.count() != 0:
+#        lastOutStockRecord = lastOutStockRecordSet.order_by('create_at')[0]
+#        sales_index = lastOutStockRecord.sell_index
+#        logger.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
+#    #logger.info("Product: "+product.name+"'s sales_index: " + str(sales_index))
+#    return sales_index        
 
-def __find_cost__(salesIdx, outStockRecord):
-    if outStockRecord.product.barcode == "FOC":
-        logger.debug("FOC product found, cost == 0 ")
-        return 0
-    product = outStockRecord.product
-    sales_index = 0
-    #find last time sell record
-    historyCost = []
-    productQuantity = []
-    inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')
-    currentQuantity = 0
-    salesIdxPosision = -1
-    idx = 0
-    for inStockRecord in inStockRecordSet:
-        historyCost.append(inStockRecord.cost)
-        currentQuantity = currentQuantity + inStockRecord.quantity
-        productQuantity.append(currentQuantity)
-        if salesIdx <= currentQuantity and salesIdxPosision == -1:
-            salesIdxPosision = idx
-        idx = idx + 1
-    totalproductCost = 0
-    cost = historyCost[salesIdxPosision]
-    for i in range(outStockRecord.quantity):
-        logger.error("%s, %s",(salesIdx + i + 1) , productQuantity[salesIdxPosision])        
-        if (salesIdx + i + 1) > productQuantity[salesIdxPosision]:
-            if salesIdxPosision >= len(productQuantity):
-                logger.error("salesIdxPosision over limit: %s" % salesIdxPosision )
-                pass
-            else:
-                salesIdxPosision = salesIdxPosision + 1
-        if salesIdxPosision >= len(historyCost):
-            salesIdxPosision = len(historyCost)-1
-        cost = historyCost[salesIdxPosision]
-        logger.info("salesIdxPosision: %s", salesIdxPosision)
-        logger.info("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
-        totalproductCost = totalproductCost + cost
-    return totalproductCost
+#def __find_cost__(salesIdx, outStockRecord):
+#    if outStockRecord.product.barcode == "FOC":
+#        logger.debug("FOC product found, cost == 0 ")
+#        return 0
+#    product = outStockRecord.product
+#    sales_index = 0
+#    #find last time sell record
+#    historyCost = []
+#    productQuantity = []
+#    inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')
+#    currentQuantity = 0
+#    salesIdxPosision = -1
+#    idx = 0
+#    for inStockRecord in inStockRecordSet:
+#        historyCost.append(inStockRecord.cost)
+#        currentQuantity = currentQuantity + inStockRecord.quantity
+#        productQuantity.append(currentQuantity)
+#        if salesIdx <= currentQuantity and salesIdxPosision == -1:
+#            salesIdxPosision = idx
+#        idx = idx + 1
+#    totalproductCost = 0
+#    cost = historyCost[salesIdxPosision]
+#    for i in range(outStockRecord.quantity):
+#        logger.error("%s, %s",(salesIdx + i + 1) , productQuantity[salesIdxPosision])        
+#        if (salesIdx + i + 1) > productQuantity[salesIdxPosision]:
+#            if salesIdxPosision >= len(productQuantity):
+#                logger.error("salesIdxPosision over limit: %s" % salesIdxPosision )
+#                pass
+#            else:
+#                salesIdxPosision = salesIdxPosision + 1
+#        if salesIdxPosision >= len(historyCost):
+#            salesIdxPosision = len(historyCost)-1
+#        cost = historyCost[salesIdxPosision]
+#        logger.info("salesIdxPosision: %s", salesIdxPosision)
+#        logger.info("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
+#        totalproductCost = totalproductCost + cost
+#    return totalproductCost
