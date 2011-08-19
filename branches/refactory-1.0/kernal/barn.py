@@ -35,6 +35,29 @@ class CounterNotReadyException(Exception):
 
 
 class BarnMouse:
+    def _calc_last_index(self):
+        logger.debug("calc last instock record and sell index for product '%s'")
+        outStockRecords = OutStockRecord.objects.filter(product = self.product).filter(active = True).order_by("-create_at")
+        if outStockRecords.count() == 0:
+            logger.debug("Product: '%s' not any out stock record, initial it")
+            self.sell_index = 0;
+            inStockRecords = InStockRecord.objects.filter(product = self.product).filter(active = True).order_by("create_at")
+            self.last_inStockRecord = inStockRecords[0]
+        else:
+            self.sell_index = outStockRecords[0].sell_index + outStockRecords[0].quantity 
+            pre_inStockRecord = outStockRecords[0].inStockRecord
+            if  self.sell_index > (pre_inStockRecord.start_idx + pre_inStockRecord.quantity):
+                inStockRecors = InStockRecord.objects.filter(product = self.product).filter(create_at__gt = pre_inStockRecord.create_at)
+                if inStockRecors.count() == 0:
+                    logger.debug("sell_index: '%s' > pre_instockrecord: '%s', next inStockRecord NOT FOUND, return pre_inStockRecord", self.sell_index, pre_inStockRecord.pk)
+                    self.last_inStockRecord = pre_inStockRecord
+                else:
+                    logger.debug("sell_index: '%s' > pre_instockrecord: '%s', next inStockRecord FOUND, return next inStockRecord", self.sell_index, pre_inStockRecord.pk)
+                    self.last_inStockRecord = inStockRecors[0]
+            else:
+                logger.debug("sell_index: '%s' fall in pre_instockrecord: '%s', return pre_inStockRecord", self.sell_index, pre_inStockRecord.pk)
+                self.last_inStockRecord = pre_inStockRecord
+    
     def __init__(self, product):
         logger.debug("BarnMose '%s' build", product.name)
         self.product = product
@@ -44,6 +67,9 @@ class BarnMouse:
             stockCost = StockCost.objects.get(product = product)
         except StockCost.DoesNotExist:
             self._recalc_cost()
+        self.last_inStockRecord = None
+        self.sell_index = 0
+        self._calc_last_index()
 
     def _check_foc_product(self):
         if "-foc-product" in self.product.name:
@@ -142,6 +168,10 @@ class BarnMouse:
         logger.debug("product:'%s', avg cost: '%s' ", self.product, cost)
         return cost
     
+    def _recalc_sell_index(self, outStockRecord):
+        logger.debug("Re-Calc Sell Index since '%s'", outStockRecord.pk)
+        pass
+    
     def _recalc_cost(self):
         startDate = str(date.min)+" 00:00:00"
         endDate = str(date.max)+" 23:59:59"
@@ -184,6 +214,7 @@ class BarnMouse:
         return serial_no    
     
     def _count_sales_index(self):
+        
         startIDX = 0
         endIDX = 0
         
@@ -203,11 +234,17 @@ class BarnMouse:
 #                disableList.append(i)
         return 0
     
+    def _query_inStockRecord(self, serial_no):
+        if serial_no:
+            return serial_no.inStockRecord
+        return self.last_inStockRecord
+
     def OutStock(self, bill, qty, price, reason, serials):
         outStockRecord = OutStockRecord()
         outStockRecord.bill = bill
         outStockRecord.product = self.product
         serial_no = self.__lock_serial_no__(serials)
+        outStockRecord.inStockRecord = self._query_inStockRecord(serial_no)
         outStockRecord.serial_no = serial_no
         outStockRecord.unit_sell_price = price
         outStockRecord.quantity = qty
@@ -328,6 +365,9 @@ class BarnMouse:
             if Models == InStockRecord:
                 logger.debug("InStockRecord '%s' has been delete, recalc cost", pk)
                 self._recalc_cost()
+            else:
+                logger.debug("OutStockRecord '%s' has been delete, recalc sell index", pk)
+                self._recalc_sell_index()
         except model.DoesNotExist:
             logger.error("Delete '%s', pk:'%', reason:'%s' Fail, Does Not Exist",Models, pk, reason)
 
