@@ -246,7 +246,6 @@ class ConsignmentInDetail(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
     create_at = models.DateTimeField(auto_now_add = True)
     inStockRecord = models.ForeignKey(InStockRecord)
-    serialNo = models.ForeignKey(SerialNo, null = True)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
     status = models.CharField(max_length=100)

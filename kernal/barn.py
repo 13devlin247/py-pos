@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from django.contrib.auth.models import User
-from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo,\
-    Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter
+from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo, Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter,\
+    ConsignmentInDetail
 import logging
 from django.db.models.query_utils import Q
 
@@ -36,17 +36,18 @@ class CounterNotReadyException(Exception):
 
 class BarnMouse:
     def _calc_last_index(self):
-        logger.debug("calc last instock record and sell index for product '%s'")
+        logger.debug("calc last instock record and sell index for product '%s'", self.product.name)
         outStockRecords = OutStockRecord.objects.filter(product = self.product).filter(active = True).order_by("-create_at")
         if outStockRecords.count() == 0:
             logger.debug("Product: '%s' not any out stock record, initial it")
             self.sell_index = 0;
             inStockRecords = InStockRecord.objects.filter(product = self.product).filter(active = True).order_by("create_at")
-            self.last_inStockRecord = inStockRecords[0]
+            if inStockRecords.count() != 0:
+                self.last_inStockRecord = inStockRecords[0]
         else:
             self.sell_index = outStockRecords[0].sell_index + outStockRecords[0].quantity 
             pre_inStockRecord = outStockRecords[0].inStockRecord
-            if  self.sell_index > (pre_inStockRecord.start_idx + pre_inStockRecord.quantity):
+            if  self.sell_index > (pre_inStockRecord.startIDX + pre_inStockRecord.quantity):
                 inStockRecors = InStockRecord.objects.filter(product = self.product).filter(create_at__gt = pre_inStockRecord.create_at)
                 if inStockRecors.count() == 0:
                     logger.debug("sell_index: '%s' > pre_instockrecord: '%s', next inStockRecord NOT FOUND, return pre_inStockRecord", self.sell_index, pre_inStockRecord.pk)
@@ -58,10 +59,26 @@ class BarnMouse:
                 logger.debug("sell_index: '%s' fall in pre_instockrecord: '%s', return pre_inStockRecord", self.sell_index, pre_inStockRecord.pk)
                 self.last_inStockRecord = pre_inStockRecord
     
+
+    def _check_consignment(self):
+        inStockRecords = InStockRecord.objects.filter(product = self.product).filter(active = True)
+        if inStockRecords.count() == 0:
+            logger.debug("Product: '%s' not initial yet, cant to check if consignment or not", self.product)
+            return None
+        for inStockRecord in inStockRecords:
+            inStockBatch = inStockRecord.inStockBatch
+            if inStockBatch.type == Hermes.CONSIGNMENT_IN:
+                return True
+            else:
+                return False
+        
+    
+    
     def __init__(self, product):
         logger.debug("BarnMose '%s' build", product.name)
         self.product = product
         self.is_serialable = self._check_serial() # mouse.is_serialable == None that mean this is initial product, still dont know is serial product or not
+        self.is_consignment_product = self._check_consignment()
         self.foc_product = self._check_foc_product()
         try:
             stockCost = StockCost.objects.get(product = product)
@@ -149,7 +166,7 @@ class BarnMouse:
     def Cost(self, serial=None):
         if serial:
             try:
-                serial = SerialNo.objects.get(serial_no=serial)
+                serial = SerialNo.objects.get(serial_no=serial.serial_no)
                 cost = serial.inStockRecord.cost
                 logger.debug("product:'%s', Serial no: '%s' cost: '%s'", self.product, serial, cost)
                 return cost
@@ -338,6 +355,14 @@ class BarnMouse:
         except InStockRecord.DoesNotExist:
             logger.warn("instance '%s' , Cost: '%s' does NOT update correctly", pk, cost)
     
+    def UpdateProfit(self, outStockRecord):
+        logger.debug("Update profit, OutStockRecord: '%s'", outStockRecord.pk)
+        totalCost = self.Cost(outStockRecord.serial_no) * outStockRecord.quantity 
+        outStockRecord.profit = outStockRecord.amount - totalCost
+        outStockRecord.cost = totalCost
+        outStockRecord.save()
+
+    
     def _effect_counter(self, inStockRecord):
         logger.debug("look up effect count with inStockRecord: '%s'", inStockRecord.pk)
         counters = {}
@@ -497,17 +522,6 @@ class BarnOwl:
             mouse = BarnMouse(product)
             outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial)
             outStockRecords.append(outStockRecord)
-            """
-            if payment.type == "Consignment":
-                consignmentOut = ConsignmentOutDetail()
-                consignmentOut.payment = payment
-                consignmentOut.outStockRecord = outStockRecord
-                consignmentOut.serialNo = serial
-                consignmentOut.quantity = outStockRecord.quantity
-                consignmentOut.balance = 0
-                consignmentOut.save()
-                logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
-            """                
         return outStockRecords
     
     
@@ -739,7 +753,7 @@ class BarnOwl:
             self.DeleteInStockBatch(inStockBatch.pk, "InStockRecord build fail, serial NOT Required, please remove it")
             raise srException 
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
-        return inStockRecords
+        return [inStockBatch, inStockRecords]
     
     def OutStock(self, reason, bill_dict, out_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, out_stock_batch_dict)
@@ -806,6 +820,10 @@ class BarnOwl:
             logger.error("Delete Error")
 
 class Hermes:
+
+    CONSIGNMENT_IN = "Consignment_IN"
+    CONSIGNMENT_IN_STATUS_INCOMPLETE = "Incomplete"
+    CONSIGNMENT_IN_STATUS_COMPLETE = "Complete"
     def _counter_check(self):
         counters = Counter.objects.filter(active = True)
         if counters.count() > 0:
@@ -815,46 +833,32 @@ class Hermes:
     def __init__(self):
         self.is_all_close = self._counter_check()
         
-    def _update_outStockRecord_set(self, bill):
+    def _recalc_bill_profit(self, bill):
         outStockRecordSet = bill.outstockrecord_set.all()
         totalProfit = 0
         for outStockRecord in outStockRecordSet:
-            if outStockRecord.serial_no != None:
-                product = outStockRecord.serial_no.inStockRecord.product
-                totalCost = outStockRecord.serial_no.inStockRecord.cost
-                outStockRecord.sell_index = -1
-                outStockRecord.serial_no.active = False
-                outStockRecord.serial_no.save()
-                logger.info("Get price by SerialNo: %s ",totalCost);
-            else:
-                product = outStockRecord.product
-                sales_index = __find_SalesIdx__(product)
-                totalCost = __find_cost__(sales_index, outStockRecord)
-                outStockRecord.sell_index = __count_sales_index__(product, sales_index, outStockRecord.quantity) 
-                logger.info("Get cost by FIFO, sales index: %s ,quantity: %s, sell_index: %s",sales_index , outStockRecord.quantity, outStockRecord.sell_index);
-            outStockRecord.profit = outStockRecord.amount - totalCost
-            outStockRecord.cost = totalCost
-            outStockRecord.save()
+            mouse = BarnMouse(outStockRecord.product)
+            mouse.UpdateProfit(outStockRecord)
             totalProfit = totalProfit + outStockRecord.profit
             logger.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
         bill.profit = totalProfit
         logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
         bill.save()
 
-    def _CounterCalc(self, counterID):
+    def ReCalcCounterByPK(self, counterID):
         counter = Counter.objects.get(pk=counterID)
         bills = Bill.objects.filter(counter=counter)
         totalAmount = counter.initail_amount
         for bill in bills:
             totalAmount = totalAmount + bill.total_price
             logger.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
-            self._update_outStockRecord_set(bill)
+            self._recalc_bill_profit(bill)
         counter.close_amount = totalAmount
         counter.active = False
         counter.save()
         logger.debug("Counter '%s', '%s' update", counter.pk, counter.create_at)    
 
-    def ReCalc(self, date):
+    def ReCalcCounters(self, date):
         new_date = str(datetime.today()).split(" ")[0] + " 23:59:59"
         logger.debug("create_at__range=(%s,%s)", date, new_date)
         counters = Counter.objects.filter(create_at__range=(date, new_date)).order_by('create_at')
@@ -862,9 +866,67 @@ class Hermes:
         for counter in counters:
             counter.active = True
             counter.save()
-            self._CounterCalc(counter.pk)
+            self.ReCalcCounterByPK(counter.pk)
+
+    def ConsignmentOut(self, payment, outStockRecords):
+            if payment.type != "Consignment":
+                logger.debug("Not Consignment Bill, return ")
+                return
+            for outStockRecord in outStockRecords:
+                consignmentOut = ConsignmentOutDetail()
+                consignmentOut.payment = payment
+                consignmentOut.outStockRecord = outStockRecord
+                consignmentOut.serialNo = outStockRecord.serial_no
+                consignmentOut.quantity = outStockRecord.quantity
+                consignmentOut.balance = 0
+                consignmentOut.save()
+                logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
         
     def Profit(self, product):
         return False
-    
 
+    
+    def ConsignmentIn(self, inStockBatch):
+        if inStockBatch.mode == self.CONSIGNMENT_IN:
+            logger.debug("Consignment IN batch found, build consignemnt details.")
+            inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
+            for inStockRecord in inStockRecords:
+                consignmentInDetail = ConsignmentInDetail()
+                consignmentInDetail.inStockBatch = inStockRecord.inStockBatch
+                consignmentInDetail.inStockRecord = inStockRecord
+                consignmentInDetail.quantity = inStockRecord.quantity
+                consignmentInDetail.balance = 0
+                consignmentInDetail.status = Hermes.CONSIGNMENT_IN_STATUS_INCOMPLETE
+                consignmentInDetail.save()        
+                logger.debug("Consignment IN record build! '%s'", consignmentInDetail.pk)
+        else:
+            logger.debug("InStock mode: %s", inStockBatch.mode)
+
+    
+    def BalanceConsignmentIN(self, outStockRecords):
+        logger.debug("BalanceConsignmentIN, outStockRecords: '%s'", outStockRecords.count())
+        for outStockRecord in outStockRecords:
+            mouse = BarnMouse(outStockRecord.product)
+            if not mouse.is_consignment_product:
+                continue
+            if mouse.is_serialable:
+                serial_no = outStockRecord.serial_no
+                inStockRecord = serial_no.inStockRecord
+                consignmentInDetails = ConsignmentInDetail.objects.filter(inStockRecord = inStockRecord).order_by("create_at")
+                sold_out_qty = outStockRecord.quantity
+                for consignmentInDetail in consignmentInDetails:
+                    consignmentQty = consignmentInDetail.quantity
+                    if sold_out_qty <= consignmentQty:
+                        consignmentInDetail.balance = consignmentQty - sold_out_qty
+                        if consignmentInDetail.balance == 0:
+                            logger.debug("Consignment IN Record '%s' balanced. ", consignmentInDetail.pk)
+                            consignmentInDetail.active = False
+                        consignmentInDetail.save()
+                        logger.debug("last Consignment IN Record balance, '%s'", consignmentInDetail.pk)
+                        break
+                    else:
+                        consignmentInDetail.balance = consignmentQty
+                        consignmentInDetail.save()
+                        sold_out_qty = sold_out_qty - consignmentQty
+                        logger.debug("NOT last Consignment IN Record, next...,", consignmentInDetail.pk)
+    
