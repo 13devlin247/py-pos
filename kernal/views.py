@@ -851,8 +851,10 @@ def ConsignmentInBalance(request):
         supplier = __query_supplier__(request, 'supplier')
         bill = __build_bill__(request, customer, counters[0])
         payment = __build_payment__(request, bill, customer)
-        outStockRecords = __build_outstock_record__(request, bill, payment, salesDict, 'ConsignmentInBalance')      
-        __build_Consignment_In_index__(supplier, outStockRecords)
+        outStockRecords = __build_outstock_record__(request, bill, payment, salesDict, 'ConsignmentInBalance')
+        hermes = Hermes()
+        hermes.BalanceConsignmentIN(outStockRecords, supplier)      
+#        __build_Consignment_In_index__(supplier, outStockRecords)
         if payment.type == 'Invoice':
             logger.debug("Invoice bill, direct to invoice interface")
             return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
@@ -876,7 +878,7 @@ def ConsignmentInBalance(request):
         __close_consignment__(request)
         logger.info("InventoryConfirm finish")
         """        
-        return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
+        return HttpResponseRedirect('/report/consignment/in/balance/')
 
         
 def QueryBill(request, displayPage, billID):    
