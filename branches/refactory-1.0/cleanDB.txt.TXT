@@ -1,7 +1,7 @@
 DELETE FROM kernal_bill;
 DELETE FROM kernal_consignmentindetail;
 DELETE FROM kernal_consignmentoutdetail;
-DELETE FROM kernal_bill;
+DELETE FROM kernal_stockcost;
 DELETE FROM kernal_disablestock;
 DELETE FROM kernal_instockbatch;
 DELETE FROM kernal_instockrecord;
