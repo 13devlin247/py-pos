@@ -28,7 +28,7 @@ from barn import BarnOwl
 # import the logging library
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
-    BarnMouse, SerialRejectException, Hermes
+    BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
 
 logging.basicConfig(
     level = logging.WARN,
@@ -633,7 +633,11 @@ def ProductCostUpdate(request):
 
     for inStockRecord in inStockRecords:
         cost = float(request.GET.get("inStockRecord_" + str(inStockRecord.pk), "0"))
-        mouse = BarnMouse(inStockRecord.product)
+        mouse = None
+        if inStockRecord.product.algo.name == Algo.PERCENTAGE:
+            mouse = MickyMouse(inStockRecord.product)
+        else:
+            mouse = BarnMouse(inStockRecord.product)        
         mouse.UpdateCost(inStockRecord.pk, cost)
     hermes.ReCalcCounters(inStockBatch.create_at)
     return HttpResponseRedirect('/inventory/result/'+inStockBatch_pk)
@@ -659,18 +663,18 @@ def SalesConfirm(request):
         salesDict = __convert_sales_URL_2_dict__(request)
         owl = BarnOwl()
         try:
-            results = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
             hermes = Hermes()
-            payment = results[1]
-            outStockRecords = results[2]
+            payment = bills_and_payments[1]
+            outStockRecords = bills_and_payments[2]
             hermes.ConsignmentOut(payment, outStockRecords)
             hermes.BalanceConsignmentIN(outStockRecords)
         except CounterNotReadyException as e:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
             return HttpResponseRedirect('/admin/kernal/counter/add/')    
         # process Request parameter
-        bill = results[0]
-        payment = results[1]
+        bill = bills_and_payments[0]
+        payment = bills_and_payments[1]
         if payment.type == 'Invoice':
             logger.debug("Invoice bill, direct to invoice interface")
             return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
@@ -838,23 +842,25 @@ def __build_Consignment_Out_index__(supplier, outStockRecords):
 def ConsignmentInBalance(request):
     inventoryDict = {}
     if request.method == 'GET':
-        # process Request parameter
-        # check Counter 
-        counters = None
-        counters = Counter.objects.filter(active=True).order_by('-create_at')
-        if counters.count() == 0:
+        bill_dict = __convert_sales_URL_2_bill_dict__(request)
+        salesDict = __convert_sales_URL_2_dict__(request)
+        thanatos = Thanatos()
+        supplier = thanatos.Supplier(request.GET.get('supplier', 'Cash'))
+        
+        owl = BarnOwl()
+        bill = None
+        try:
+            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            hermes = Hermes()
+            bill = bills_and_payments[0]
+            payment = bills_and_payments[1]
+            outStockRecords = bills_and_payments[2]
+            hermes.ConsignmentOut(payment, outStockRecords)
+            hermes.BalanceConsignmentIN(outStockRecords, supplier)
+        except CounterNotReadyException as e:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
             return HttpResponseRedirect('/admin/kernal/counter/add/')    
-        salesDict = __convert_sales_URL_2_dict__(request)
-        logger.debug("sales dict: %s" , salesDict)
-        customer = __query_customer__(request, 'supplier')
-        supplier = __query_supplier__(request, 'supplier')
-        bill = __build_bill__(request, customer, counters[0])
-        payment = __build_payment__(request, bill, customer)
-        outStockRecords = __build_outstock_record__(request, bill, payment, salesDict, 'ConsignmentInBalance')
-        hermes = Hermes()
-        hermes.BalanceConsignmentIN(outStockRecords, supplier)      
-#        __build_Consignment_In_index__(supplier, outStockRecords)
+        
         if payment.type == 'Invoice':
             logger.debug("Invoice bill, direct to invoice interface")
             return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
@@ -868,16 +874,6 @@ def ConsignmentInBalance(request):
         error_msg = __check_consignment_in_balance_input__(request, inventoryDict, supplier)
         if error_msg:
             return render_to_response('consignment_in_balance_form.html',{'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm/', 'error_msg': error_msg})            
-        """
-        logger.debug("inventory dict build success: %s", inventoryDict)
-        inStockBatch = __build_instock_batch__(request)
-        inStockRecords = __build_instock_records__(inStockBatch, inventoryDict)
-        __retriever_original_cost__(request, inStockRecords, inventoryDict, customer)  
-        serials = __build_serial_no__(request, inStockRecords, inventoryDict)  
-        __consignment_out_balance_by_serials_no__(request, serials)
-        __close_consignment__(request)
-        logger.info("InventoryConfirm finish")
-        """        
         return HttpResponseRedirect('/report/consignment/in/balance/')
 
         
@@ -935,44 +931,44 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
     logger.debug("Product '%s' quantity count by %s ~ %s, result: %s, %s, %s, %s", product.name, starttime, endtime, summary[0], summary[1], summary[2], summary[3] )
     return summary 
      
-def __count_inventory_stock__(starttime, endtime, product):
-    result = []
-    inStockSummary = []
-    outStockSummary = []
-    inStockRecords = InStockRecord.objects.filter(product = product)
-    outStockRecords = OutStockRecord.objects.filter(product = product)
-    inStockSummary = __count_product_stock__(starttime, endtime, inStockRecords, product)
-    outStockSummary = __count_product_stock__(starttime, endtime, outStockRecords, product)
-    # count old stock record
-    old_inStock = inStockSummary[0]
-    old_outStock = outStockSummary[0]
-    old_Stock = old_inStock - old_outStock
-    # logger.debug("the product '%s' stock before '%s', InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, starttime, old_inStock, old_outStock, old_Stock)
-    # count current stock record
-    current_inStock = inStockSummary[1]
-    current_outStock = outStockSummary[1]
-    current_Stock = current_inStock - current_outStock    
-    #logger.debug("the product '%s' stock fall in: '%s' ~ '%s', InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, starttime, endtime, current_inStock, current_outStock, current_Stock)
-    # count all stock record
-    total_inStock = inStockSummary[2]
-    total_outStock = outStockSummary[2]
-    total_Stock = total_inStock - total_outStock    
-    #logger.debug("the product '%s' total stock, InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, total_inStock, total_outStock, total_Stock)
-    # count all stock cost
-    cost_inStock = inStockSummary[3]
-    cost_outStock = outStockSummary[3]
-    cost_Stock = cost_inStock - cost_outStock    
-    #cost_Stock = round(cost_Stock, 2)
-    logger.debug("the product '%s' cost stock, InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, cost_inStock, cost_outStock, cost_Stock)
-    result.append(product.name)
-    result.append(product.description)
-    result.append(old_Stock)
-    result.append(current_inStock)
-    result.append(current_outStock)
-    result.append(total_Stock)
-    result.append(cost_Stock)
-    logger.debug("Product: '%s' count: '%s' ", product.name, result)
-    return result
+#def __count_inventory_stock__(starttime, endtime, product):
+#    result = []
+#    inStockSummary = []
+#    outStockSummary = []
+#    inStockRecords = InStockRecord.objects.filter(product = product)
+#    outStockRecords = OutStockRecord.objects.filter(product = product)
+#    inStockSummary = __count_product_stock__(starttime, endtime, inStockRecords, product)
+#    outStockSummary = __count_product_stock__(starttime, endtime, outStockRecords, product)
+#    # count old stock record
+#    old_inStock = inStockSummary[0]
+#    old_outStock = outStockSummary[0]
+#    old_Stock = old_inStock - old_outStock
+#    # logger.debug("the product '%s' stock before '%s', InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, starttime, old_inStock, old_outStock, old_Stock)
+#    # count current stock record
+#    current_inStock = inStockSummary[1]
+#    current_outStock = outStockSummary[1]
+#    current_Stock = current_inStock - current_outStock    
+#    #logger.debug("the product '%s' stock fall in: '%s' ~ '%s', InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, starttime, endtime, current_inStock, current_outStock, current_Stock)
+#    # count all stock record
+#    total_inStock = inStockSummary[2]
+#    total_outStock = outStockSummary[2]
+#    total_Stock = total_inStock - total_outStock    
+#    #logger.debug("the product '%s' total stock, InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, total_inStock, total_outStock, total_Stock)
+#    # count all stock cost
+#    cost_inStock = inStockSummary[3]
+#    cost_outStock = outStockSummary[3]
+#    cost_Stock = cost_inStock - cost_outStock    
+#    #cost_Stock = round(cost_Stock, 2)
+#    logger.debug("the product '%s' cost stock, InStock: '%s', OutStock:'%s', Balance: '%s'", product.name, cost_inStock, cost_outStock, cost_Stock)
+#    result.append(product.name)
+#    result.append(product.description)
+#    result.append(old_Stock)
+#    result.append(current_inStock)
+#    result.append(current_outStock)
+#    result.append(total_Stock)
+#    result.append(cost_Stock)
+#    logger.debug("Product: '%s' count: '%s' ", product.name, result)
+#    return result
 
 def CountInventory(request):
     startDate = request.GET.get('start_date','')
@@ -983,25 +979,18 @@ def CountInventory(request):
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
     logger.debug("%s", startDate)
-    starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
-    endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
     products = Product.objects.filter(Q(active=True)).order_by("name")
     list = []
     for product in products:
-        stockCost = None
-        try:
-            stockCost = StockCost.objects.get(product = product)
-        except StockCost.DoesNotExist:
-            mouse = BarnMouse(product)
-            stockCost = StockCost.objects.get(product = product)
+        owl = BarnOwl()
         result = []
         result.append(product.name)
         result.append(product.description)
         result.append(0) #old_Stock
         result.append(0) #current_inStock
         result.append(0) # current_outStock
-        result.append(stockCost.qty)
-        result.append(stockCost.qty * stockCost.avg_cost)        
+        result.append(owl.QTY(product))
+        result.append(owl.QTY(product) * owl.Cost(product))        
         list.append(result) 
 #        list.append(__count_inventory_stock__(starttime, endtime, product)) 
     return render_to_response('stock_take.html',{'stockList': list, 'dateRange': str(startDate)+" to "+str(endDate)}, )
@@ -1124,18 +1113,13 @@ def ProductInfo(request, query):
 def ProductInventory(request, productID):
     logger.info("check product: '%s'  inventory" % productID)
     product = Product.objects.get(pk=productID)
-    startDate = request.GET.get('start_date','')
-    endDate = request.GET.get('end_date','')
-    if startDate == '' or endDate == '':
-        startDate = str(date.min)
-        endDate = str(date.max)
-    startDate = startDate+" 00:00:00"
-    endDate = endDate+" 23:59:59"
-    logger.debug("%s", startDate)
-    starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
-    endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
-    ans = __count_inventory_stock__(starttime, endtime, product)
-    json = "[{\"inventory\":"+str(ans[5])+"}]"
+    mouse = None
+    if product.algo.name == Algo.PERCENTAGE:
+        mouse = MickyMouse(product)
+    else:
+        mouse = BarnMouse(product)
+    qty = mouse.QTY()
+    json = "[{\"inventory\":"+str(qty)+"}]"
     return HttpResponse(json, mimetype="application/json")    
 
 def __json_wrapper__(querySet):
@@ -1256,15 +1240,15 @@ def ProductDelete(request):
                 product.save()
     return HttpResponseRedirect('/product/search/')        
 
-def InStockRecordSave(request):
-    if request.method == 'GET':
-        form = InStockRecordForm(request.GET)
-        if form.is_valid():
-            inStockRecord = form.save(commit = True)
-            inStockRecord.save()
-            return HttpResponseRedirect('/in_stock_record/search/')
-        else:
-            return HttpResponseRedirect('/in_stock_record/create/')
+#def InStockRecordSave(request):
+#    if request.method == 'GET':
+#        form = InStockRecordForm(request.GET)
+#        if form.is_valid():
+#            inStockRecord = form.save(commit = True)
+#            inStockRecord.save()
+#            return HttpResponseRedirect('/in_stock_record/search/')
+#        else:
+#            return HttpResponseRedirect('/in_stock_record/create/')
 
 def OutStockRecordSave(request):
     if request.method == 'GET':

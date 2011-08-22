@@ -17,6 +17,7 @@ from pos.kernal.models import Type, TypeForm
 from pos.kernal.models import Counter
 from pos.kernal.models import CounterAdmin
 from pos.kernal.models import Company
+from pos.kernal.models import Algo
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(InStockRecord)
@@ -33,4 +34,5 @@ admin.site.register(Brand)
 admin.site.register(Type)
 admin.site.register(Counter, CounterAdmin)
 admin.site.register(Company)
+admin.site.register(Algo)
 
