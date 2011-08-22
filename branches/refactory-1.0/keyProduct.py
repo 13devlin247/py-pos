@@ -1,6 +1,11 @@
 import sys
-sys.path.append('d:\\')
-sys.path.append('d:\\pos\\')
+import os
+p1 = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
+p2 = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+sys.path.append(p1)
+sys.path.append(p2)
+sys.stdout = sys.stderr
+os.environ['DJANGO_SETTINGS_MODULE'] = 'pos.settings' 
 import django
 from pos.kernal.models import *
 

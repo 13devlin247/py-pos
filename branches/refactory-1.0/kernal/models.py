@@ -46,6 +46,12 @@ class UOM(models.Model):
     def __unicode__(self):
         return self.name    
 
+class Algo(models.Model):
+    PERCENTAGE = "Percentage"
+    name = models.CharField(max_length=100)
+    def __unicode__(self):
+        return self.name    
+
 class Product(models.Model):
     barcode = models.CharField(max_length=100, blank=True)
     name = models.CharField("code",max_length=100)
@@ -57,7 +63,7 @@ class Product(models.Model):
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     uom = models.ForeignKey(UOM)
     active = models.BooleanField("actived product", True)
-    
+    algo = models.ForeignKey(Algo, null = True)
     def __unicode__(self):
         return self.name
 
@@ -135,7 +141,7 @@ class InStockBatch(models.Model):
     create_at = models.DateTimeField(auto_now_add = True)
     active = models.BooleanField(True)
     reason = models.CharField(max_length=100, null = True)    
-    
+
 class InStockRecord(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
     barcode = models.CharField(max_length=100)
@@ -249,6 +255,13 @@ class ConsignmentInDetail(models.Model):
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
     status = models.CharField(max_length=100)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+
+class ConsignmentInDetailBalanceHistory(models.Model):
+    consignmentInDetail = models.ForeignKey(ConsignmentInDetail)
+    outStockRecord = models.ForeignKey(OutStockRecord)
+    create_at = models.DateTimeField(auto_now_add = True)
     active = models.BooleanField(True)
     reason = models.CharField(max_length=100, null = True)
     

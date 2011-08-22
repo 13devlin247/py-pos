@@ -175,7 +175,7 @@ urlpatterns = patterns('',
     url(r'^inventory/result/(?P<inStockBatchID>[\x20-\x7E]+)*', login_required(QueryInventory)),                                
     url(r'^in_stock_record/create/$', login_required(create_update.create_object), in_stock_record_crud_view), 
     url(r'^in_stock_record/search/$', login_required(list_detail.object_list),  in_stock_record_list_view), 
-    url(r'^in_stock_record/save/$', login_required(InStockRecordSave)), 
+#    url(r'^in_stock_record/save/$', login_required(InStockRecordSave)), 
 
     url(r'^out_stock_record/create/$', login_required(create_update.create_object), out_stock_record_crud_view), 
     url(r'^out_stock_record/search/$', login_required(list_detail.object_list),  out_stock_record_list_view), 

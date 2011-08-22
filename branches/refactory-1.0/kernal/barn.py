@@ -1,11 +1,9 @@
 from datetime import date, datetime
 from django.contrib.auth.models import User
 from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo, Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter,\
-    ConsignmentInDetail
+    ConsignmentInDetail, ConsignmentInDetailBalanceHistory, Algo
 import logging
 from django.db.models.query_utils import Q
-
-
 
 logging.basicConfig(
     level = logging.WARN,
@@ -33,7 +31,6 @@ class CounterNotReadyException(Exception):
     def __str__(self):
         return repr(self.value)
 
-
 class BarnMouse:
     def _calc_last_index(self):
         logger.debug("calc last instock record and sell index for product '%s'", self.product.name)
@@ -58,7 +55,6 @@ class BarnMouse:
             else:
                 logger.debug("sell_index: '%s' fall in pre_instockrecord: '%s', return pre_inStockRecord", self.sell_index, pre_inStockRecord.pk)
                 self.last_inStockRecord = pre_inStockRecord
-    
 
     def _check_consignment(self):
         inStockRecords = InStockRecord.objects.filter(product = self.product).filter(active = True)
@@ -71,11 +67,9 @@ class BarnMouse:
                 return True
             else:
                 return False
-        
-    
     
     def __init__(self, product):
-        logger.debug("BarnMose '%s' build", product.name)
+        logger.debug("BarnMose Build, product: '%s'", product.name)
         self.product = product
         self.is_serialable = self._check_serial() # mouse.is_serialable == None that mean this is initial product, still dont know is serial product or not
         self.is_consignment_product = self._check_consignment()
@@ -399,8 +393,95 @@ class BarnMouse:
         except model.DoesNotExist:
             logger.error("Delete '%s', pk:'%', reason:'%s' Fail, Does Not Exist",Models, pk, reason)
 
+class MickyMouse(BarnMouse):
+    def _check_foc_product(self):
+        if "-foc-product" in self.product.name:
+            logger.debug("'%s' is FOC Product", self.product.name)
+            return True
+        return False
+        
 
-
+    def _recalc_cost(self):
+        inStockRecords = InStockRecord.objects.filter(product = self.product)
+        if inStockRecords.count() > 0:
+            return inStockRecords.order_by(("-create_at"))[0].cost
+        logger.debug("Product: '%s' cost not found", self.product)
+        return 0
+    
+    
+    def __init__(self, product):
+        logger.debug("MickyMouse Build, product: '%s'", product.name)
+        self.product = product
+        self.cost = self._recalc_cost()
+        self.is_serialable = False
+        self.is_consignment_product = False
+        self.foc_product = self._check_foc_product()
+        self.last_inStockRecord = None
+        self.sell_index = 0
+        
+    def InStock(self, inStockBatch, qty, cost, reason, serials):
+        if cost == "":
+            logger.debug("Cost not define, use avg cost") 
+            cost = self.Cost()
+        inStockRecord = InStockRecord()
+        inStockRecord.inStockBatch = inStockBatch
+        inStockRecord.product = self.product
+        inStockRecord.cost = float(self.product.retail_price) * float(cost)
+        inStockRecord.quantity = -1
+        inStockRecord.status = reason
+        inStockRecord.active = True
+        inStockRecord.startIDX = -1
+        inStockRecord.save()
+        self.cost = cost
+        logger.debug("Product '%s' instock build success, cost: '%s', quantity:'%s' ", self.product.name, inStockRecord.cost, inStockRecord.quantity)
+        return inStockRecord
+        
+    def OutStock(self, bill, qty, price, reason, serials):
+        outStockRecord = OutStockRecord()
+        outStockRecord.bill = bill
+        outStockRecord.product = self.product
+        outStockRecord.inStockRecord = self._query_inStockRecord(None)
+        outStockRecord.serial_no = None
+        outStockRecord.unit_sell_price = price
+        outStockRecord.quantity = qty
+        outStockRecord.amount = price * qty 
+        outStockRecord.sell_index = 0;
+        outStockRecord.profit = float(outStockRecord.amount) - float(self.cost);
+        outStockRecord.cost = self.cost;
+        outStockRecord.type = reason
+        outStockRecord.active = True
+        outStockRecord.save()
+        logger.info("Product: '%s' OutStockRecord build: '%s' , bill pk: '%s', qty: '%s', price: '%s', reason: '%s', serials: '%s' ", self.product.name, outStockRecord.pk, bill.pk, qty, price, reason, serials)
+        return outStockRecord
+    
+    def StockValue(self):
+        return 0
+    
+    def QTY(self):
+        return 99999
+    
+    def Cost(self, serial=None):
+        return self.cost
+    
+    
+    def UpdateCost(self, pk, cost):
+        return 0
+    
+    def UpdateProfit(self, outStockRecord):
+        return 0
+    
+    def Delete(self, reason, Models, pk):
+        try:
+            logger.debug("Delete '%s', pk:'%s', reason:'%s'", Models, pk, reason)
+            model = Models.objects.get(pk = pk)
+            model.active = False
+            model.reason = reason
+            model.save()
+            if Models == InStockRecord:
+                logger.debug("InStockRecord '%s' has been delete, recalc cost", pk)
+                self.cost = self._recalc_cost()
+        except model.DoesNotExist:
+            logger.error("Delete '%s', pk:'%', reason:'%s' Fail, Does Not Exist",Models, pk, reason)
 
 class BarnOwl:
     def __init__(self):
@@ -526,7 +607,12 @@ class BarnOwl:
             unit_sell_price = float(dict[barcode]['price'])
             imei = dict[barcode].get('imei', 'None')
             serial = self._is_serial_no(imei)
-            mouse = BarnMouse(product)
+            if product.algo.name == Algo.PERCENTAGE:
+                logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)
+                mouse = MickyMouse(product)
+            else:
+                logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)            
+                mouse = BarnMouse(product)
             outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial)
             outStockRecords.append(outStockRecord)
         return outStockRecords
@@ -548,7 +634,14 @@ class BarnOwl:
                 continue        
             cost = inventoryDict [pk]['cost']
             qty = inventoryDict [pk]['quantity']
-            mouse = BarnMouse(product)
+            mouse = None
+            if product.algo.name == Algo.PERCENTAGE:
+                logger.debug("Build instockrecord by algo: '%s'", product.algo.name)
+                mouse = MickyMouse(product)
+            else:
+                logger.debug("Build instockrecord by algo: '%s'", product.algo.name)
+                mouse = BarnMouse(product)
+                
             serials = self.__filter_serial_by_product__(inventoryDict[pk])
             
             if mouse.is_serialable != None:  
@@ -565,20 +658,6 @@ class BarnOwl:
             inStockRecords.append(inStockRecord)
         return inStockRecords
     
-    def __query_customer__(self, customerName):
-        customerList = Customer.objects.filter(name=customerName)
-        customer = None
-        if customerList.count() == 0:
-            logger.debug("Customer '%s' not found, auto create cusomer info.")
-            customer = Customer()
-            customer.customer_code = customerName
-            customer.name = customerName
-            customer.save()
-            logger.debug("Customer build success: %s", customer)
-        customer = Customer.objects.filter(name=customerName)[0]
-        logger.debug("Customer found: %s", customer)
-        return customer    
-
     def __build_bill__(self, dict, customer, counter):
         bill = Bill()
         bill.mode = dict.get('mode', 'sale')
@@ -699,8 +778,12 @@ class BarnOwl:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
             raise CounterNotReadyException("Counter Not Found")
         # process Request parameter
-        customer_name = dict.get("customer")
-        customer = self.__query_customer__(customer_name)
+        thanatos = Thanatos()
+        customer = None
+        if dict.get("mode", '') == Hermes.CONSIGNMENT_IN_RETURN:
+            customer = thanatos.Customer(dict.get("supplier"))
+        else:
+            customer = thanatos.Customer(dict.get("customer"))
         bill = self.__build_bill__(dict, customer, counter)
         payment = self.__build_payment__(dict, bill, customer)
         return [bill, payment]
@@ -771,15 +854,27 @@ class BarnOwl:
         return [bill, payment, outStockRecords]
         
     def Cost(self, product, serial=None):
-        mouse = BarnMouse(product)
+        mouse = None
+        if product.algo.name == Algo.PERCENTAGE:
+            mouse = MickyMouse(product)
+        else:
+            mouse = BarnMouse(product)
         return mouse.Cost(serial)
         
     def QTY(self, product):
-        mouse = BarnMouse(product)
+        mouse = None
+        if product.algo.name == Algo.PERCENTAGE:
+            mouse = MickyMouse(product)
+        else:
+            mouse = BarnMouse(product)
         return mouse.QTY()
     
     def StockValue(self, product):
-        mouse = BarnMouse(product)
+        mouse = None
+        if product.algo.name == Algo.PERCENTAGE:
+            mouse = MickyMouse(product)
+        else:
+            mouse = BarnMouse(product)
         return mouse.StockValue()
 
     def DeleteBill(self, bill_pk, reason):
@@ -803,7 +898,11 @@ class BarnOwl:
             outStockRecords = OutStockRecord.objects.filter(bill = bill)
             for outStockRecord in outStockRecords:
                 product = outStockRecord.product
-                mouse = BarnMouse(product)
+                mouse = None
+                if product.algo.name == Algo.PERCENTAGE:
+                    mouse = MickyMouse(product)
+                else:
+                    mouse = BarnMouse(product)
                 mouse.Delete(reason, OutStockRecord, outStockRecord.pk)
         except Bill.DoesNotExist:
             logger.error("Delete Error")
@@ -821,7 +920,11 @@ class BarnOwl:
             inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
             for inStockRecord in inStockRecords:
                 product = inStockRecord.product
-                mouse = BarnMouse(product)
+                mouse = None
+                if product.algo.name == Algo.PERCENTAGE:
+                    mouse = MickyMouse(product)
+                else:
+                    mouse = BarnMouse(product)
                 mouse.Delete(reason, InStockRecord, inStockRecord.pk)
         except InStockBatch.DoesNotExist:
             logger.error("Delete Error")
@@ -829,6 +932,7 @@ class BarnOwl:
 class Hermes:
     CONSIGNMENT_OUT = "Consignment_OUT"
     CONSIGNMENT_IN = "Consignment_IN"
+    CONSIGNMENT_IN_RETURN = "ConsignmentInReturn"
     CONSIGNMENT_IN_STATUS_INCOMPLETE = "Incomplete"
     CONSIGNMENT_IN_STATUS_COMPLETE = "Complete"
     CONSIGNMENT_IN_STATUS_FOCUS = "focusing"
@@ -846,7 +950,11 @@ class Hermes:
         outStockRecordSet = bill.outstockrecord_set.all()
         totalProfit = 0
         for outStockRecord in outStockRecordSet:
-            mouse = BarnMouse(outStockRecord.product)
+            mouse = None
+            if outStockRecord.product.algo.name == Algo.PERCENTAGE:
+                mouse = MickyMouse(outStockRecord.product)
+            else:
+                mouse = BarnMouse(outStockRecord.product)
             mouse.UpdateProfit(outStockRecord)
             totalProfit = totalProfit + outStockRecord.profit
             logger.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
@@ -879,7 +987,7 @@ class Hermes:
 
     def ConsignmentOut(self, payment, outStockRecords):
             if payment.type != self.CONSIGNMENT_OUT:
-                logger.debug("Not Consignment Bill, return ")
+                logger.debug("Payment: '%s' Not Consignment Bill, return ", payment.pk)
                 return
             for outStockRecord in outStockRecords:
                 consignmentOut = ConsignmentOutDetail()
@@ -905,6 +1013,7 @@ class Hermes:
                 consignmentInDetail.inStockRecord = inStockRecord
                 consignmentInDetail.quantity = inStockRecord.quantity
                 consignmentInDetail.balance = 0
+                consignmentInDetail.active = True
                 consignmentInDetail.status = Hermes.CONSIGNMENT_IN_STATUS_INCOMPLETE
                 consignmentInDetail.save()        
                 logger.debug("Consignment IN record build! '%s'", consignmentInDetail.pk)
@@ -912,7 +1021,12 @@ class Hermes:
             logger.debug("InStock mode: %s", inStockBatch.mode)
 
     def _query_consignment_in_detail_set(self, outStockRecord, supplier = None):
-        mouse = BarnMouse(outStockRecord.product)
+        logger.debug("Query consignment in details, outStockRecord: '%s', supplier: '%s'", outStockRecord.pk, supplier)
+        mouse = None
+        if outStockRecord.product.algo.name == Algo.PERCENTAGE:
+            mouse = MickyMouse(outStockRecord.product)
+        else: 
+            mouse = BarnMouse(outStockRecord.product)
         if not mouse.is_consignment_product:
             logger.warn("Product: '%s' was not consignment product", outStockRecord.product.pk)
             return []
@@ -929,27 +1043,104 @@ class Hermes:
                 logger.debug("Query Product: '%s', ConsignmentInDetails", outStockRecord.product)
                 query = Q(inStockRecord__product = outStockRecord.product)&Q(active=True)
             return ConsignmentInDetail.objects.filter(query).order_by("create_at")
+    
+    def _close_Consignment(self, consignmentInDetail):
+        if consignmentInDetail.balance == consignmentInDetail.quantity:
+            logger.debug("Consignment IN Record '%s' balanced. ", consignmentInDetail.pk)
+            consignmentInDetail.status = self.CONSIGNMENT_IN_STATUS_COMPLETE
+            consignmentInDetail.active = False
+            
 
-    def _balance_consignment_in(self, total_sold_qty, consignmentInDetails):
+    def _balance_consignment_in(self, outStockRecord, consignmentInDetails):
+        total_sold_qty = outStockRecord.quantity
+        logger.debug("total_sold_qty: '%s', consignmentInDetails: '%s'", total_sold_qty, len(consignmentInDetails))
         for consignmentInDetail in consignmentInDetails:
             consignmentQty = consignmentInDetail.quantity - consignmentInDetail.balance
+            if consignmentQty == 0:
+                return
+            consignmentInDetailBalanceHistory = ConsignmentInDetailBalanceHistory()
+            consignmentInDetailBalanceHistory.consignmentInDetail = consignmentInDetail
+            consignmentInDetailBalanceHistory.outStockRecord = outStockRecord
+            consignmentInDetailBalanceHistory.active = 1
+            consignmentInDetailBalanceHistory.save()
+            logger.debug("consignmentInDetailBalanceHistory build, id:'%s'", consignmentInDetailBalanceHistory.pk)
+            logger.debug("total_sold_qty: '%s', consignmentQty: '%s'", total_sold_qty, consignmentQty)
             if total_sold_qty <= consignmentQty:
+                logger.debug("ConsignmentInDetails: '%s' balance qty: '%s'", consignmentInDetail.pk, consignmentQty)
                 consignmentInDetail.balance = consignmentInDetail.balance + total_sold_qty
-                if consignmentInDetail.balance == consignmentInDetail.quantity:
-                    logger.debug("Consignment IN Record '%s' balanced. ", consignmentInDetail.pk)
-                    consignmentInDetail.status = self.CONSIGNMENT_IN_STATUS_COMPLETE
-                    consignmentInDetail.active = False
+                self._close_Consignment(consignmentInDetail)
                 consignmentInDetail.save()
                 logger.debug("last Consignment IN Record balance, '%s'", consignmentInDetail.pk)
+                break
             else:
-                consignmentInDetail.balance = consignmentInDetail.quantity
+                consignmentInDetail.balance = consignmentInDetail.balance + consignmentQty
+                self._close_Consignment(consignmentInDetail)
                 consignmentInDetail.save()
-                sold_out_qty = total_sold_qty - consignmentInDetail.quantity
+                total_sold_qty = total_sold_qty - consignmentQty
                 logger.debug("Consignment IN Record: '%s' NOT last Consignment IN Record, next...,", consignmentInDetail.pk)
+                logger.debug("ConsignmentInDetails: '%s' balance qty: '%s'", consignmentInDetail.pk, consignmentInDetail.balance)
         
         
     def BalanceConsignmentIN(self, outStockRecords, supplier = None):
         logger.debug("BalanceConsignmentIN, outStockRecords: '%s'", len(outStockRecords))
         for outStockRecord in outStockRecords:
             consignment_in_detail_set = self._query_consignment_in_detail_set(outStockRecord, supplier)
-            self._balance_consignment_in(outStockRecord.quantity, consignment_in_detail_set)
+            self._balance_consignment_in(outStockRecord, consignment_in_detail_set)
+
+    def DeleteConsignmentIn(self, inStockBatch, reason):
+        consignmentInDetails = ConsignmentInDetail.objects.filter(inStockBatch = inStockBatch)
+        for consignmentInDetail in consignmentInDetails:
+            consignmentInDetail.active = False
+            consignmentInDetail.reason = reason
+            consignmentInDetail.save()
+            logger.debug("ConsignmentInDetail deleted. id: '%s' , reason: '%s'", consignmentInDetail.pk, reason)
+
+    def DeleteConsignmentInBalance(self, bill, reason):
+        logger.debug("delete Consignment In Balance, Bill ID:'%s', reason: '%s' ", bill.pk, reason)
+        outStockRecords = OutStockRecord.objects.filter(bill = bill)
+        for outStockRecord in outStockRecords:
+            if outStockRecord.product.algo.name == Algo.PERCENTAGE:
+                mouse = MickyMouse(outStockRecord.product)
+            else:
+                mouse = BarnMouse(outStockRecord.product)
+            mouse.Delete(reason, OutStockRecord, outStockRecord.pk)
+            ConsignmentInDetailBalanceHistorys = ConsignmentInDetailBalanceHistory.objects.filter(outStockRecord = outStockRecord)
+            total_consignment_qty = 0
+            for ConsignmentInDetailBalanceHistory in ConsignmentInDetailBalanceHistorys:
+                total_consignment_qty += ConsignmentInDetailBalanceHistory.consignmentInDetail.balance
+                ConsignmentInDetailBalanceHistory.active = False
+                ConsignmentInDetailBalanceHistory.reason = reason
+                ConsignmentInDetailBalanceHistory.save()
+            
+                
+class Thanatos:
+    def Customer(self, name):
+        customerList = Customer.objects.filter(name=name)
+        customer = None
+        if customerList.count() == 0:
+            logger.debug("Customer '%s' not found, auto create cusomer info.", name)
+            customer = Customer()
+            customer.customer_code = name
+            customer.name = name
+            customer.save()
+            logger.debug("Customer build success: %s", customer)
+        else:
+            customer = customerList[0]
+        logger.debug("Customer: '%s' found", customer.name)
+        return customer
+        
+    def Supplier(self, name):
+        supplierList = Supplier.objects.filter(name=name)
+        supplier = None
+        if supplierList.count() == 0:
+            logger.debug("Supplier '%s' not found, auto create supplier info.")
+            supplier = Supplier()
+            supplier.customer_code = name
+            supplier.name = name
+            supplier.save()
+            logger.debug("Supplier build success: %s", supplier)
+        else:
+            supplier = supplierList[0]
+        logger.debug("Supplier: '%s' found", supplier.name)
+        return supplier    
+        
