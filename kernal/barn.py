@@ -111,7 +111,7 @@ class BarnMouse:
                 summary[3] = summary[3] +  stockRecord.cost
             else: # that mean this is InStockRecord
                 summary[3] = summary[3] + ( stockRecord.cost * stockRecord.quantity) 
-        logger.debug("Product '%s' quantity count by %s ~ %s, result: %s, %s, %s, %s", product.name, starttime, endtime, summary[0], summary[1], summary[2], summary[3] )
+        logger.debug("Product '%s' '%s' quantity count by %s ~ %s, result: B4_QTY:%s, NOW_QTY:%s, QTY:%s, COST:%s", product.name, stockRecords, starttime, endtime, summary[0], summary[1], summary[2], summary[3] )
         return summary 
          
     def __count_inventory_stock__(self, starttime, endtime, product):
@@ -196,7 +196,7 @@ class BarnMouse:
         if qty != 0:
             avg_cost = cost / qty
         on_hand_value = qty * avg_cost
-        logger.debug("Product: '%s' avarage cost: '%s'",self.product.name, avg_cost)
+        logger.debug("Product: '%s' avarage cost: (%s/%s) = %s",self.product.name, cost, qty, avg_cost)
         
         stockCosts = StockCost.objects.filter(product = self.product)
         stockCost = None
@@ -262,8 +262,8 @@ class BarnMouse:
         outStockRecord.quantity = qty
         outStockRecord.amount = price * qty 
         outStockRecord.sell_index = 0;
-        outStockRecord.profit = 0;
-        outStockRecord.cost = -1;
+        outStockRecord.cost = self.Cost(serial_no) * qty;
+        outStockRecord.profit = float(outStockRecord.amount) - float(outStockRecord.cost);
         outStockRecord.type = reason
         outStockRecord.active = True
         outStockRecord.save()
@@ -426,8 +426,8 @@ class MickyMouse(BarnMouse):
         inStockRecord = InStockRecord()
         inStockRecord.inStockBatch = inStockBatch
         inStockRecord.product = self.product
-        inStockRecord.cost = float(self.product.retail_price) * float(cost)
-        inStockRecord.quantity = -1
+        inStockRecord.cost = float(self.product.retail_price) * (1 - float(cost))
+        inStockRecord.quantity = 0
         inStockRecord.status = reason
         inStockRecord.active = True
         inStockRecord.startIDX = -1
@@ -446,12 +446,12 @@ class MickyMouse(BarnMouse):
         outStockRecord.quantity = qty
         outStockRecord.amount = price * qty 
         outStockRecord.sell_index = 0;
-        outStockRecord.profit = float(outStockRecord.amount) - float(self.cost);
-        outStockRecord.cost = self.cost;
+        outStockRecord.cost = self.cost * qty;
+        outStockRecord.profit = float(outStockRecord.amount) - float(outStockRecord.cost);
         outStockRecord.type = reason
         outStockRecord.active = True
         outStockRecord.save()
-        logger.info("Product: '%s' OutStockRecord build: '%s' , bill pk: '%s', qty: '%s', price: '%s', reason: '%s', serials: '%s' ", self.product.name, outStockRecord.pk, bill.pk, qty, price, reason, serials)
+        logger.info("Product: '%s' OutStockRecord build: '%s' , bill pk: '%s', qty: '%s', price: '%s', reason: '%s', serials: '%s', amout:'%s', cost:'%s', profit: '%s' ", self.product.name, outStockRecord.pk, bill.pk, qty, price, reason, serials, float(outStockRecord.amount), float(outStockRecord.cost), outStockRecord.profit)
         return outStockRecord
     
     def StockValue(self):
@@ -523,7 +523,7 @@ class BarnOwl:
                 if serial == '':
                     continue
                 logger.debug("Serial: '%s' add to serial list", productDict[item])
-                serials.append()
+                serials.append(serial)
         logger.debug("serials count: '%s' ", len(serials))
         return serials
 
@@ -844,6 +844,12 @@ class BarnOwl:
             raise srException 
         logger.debug("InStockBatch '%s' build", inStockBatch.pk)
         return [inStockBatch, inStockRecords]
+
+    def _summary_profit(self, outStockRecords):
+        total_profit = 0
+        for outStockRecord in outStockRecords:
+            total_profit += float(outStockRecord.profit)
+        return total_profit
     
     def OutStock(self, reason, bill_dict, out_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, out_stock_batch_dict)
@@ -851,6 +857,9 @@ class BarnOwl:
         bill = result[0]
         payment = result[1]
         outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , reason)
+        bill.profit = self._summary_profit(outStockRecords)
+        logger.debug("Bill: '%s' profit: '%s'", bill.pk, bill.profit)
+        bill.save()
         return [bill, payment, outStockRecords]
         
     def Cost(self, product, serial=None):
@@ -962,20 +971,23 @@ class Hermes:
         logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
         bill.save()
 
-    def ReCalcCounterByPK(self, counterID):
+    def ReCalcCounterByPK(self, counterID, recalc_bill_profit = False):
         counter = Counter.objects.get(pk=counterID)
         bills = Bill.objects.filter(counter=counter)
         totalAmount = counter.initail_amount
         for bill in bills:
-            totalAmount = totalAmount + bill.total_price
             logger.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
-            self._recalc_bill_profit(bill)
+            if recalc_bill_profit:
+                logger.debug("ReCalc Bill '%s' outStockRecord profit", bill.pk)
+                self._recalc_bill_profit(bill)
+            totalAmount = totalAmount + bill.total_price            
         counter.close_amount = totalAmount
         counter.active = False
         counter.save()
         logger.debug("Counter '%s', '%s' update", counter.pk, counter.create_at)    
 
     def ReCalcCounters(self, date):
+        date = str(date).split(" ")[0] + " 00:00:00"
         new_date = str(datetime.today()).split(" ")[0] + " 23:59:59"
         logger.debug("create_at__range=(%s,%s)", date, new_date)
         counters = Counter.objects.filter(create_at__range=(date, new_date)).order_by('create_at')
@@ -983,7 +995,8 @@ class Hermes:
         for counter in counters:
             counter.active = True
             counter.save()
-            self.ReCalcCounterByPK(counter.pk)
+            logger.debug("Counter '%s': '%s' reopen for re-calc.", counter.pk, counter.create_at)
+            self.ReCalcCounterByPK(counter.pk, recalc_bill_profit=True)
 
     def ConsignmentOut(self, payment, outStockRecords):
             if payment.type != self.CONSIGNMENT_OUT:
