@@ -1402,6 +1402,7 @@ def _build_users_sold_dict(product, startDate, endDate):
         users[user][0].cost = users[user][0].cost + outStockRecord.cost
         users[user][0].quantity = users[user][0].quantity + outStockRecord.quantity
         users[user][0].profit = users[user][0].profit + outStockRecord.profit
+        logger.debug("product: '%s' outstockrecord: '%s' profit: '%s', total: profit: '%s'", outStockRecord.product.pk, outStockRecord.pk, outStockRecord.profit, users[user][0].profit)
         users[user][0].amount = users[user][0].amount + outStockRecord.amount
         users[user].append(outStockRecord)
         logger.info("add %s's  outStockRecord" % user )
