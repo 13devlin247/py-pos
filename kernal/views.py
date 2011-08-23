@@ -271,6 +271,7 @@ def __convert_inventory_URL_2_inStockBatch_dict__(request):
     dict [u'_auth_user_id'] = request.session.get('_auth_user_id')
     dict [u'do_no'] = request.GET.get('do_no')
     dict [u'inv_no'] = request.GET.get('inv_no')
+    dict [u'refBill_no'] = request.GET.get('refBill_no')
     dict [u'do_date'] = request.GET.get('do_date')
     logger.debug("InStockBatch parameters: %s", dict)        
     return dict
@@ -620,6 +621,32 @@ def __build_outstock_record__(request, bill, payment, dict , type):
             consignmentOut.save()
             logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
         return outStockRecords
+
+def DepositSave(request):
+    cname = request.GET.get("customer")
+    thanatos = Thanatos()
+    customer = thanatos.Customer(cname)
+    form = DepositForm(request.GET)
+    deposit = form.save(commit=False)
+    deposit.customer = customer
+    deposit.active = True
+    deposit.save()
+    logger.info("Deposite '%s' create success", deposit.pk)
+    return HttpResponseRedirect('/search/deposit/')
+
+def ServiceSave(request):
+    cname = request.GET.get("customer")
+    thanatos = Thanatos()
+    customer = thanatos.Customer(cname)
+    form = ServiceJobForm(request.GET)
+    service = form.save(commit=False)
+    service.customer = customer
+    service.profit = float(service.price) - float(service.cost)
+    service.active = True
+    service.save()
+    logger.info("Service job '%s' create success", service.pk)
+    return HttpResponseRedirect('/search/service/')
+
 
 def ProductCostUpdate(request):
     inStockBatch_pk = request.GET.get("inStockBatch_pk")
@@ -999,13 +1026,35 @@ def CountInventory(request):
     auto-complete view start
 """
 def __autocomplete_wrapper__(querySet, filter):
-    logger.debug("wraping querySet: '%s', into autocomplete format %s ", querySet, filter)
+    logger.debug("wraping querySet count: '%s', into autocomplete format %s ", len(querySet), filter)
     list = ''
     for result in querySet:
         string = filter(result) + "\n"
         list = list + string
         logger.debug("wrapper str: '%s'", string)
     return list
+
+def _str_2_int(string):
+    try:
+        return int(string)
+    except ValueError:
+        return -1    
+
+def DepositList(request):
+    keyword = request.GET.get('q', "")
+    logger.debug("search Deposit list by keyword: %s", keyword)
+    
+    querySet = __search__(Deposit, Q(customer__name__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword)))
+    list = __autocomplete_wrapper__(querySet, lambda model: str(model.pk))    
+    return HttpResponse(list, mimetype="text/plain")
+
+def ServiceList(request):
+    keyword = request.GET.get('q', "")
+    logger.debug("search Deposit list by keyword: %s", keyword)
+    
+    querySet = __search__(ServiceJob, Q(imei__contains=keyword)|Q(customer__name__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword)))
+    list = __autocomplete_wrapper__(querySet, lambda model: str(model.imei))    
+    return HttpResponse(list, mimetype="text/plain")
 
 def CustomerList(request):
     keyword = request.GET.get('q', "")
@@ -1146,6 +1195,19 @@ def PaymentInfo(request, type, query):
     payments = __search__(Payment, (Q(bill__customer__name__exact=query) & Q(type__exact=type)))
     json = __json_wrapper__(payments.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
+
+def DepositInfo(request, query):
+    logger.info("get deposit info by keyword: %s " , query)
+    deposits = __search__(Deposit, (Q(customer__name__contains=query) | Q(refBill = query) | Q(pk=_str_2_int(query)) ))
+    json = __json_wrapper__(deposits.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")                
+
+def ServiceInfo(request, query):
+    logger.info("get Service job info by keyword: %s " , query)
+    deposits = __search__(ServiceJob, (Q (imei = query) | Q(customer__name__contains=query) | Q(refBill = query) | Q(pk=_str_2_int(query)) ))
+    json = __json_wrapper__(deposits.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")                
+
     
 def PaymentInfoByPK(request, pk):
     logger.info("get '%s' payment info by PK: %s " , type, pk)

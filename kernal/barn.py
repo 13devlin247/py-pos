@@ -1,7 +1,7 @@
 from datetime import date, datetime
 from django.contrib.auth.models import User
 from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo, Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter,\
-    ConsignmentInDetail, ConsignmentInDetailBalanceHistory, Algo
+    ConsignmentInDetail, ConsignmentInDetailBalanceHistory, Algo, Deposit
 import logging
 from django.db.models.query_utils import Q
 
@@ -663,6 +663,10 @@ class BarnOwl:
         bill.mode = dict.get('mode', 'sale')
         bill.subtotal_price = dict.get('subTotal', '0')
         bill.discount = dict.get('discount', '0')
+        bill.deposit_price = dict.get('deposit', '0')
+        deposit_id = dict.get('depositField', '')
+        if deposit_id != '':
+            bill.deposit = Deposit.objects.get(pk=int(deposit_id))
         bill.total_price = dict.get('total', '0')
         bill.tendered_amount = dict.get('amountTendered', '0')
         bill.change = dict.get('change', '0')
@@ -825,6 +829,7 @@ class BarnOwl:
         inStockBatch.do_date = do_date
         inStockBatch.invoice_no = dict.get('inv_no', "-")
         inStockBatch.do_no = dict.get('do_no', "-")
+        inStockBatch.refBill_no = dict.get('refBill_no', "-")
         inStockBatch.status = 'Incomplete'
         inStockBatch.active = True
         inStockBatch.save();
@@ -857,7 +862,7 @@ class BarnOwl:
         bill = result[0]
         payment = result[1]
         outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , reason)
-        bill.profit = self._summary_profit(outStockRecords)
+        bill.profit = self._summary_profit(outStockRecords) + float(bill.deposit_price) 
         logger.debug("Bill: '%s' profit: '%s'", bill.pk, bill.profit)
         bill.save()
         return [bill, payment, outStockRecords]

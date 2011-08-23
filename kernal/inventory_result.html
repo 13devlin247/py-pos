@@ -51,7 +51,13 @@
                 <td class="Receipt">            <b>{{inStockBatch.invoice_no}}                    </b></td>        
                 <td class="Receipt label">      DO Date<span>:</span>              </td>        
                 <td class="Receipt"><b>{{inStockBatch.do_date}}</b></td>    
-              </tr>              
+              </tr>
+              <tr>        
+                <td class="Receipt label">            </td>        
+                <td class="Receipt">            </td>        
+                <td class="Receipt label">      Ref.Bill No<span>:</span>              </td>        
+                <td class="Receipt"><b>{{inStockBatch.refBill_no}}</b></td>    
+              </tr>					              
 			  {% endblock %}                    
               
                 {% block bill_detail %}

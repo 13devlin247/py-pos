@@ -88,6 +88,20 @@ imei_list_view = {
     'extra_context': {'autocomplete_url': '/imei/ajax/','json_url': '/payment/info/', 'display':'bill' }
 }
 
+deposit_list_view = {
+    'queryset': Deposit.objects.filter(active = True).order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_deposit.html', 
+    'extra_context': {'autocomplete_url': '/deposit/ajax/','json_url': '/deposit/info/', 'display':'bill' }
+}
+
+service_list_view = {
+    'queryset': ServiceJob.objects.filter(active = True).order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_service.html', 
+    'extra_context': {'autocomplete_url': '/service/ajax/','json_url': '/service/info/', 'display':'bill' }
+}
+
 cashsales_list_view = {
     'queryset': Payment.objects.filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'),                      
     'allow_empty': True,                      
@@ -122,6 +136,7 @@ out_stock_record_crud_view  = {
     'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
+
 
 
 
@@ -168,7 +183,10 @@ urlpatterns = patterns('',
     url(r'^customer/ajax/$', login_required(CustomerList)),    
     url(r'^product/ajax/$', login_required(ProductList)),    
     url(r'^payment/ajax/$', login_required(PaymentList)),    
-    url(r'^imei/ajax/$', login_required(IMEIorBillIDList)),        
+    url(r'^imei/ajax/$', login_required(IMEIorBillIDList)),
+    url(r'^deposit/ajax/$', login_required(DepositList)),
+    url(r'^service/ajax/$', login_required(ServiceList)),
+            
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
     url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
@@ -190,6 +208,14 @@ urlpatterns = patterns('',
     url(r'^consignment/out/balance/$', login_required(direct_to_template),  {'template': 'consignment_out_balance_form.html',  'extra_context': {'title':'Consignment OutStock Balance', 'form': InStockBatchForm, 'action':'/consignment/out/balance/confirm/' } }),
     url(r'^consignment/out/sales/$', login_required(direct_to_template),  {'template': 'consignment_out_sale_form.html',  'extra_context': {'title':'Consignment OutStock Balance', 'form': InStockBatchForm, 'action':'/consignment/out/sale/confirm/' } }),
     url(r'^stock/adjust/$', login_required(direct_to_template),  {'template': 'stock_adjust.html',  'extra_context': {'title':'Stock Adjust', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
+
+    url(r'^deposit/add/$', login_required(direct_to_template),  {'template': 'deposit.html',  'extra_context': {'form': DepositForm(), 'action':'/deposit/add/confirm/'} }),    
+    url(r'^deposit/add/confirm/$', DepositSave),
+    url(r'^deposit/info/(?P<query>[\x20-\x7E]+)*', login_required(DepositInfo)),
+    
+    url(r'^service/add/$', login_required(direct_to_template),  {'template': 'service.html',  'extra_context': {'form': ServiceJobForm(), 'action':'/service/add/confirm/'} }),    
+    url(r'^service/add/confirm/$', ServiceSave),
+    url(r'^service/info/(?P<query>[\x20-\x7E]+)*', login_required(ServiceInfo)),    
     
     url(r'^consignment/out/balance/confirm/$', ConsignmentOutBalance),
     url(r'^consignment/out/sale/confirm/$', ConsignmentOutSale),
@@ -233,10 +259,8 @@ urlpatterns = patterns('',
     url(r'^search/cashsales/$', login_required(list_detail.object_list), cashsales_list_view),                                        
     url(r'^search/imei/$', login_required(list_detail.object_list), imei_list_view),                                        
     url(r'^search/consignment/$', login_required(list_detail.object_list), consignment_list_view),                                        
-    
-    
-    
-    
+    url(r'^search/deposit/$', login_required(list_detail.object_list), deposit_list_view),
+    url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
@@ -245,8 +269,4 @@ urlpatterns = patterns('',
     
     url(r'^category/info/$', login_required(CategoryInfo)),
     url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)*', login_required(PrintBarcode)),
-
-    
-    
-
 )
