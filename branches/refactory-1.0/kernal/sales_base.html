@@ -65,8 +65,52 @@
 			{% block Customer %}
             <label id="customer_label" for="customer">Select Customer
             </label>  		
-            <input type="text" name="customer" value="Cash" id="customer" size="30"  />		
+            <input type="text" name="customer" value="Cash" id="customer" size="30"  /></br>
+            <label id="customer_label" for="customer">Deposit No
+            </label>  		
+            <input type="text" name="depositField" value="" id="depositField" size="30"  />						
             <script type="text/javascript">
+                $("#depositField").autocomplete("/deposit/ajax/", {
+                    width: 260,
+                    selectFirst: false
+                });
+                $("#depositField").keydown(function(event){
+                    if(event.keyCode == '13'){
+                        if ($("#depositField").val()==''){
+                            $("#depositDetail").html("")
+                            $("#deposit").attr("value", "0.00")
+                            calcTotalPrice();                            
+                        }
+                    }
+                });
+                
+                $("#depositField").result(function(event, data, formatted)
+                {
+                    customerName = $("#depositField").val();
+                    $("#depositDetail").html(customerName);
+                        $.ajax({
+                            url: "/deposit/info/"+customerName,
+                            type: "JSON",
+                            success: function(data){  
+                                var customerShow = '<div style="text-align: left; border: solid 1px black">';
+                                customerShow += "<div><b>Deposite</b></div>";
+                                customerShow += "<div>Customer: "+data[0].fields.customer+"</div>";
+                                customerShow += "<div>Deposite: "+data[0].fields.price+"</div>";
+                                customerShow += "<div>Date: "+data[0].fields.create_at+"</div>";
+                                customerShow += "<div>Ref. Bill: "+data[0].fields.refBill+"</div>";                                
+                                customerShow += "<div>Description: <br/>"+data[0].fields.description+"</div>";
+                                customerShow += "</div>";
+                                
+                                $("#depositDetail").html(customerShow);
+                                $("#deposit").attr("value",data[0].fields.price)
+                            },
+                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
+                            complete: function(data){
+			                    calcTotalPrice();                            
+                            },
+                        });            
+                });              
+				
                 $("#customer").autocomplete("/customer/ajax/", {
                     width: 260,
                     selectFirst: false
@@ -93,11 +137,10 @@
                         });            
                 });              
             </script>
-            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
+            <div style="margin-top:5px;text-align:center;" id="supplierDetail">          </div>
+            <div style="margin-top:5px;text-align:center;" id="depositDetail">          </div>
 			{% endblock %}
-          
-            		
-          </div>  		
+  		
           <div class="clearfix">&nbsp;
           </div>  		 	
           <div id='sale_details'>  		
@@ -108,7 +151,14 @@
             <div class="float_left" style='width:50%;'>Discount:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
-            </div>  		 		
+            </div>
+			<div id="deposit_block">
+				<div class="float_left" style='width:50%;'>Deposit:
+				</div>  		
+				<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="deposit" value="0.00" id="deposit" size="10" style="border: none; background: transparent;"/>
+				</div>  	
+			</div>            
+              		 		
             <div class="float_left" style='width:50%;'>Total:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>

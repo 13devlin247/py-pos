@@ -129,12 +129,41 @@ class CustomerAdmin(admin.ModelAdmin):
     ordering = ['-customer_code']
     list_per_page = 25
     search_fields = ['customer_code', 'name', 'contact_person', 'phone', 'email']
+
+class ServiceJob(models.Model):
+    imei = models.CharField(max_length=100, primary_key = True) 
+    description = models.TextField(blank=True)
+    customer = models.ForeignKey(Customer)
+    cost = models.DecimalField(max_digits=100,  decimal_places=2)
+    price = models.DecimalField(max_digits=100,  decimal_places=2)
+    profit = models.DecimalField(max_digits=100,  decimal_places=2)
+    active = models.BooleanField(True)
+    refBill = models.CharField("ref. Bill no", max_length=100, null = True)
+    reason = models.CharField(max_length=100, null = True)
+    create_at = models.DateTimeField(auto_now_add = True)    
+     
+    def __unicode__(self):
+        return self.imei    
+
+class Deposit(models.Model):
+    description = models.TextField(blank=True)
+    customer = models.ForeignKey(Customer)
+    price = models.DecimalField(max_digits=100,  decimal_places=2)
+    active = models.BooleanField(True)
+    refBill = models.CharField("ref. Bill no", max_length=100, null = True)
+    reason = models.CharField(max_length=100, null = True)
+    create_at = models.DateTimeField(auto_now_add = True)    
+     
+    def __unicode__(self):
+        return self.pk    
+
     
 class InStockBatch(models.Model):
     supplier = models.ForeignKey(Supplier)
     do_date = models.DateField(auto_now_add = False)
-    invoice_no = models.CharField(max_length=100)
-    do_no = models.CharField(max_length=100)
+    invoice_no = models.CharField(max_length=100, blank = True)
+    do_no = models.CharField(max_length=100, blank = True)
+    refBill_no = models.CharField(max_length=100, blank = True)    
     user = models.ForeignKey(User)
     mode = models.CharField(max_length=150) 
     status = models.CharField(max_length=150) 
@@ -184,6 +213,8 @@ class Bill(models.Model):
     subtotal_price = models.DecimalField(max_digits=100,  decimal_places=2)
     discount = models.DecimalField(max_digits=100,  decimal_places=2)
     total_price = models.DecimalField(max_digits=100,  decimal_places=2)
+    deposit_price = models.DecimalField(max_digits=100,  decimal_places=2, blank = True)
+    deposit = models.ForeignKey(Deposit, null = True) 
     tendered_amount = models.DecimalField(max_digits=100,  decimal_places=2)
     profit = models.DecimalField(max_digits=100,  decimal_places=2)
     change = models.DecimalField(max_digits=100,  decimal_places=2)
@@ -318,11 +349,22 @@ class InStockBatchForm(forms.Form):
     do_date = forms.DateField(widget=AdminDateWidget)
     do_no = forms.CharField(max_length=150)
     inv_no = forms.CharField(max_length=150)
+    refBill_no = forms.CharField(max_length=150)
     
 class VoidBillForm(ModelForm):        
     class Meta:
         model = VoidBill
         exclude = ('user','bill',)
+
+class ServiceJobForm(ModelForm):   
+    class Meta:
+        model = ServiceJob
+        fields = ('imei', 'cost', 'price', 'refBill', 'description')
+        
+class DepositForm(ModelForm):   
+    class Meta:
+        model = Deposit
+        fields = ('refBill', 'price', 'description')        
 
 class ConsignmentInBalanceForm(forms.Form):        
     supplier = forms.CharField(max_length=150)
