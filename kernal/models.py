@@ -8,6 +8,7 @@ from django.contrib.localflavor.us.models import PhoneNumberField
 from django.contrib.auth.models import User
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
+from django.conf.locale import tr
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),  
@@ -156,14 +157,13 @@ class Deposit(models.Model):
      
     def __unicode__(self):
         return self.pk    
-
     
 class InStockBatch(models.Model):
     supplier = models.ForeignKey(Supplier)
     do_date = models.DateField(auto_now_add = False)
     invoice_no = models.CharField(max_length=100, blank = True)
     do_no = models.CharField(max_length=100, blank = True)
-    refBill_no = models.CharField(max_length=100, blank = True)    
+    refBill_no = models.CharField(max_length=100, null = True, blank = True)    
     user = models.ForeignKey(User)
     mode = models.CharField(max_length=150) 
     status = models.CharField(max_length=150) 
@@ -230,6 +230,15 @@ class Bill(models.Model):
     def __unicode__(self):
         # return self.customer.name 
         return str(self.pk).zfill(6)
+
+class ExtraCost(models.Model):
+    bill = models.ForeignKey(Bill, null = True)
+    mode = models.CharField(max_length=100)
+    key = models.CharField(max_length=100) 
+    price = models.DecimalField(max_digits=100,  decimal_places=0)
+    description = models.TextField(blank=True) 
+    create_at = models.DateTimeField(auto_now_add = True)
+
 
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)
@@ -349,7 +358,7 @@ class InStockBatchForm(forms.Form):
     do_date = forms.DateField(widget=AdminDateWidget)
     do_no = forms.CharField(max_length=150)
     inv_no = forms.CharField(max_length=150)
-    refBill_no = forms.CharField(max_length=150)
+    ref_Bill_no = forms.CharField(max_length=150)
     
 class VoidBillForm(ModelForm):        
     class Meta:
