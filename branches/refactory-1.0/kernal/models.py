@@ -238,8 +238,11 @@ class ExtraCost(models.Model):
     price = models.DecimalField(max_digits=100,  decimal_places=0)
     description = models.TextField(blank=True) 
     create_at = models.DateTimeField(auto_now_add = True)
-
-
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    refBill = models.CharField(max_length=100, blank = True, null = True)
+    status = models.CharField(max_length=100, null = True)
+     
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)
     barcode = models.CharField(max_length=100)
@@ -369,6 +372,11 @@ class ServiceJobForm(ModelForm):
     class Meta:
         model = ServiceJob
         fields = ('imei', 'cost', 'price', 'refBill', 'description')
+
+class RepairForm(ModelForm):   
+    class Meta:
+        model = ExtraCost
+        fields = ('key', 'price', 'refBill', 'description')
         
 class DepositForm(ModelForm):   
     class Meta:

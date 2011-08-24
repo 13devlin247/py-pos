@@ -102,6 +102,13 @@ service_list_view = {
     'extra_context': {'autocomplete_url': '/service/ajax/','json_url': '/service/info/', 'display':'bill' }
 }
 
+repair_list_view = {
+    'queryset': ExtraCost.objects.filter(Q(active = True) & Q(status = 'Incomplete')).order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_repair.html', 
+    'extra_context': {'autocomplete_url': '/repair/ajax/','json_url': '/repair/info/', 'display':'bill' }
+}
+
 cashsales_list_view = {
     'queryset': Payment.objects.filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'),                      
     'allow_empty': True,                      
@@ -186,6 +193,7 @@ urlpatterns = patterns('',
     url(r'^imei/ajax/$', login_required(IMEIorBillIDList)),
     url(r'^deposit/ajax/$', login_required(DepositList)),
     url(r'^service/ajax/$', login_required(ServiceList)),
+    url(r'^repair/ajax/$', login_required(RepairList)),
             
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
     url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
@@ -217,6 +225,12 @@ urlpatterns = patterns('',
     url(r'^service/add/confirm/$', ServiceSave),
     url(r'^service/info/(?P<query>[\x20-\x7E]+)*', login_required(ServiceInfo)),    
     
+    url(r'^repair/add/$', login_required(direct_to_template),  {'template': 'repair.html',  'extra_context': {'form': RepairForm(), 'action':'/repair/add/confirm/'} }),    
+    url(r'^repair/add/confirm/$', RepairSave),
+    url(r'^repair/info/(?P<query>[\x20-\x7E]+)*', login_required(RepairInfo)),
+    url(r'^repair/binding/(?P<imei>[\x20-\x7E]+)*/(?P<billID>[\x20-\x7E]+)*', login_required(RepairBinding)),
+    url(r'^extra/list/(?P<billID>[\x20-\x7E]+)*', login_required(ExtraCostList)),    
+
     url(r'^consignment/out/balance/confirm/$', ConsignmentOutBalance),
     url(r'^consignment/out/sale/confirm/$', ConsignmentOutSale),
     url(r'^consignment/in/balance/confirm/$', ConsignmentInBalance),
@@ -261,6 +275,7 @@ urlpatterns = patterns('',
     url(r'^search/consignment/$', login_required(list_detail.object_list), consignment_list_view),                                        
     url(r'^search/deposit/$', login_required(list_detail.object_list), deposit_list_view),
     url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
+    url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
