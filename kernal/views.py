@@ -647,6 +647,15 @@ def ServiceSave(request):
     logger.info("Service job '%s' create success", service.pk)
     return HttpResponseRedirect('/search/service/')
 
+def RepairSave(request):
+    form = RepairForm(request.GET)
+    repair = form.save(commit=False)
+    repair.mode = "repair"
+    repair.status = "Incomplete"
+    repair.active = True
+    repair.save()
+    logger.info("Service job '%s' create success", repair.pk)
+    return HttpResponseRedirect('/search/repair/')
 
 def ProductCostUpdate(request):
     inStockBatch_pk = request.GET.get("inStockBatch_pk")
@@ -1050,10 +1059,18 @@ def DepositList(request):
 
 def ServiceList(request):
     keyword = request.GET.get('q', "")
-    logger.debug("search Deposit list by keyword: %s", keyword)
+    logger.debug("search Service list by keyword: %s", keyword)
     
     querySet = __search__(ServiceJob, Q(imei__contains=keyword)|Q(customer__name__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword)))
     list = __autocomplete_wrapper__(querySet, lambda model: str(model.imei))    
+    return HttpResponse(list, mimetype="text/plain")
+
+def RepairList(request):
+    keyword = request.GET.get('q', "")
+    logger.debug("search Repair list by keyword: %s", keyword)
+    
+    querySet = __search__(ExtraCost, Q(mode="repair") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword))))
+    list = __autocomplete_wrapper__(querySet, lambda model: str(model.key))    
     return HttpResponse(list, mimetype="text/plain")
 
 def CustomerList(request):
@@ -1204,10 +1221,34 @@ def DepositInfo(request, query):
 
 def ServiceInfo(request, query):
     logger.info("get Service job info by keyword: %s " , query)
-    deposits = __search__(ServiceJob, (Q (imei = query) | Q(customer__name__contains=query) | Q(refBill = query) | Q(pk=_str_2_int(query)) ))
-    json = __json_wrapper__(deposits.order_by("-create_at"))
+    services = __search__(ServiceJob, (Q (imei = query) | Q(customer__name__contains=query) | Q(refBill = query) | Q(pk=_str_2_int(query)) ))
+    json = __json_wrapper__(services.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
 
+def RepairInfo(request, query):
+    logger.info("get Repair job info by keyword: %s " , query)
+    repairs = __search__(ExtraCost, Q(mode="repair") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=query)|Q(refBill=query)|Q(pk=_str_2_int(query))))
+    json = __json_wrapper__(repairs.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")                
+
+def RepairBinding(request, imei, billID):
+    logger.info("Repair binding Bill: '%s' , IMEI: '%s' " , billID, imei)
+    extraCosts = ExtraCost.objects.filter(key=imei)
+    bill = Bill.objects.get(pk=int(billID))
+    for extraCost in extraCosts:
+        extraCost.bill = bill
+        extraCost.save()
+        logger.debug("extraCost: '%s' binding with bill: '%s'", extraCost.pk, bill.pk)
+    owl = BarnOwl()
+    owl.RecalcBill(bill.pk)
+    return HttpResponse("OK", mimetype="plain/text")      
+
+def ExtraCostList(request, billID):
+    logger.info("get ExtraCost List by BillID: %s " , billID)
+    bill = Bill.objects.get(pk = int(billID))
+    costs = ExtraCost.objects.filter(bill = bill)
+    json = __json_wrapper__(costs.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")                
     
 def PaymentInfoByPK(request, pk):
     logger.info("get '%s' payment info by PK: %s " , type, pk)

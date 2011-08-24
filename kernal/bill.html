@@ -179,14 +179,10 @@ th,td{
 				<td colspan="5" id="bill_detail">
                 {% block bill_detail %}
 					<table>   
-							<tr>
-							<td class="Receipt itemno"> Binding Extra Cost : </td>
-							<td class="Receipt"><input type="text" name="extraCost"/></td>
-							<td class="right qty"></td>
-							<td align="right" class="price"></td>
-							<td align="right" class="price"></td>
-							</tr>                            
-                    
+                        <thead>
+                        {% block extra_cost%}
+                        <div align=left>[+<a href="/sales/extra_cost/{{bill.pk}}"> Append Extra Cost </a>]</div>
+                        {% endblock %}                    
 						  <tr>        
 							<td colspan="5" class="border-bottom"></td>    
 						  </tr>   
@@ -199,7 +195,9 @@ th,td{
 						  </tr>    
 						  <tr>        
 							<td colspan="5" class="border-top"></td>    
-						  </tr>    
+						  </tr>   
+                        </thead>                          
+                        <tbody>
 						{% for outStockRecord in outStockRecordset.object_list %}
 							{{record}}
 							<tr>
@@ -210,13 +208,9 @@ th,td{
 							<td align="right" class="price">{{outStockRecord.amount}}</td>
 							</tr>
 						{% endfor %}
-							<tr id="extra_cost_area">
-							<td class="Receipt itemno"> {{forloop.counter}} {{outStockRecord.product.name}}</td>
-							<td class="Receipt">{{outStockRecord.product.description}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMEI: {{outStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
-							<td class="right qty">{{outStockRecord.quantity}}</td>
-							<td align="right" class="price">{{outStockRecord.unit_sell_price}}</td>
-							<td align="right" class="price">{{outStockRecord.amount}}</td>
-							</tr>                            
+                        </tbody>
+                        {% block extra_cost_detail%}
+                        {% endblock %}     
 					</table>				
                 {% endblock %}
 				</td>

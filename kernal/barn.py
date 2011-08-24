@@ -1,7 +1,8 @@
 from datetime import date, datetime
 from django.contrib.auth.models import User
 from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo, Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter,\
-    ConsignmentInDetail, ConsignmentInDetailBalanceHistory, Algo, Deposit
+    ConsignmentInDetail, ConsignmentInDetailBalanceHistory, Algo, Deposit,\
+    ExtraCost
 import logging
 from django.db.models.query_utils import Q
 
@@ -856,16 +857,31 @@ class BarnOwl:
             total_profit += float(outStockRecord.profit)
         return total_profit
     
+    def _summary_extra_cost(self, bill):
+        total_cost = 0
+        costs = ExtraCost.objects.filter(bill = bill)
+        for cost in costs:
+            total_cost += float(cost.price)
+        return total_cost
+    
     def OutStock(self, reason, bill_dict, out_stock_batch_dict):
         logger.debug("Reason: '%s', dict: %s", reason, out_stock_batch_dict)
         result = self.__build_bill_batch__(bill_dict)
         bill = result[0]
         payment = result[1]
         outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , reason)
-        bill.profit = self._summary_profit(outStockRecords) + float(bill.deposit_price) 
+        bill.profit = self._summary_profit(outStockRecords) + float(bill.deposit_price) - self._summary_extra_cost(bill) 
         logger.debug("Bill: '%s' profit: '%s'", bill.pk, bill.profit)
         bill.save()
         return [bill, payment, outStockRecords]
+    
+    def RecalcBill(self, billID):
+        logger.debug("Recalc bill: '%s'", billID)
+        bill = Bill.objects.get(pk=billID)
+        outStockRecords = OutStockRecord.objects.filter(bill = bill)
+        bill.profit = self._summary_profit(outStockRecords) + float(bill.deposit_price) - self._summary_extra_cost(bill) 
+        logger.debug("Bill: '%s' profit: '%s'", bill.pk, bill.profit)
+        bill.save()        
         
     def Cost(self, product, serial=None):
         mouse = None
