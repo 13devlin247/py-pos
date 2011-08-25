@@ -683,44 +683,42 @@ class BarnOwl:
         return bill
     
     def __build_payment__(self, dict, bill, customer):    
+        payment_dict = {}
+        payment_dict['cash_term'] = 'Cash'
+        payment_dict['cash_type'] = 'Cash Sales'
+        payment_dict['cash_status'] = 'Complete'
+        
+        payment_dict['invoice_term'] = customer.term
+        payment_dict['invoice_type'] = 'Invoice'
+        payment_dict['invoice_status'] = 'Incomplete'
+        
+        payment_dict['adjust_term'] = 'adjust'
+        payment_dict['adjust_type'] = 'Adjust'
+        payment_dict['adjust_status'] = 'Complete'        
+        
+        payment_dict['Consignment_IN_Return_term'] = 'Consignment IN Return'
+        payment_dict['Consignment_IN_Return_type'] = 'Consignment_IN_Return'
+        payment_dict['Consignment_IN_Return_status'] = 'Complete'
+
+        payment_dict['Consignment_OUT_term'] = 'Consignment OUT'
+        payment_dict['Consignment_OUT_type'] = 'Consignment_OUT'
+        payment_dict['Consignment_OUT_status'] = 'Incomplete'
+
         payment = Payment()
         payment.active = True
         payment.bill = bill
-        salesMode = dict.get('salesMode', '')
-        logger.debug("SalesMode: %s", salesMode)
-        if salesMode == "cash":
-            payment.term = "Cash"
-            payment.type = "Cash Sales"
-            payment.status = "Complete"
-        elif salesMode == "invoice":
-            payment.term = customer.term
-            payment.type = "Invoice"
-            payment.status = "Incomplete"    
-        elif salesMode == "adjust":
-            payment.term = "adjust"
-            payment.type = "adjust"
-            payment.status = "Complete"            
-        elif salesMode == "Consignment":
-            payment.term = "Consignment"
-            payment.type = "Consignment"
-            payment.status = "Incomplete"    
-        elif salesMode == "Consignment_in_balance":
-            payment.term = "Consignment_in_balance"
-            payment.type = "Consignment_in_balance"
-            payment.status = "Incomplete"    
-        elif salesMode == "Consignment_out_sales":
-            payment.term = "Consignment_out_sales"
-            payment.type = "Consignment_out_sales"
-            payment.status = "Complete"         
-        else:
-            logger.error("salesMode out of expect: %s ", salesMode)
-        logger.debug("build '%s' payment", salesMode)                
+        mode = dict.get('mode', '')
+        logger.debug("Mode: %s", mode)
+        payment.term = payment_dict[mode+"_term"]
+        payment.type = payment_dict[mode+"_type"]
+        payment.status = payment_dict[mode+"_status"]
+                        
         transactionNo = dict.get('transactionNo', '')
         if transactionNo != '': 
             logger.info("paid by creadit card")
             payment.term = "CreaditCard"
             payment.transaction_no = transactionNo
-        logger.debug("payment success builded")
+        logger.debug("payment success builded. Term:'%s', Type:'%s', Status:'%s'", payment.term, payment.type, payment.status)
         payment.save()    
         return payment    
     
@@ -961,8 +959,9 @@ class BarnOwl:
 
 class Hermes:
     CONSIGNMENT_OUT = "Consignment_OUT"
+    CONSIGNMENT_OUT_RETURN  = "Consignment_OUT_RETURN"
     CONSIGNMENT_IN = "Consignment_IN"
-    CONSIGNMENT_IN_RETURN = "ConsignmentInReturn"
+    CONSIGNMENT_IN_RETURN = "Consignment_IN_Return"
     CONSIGNMENT_IN_STATUS_INCOMPLETE = "Incomplete"
     CONSIGNMENT_IN_STATUS_COMPLETE = "Complete"
     CONSIGNMENT_IN_STATUS_FOCUS = "focusing"
@@ -1021,7 +1020,7 @@ class Hermes:
 
     def ConsignmentOut(self, payment, outStockRecords):
             if payment.type != self.CONSIGNMENT_OUT:
-                logger.debug("Payment: '%s' Not Consignment Bill, return ", payment.pk)
+                logger.debug("Payment: '%s' Not Consignment Bill. Payment type = '%s', return ", payment.pk, payment.type)
                 return
             for outStockRecord in outStockRecords:
                 consignmentOut = ConsignmentOutDetail()
@@ -1036,6 +1035,25 @@ class Hermes:
     def Profit(self, product):
         return False
 
+    
+    def ConsignmentOutReturn(self, inStockBatch):
+        if inStockBatch.mode == self.CONSIGNMENT_OUT_RETURN:
+            logger.debug("Consignment out return found, consignemnt out balance.")
+            supplier = inStockBatch.supplier
+            payments = Payment.objects.filter(Q(supplier = supplier))
+            inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
+            for inStockRecord in inStockRecords:
+                consignmentInDetail = ConsignmentInDetail()
+                consignmentInDetail.inStockBatch = inStockRecord.inStockBatch
+                consignmentInDetail.inStockRecord = inStockRecord
+                consignmentInDetail.quantity = inStockRecord.quantity
+                consignmentInDetail.balance = 0
+                consignmentInDetail.active = True
+                consignmentInDetail.status = Hermes.CONSIGNMENT_IN_STATUS_INCOMPLETE
+                consignmentInDetail.save()        
+                logger.debug("Consignment IN record build! '%s'", consignmentInDetail.pk)
+        else:
+            logger.debug("InStock mode: %s", inStockBatch.mode)
     
     def ConsignmentIn(self, inStockBatch):
         if inStockBatch.mode == self.CONSIGNMENT_IN:
@@ -1116,6 +1134,7 @@ class Hermes:
         
         
     def BalanceConsignmentIN(self, outStockRecords, supplier = None):
+        
         logger.debug("BalanceConsignmentIN, outStockRecords: '%s'", len(outStockRecords))
         for outStockRecord in outStockRecords:
             consignment_in_detail_set = self._query_consignment_in_detail_set(outStockRecord, supplier)
