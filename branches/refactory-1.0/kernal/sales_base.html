@@ -4,7 +4,6 @@
 {% endblock %}
 
 {% block hiddenValue %}
-    <input type="hidden" name="salesMode" value="cash"/>
 {% endblock %}
 
 {% block title %}
@@ -17,7 +16,7 @@
             <span>Register Mode
             </span>  
             <select name="mode" onchange="$('#mode_form').submit();">  
-              <option value="sale" selected="selected">Sale
+              <option value="cash" selected="selected">Sale
               </option>  
               <option value="trade-in">Trade-in
               </option>  			  

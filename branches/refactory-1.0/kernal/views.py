@@ -360,6 +360,7 @@ def __build_instock_records__(inStockBatch, inventoryDict, status):
         inStockRecord.product = product
         inStockRecord.cost = cost
         inStockRecord.quantity = quantity
+        inStockRecord.startIDX = 0
         inStockRecord.status = status
         inStockRecord.save()
         logger.debug("instock '%s' build success, cost: '%s', quantity:'%s' ", product.name, inStockRecord.cost, inStockRecord.quantity)
@@ -415,6 +416,7 @@ def InventoryConfirm(request):
 
         hermes = Hermes()
         hermes.ConsignmentIn(result[0])
+        hermes.ConsignmentOutReturn(result[0])
 
         return HttpResponseRedirect('/inventory/result/'+str(result[0].pk))
 """
@@ -741,34 +743,34 @@ def __consignment_out_handler__(request, is_sales):
         logger.info("InventoryConfirm finish")
         return HttpResponseRedirect('/inventory/result/'+str(inStockBatch.pk))
         
-def ConsignmentOutSale(request):
-    salesDict = {}
-    if request.method == 'GET':
-        # check Counter 
-        counters = None
-        counters = Counter.objects.filter(active=True).order_by('-create_at')
-        if counters.count() == 0:
-            logger.warn("Can not found 'OPEN' Counter, direct to open page")
-            return HttpResponseRedirect('/admin/kernal/counter/add/')    
-        # process Request parameter
-        salesDict = __convert_sales_URL_2_dict__(request)
-        logger.debug("sales dict: %s" , salesDict)
-        customer = __query_customer__(request, 'customer')
-        bill = __build_bill__(request, customer, counters[0])
-        payment = __build_payment__(request, bill, customer)
-        __build_outstock_record__(request, bill, payment, salesDict, 'ConsignmentOutSales')      
-        if payment.type == 'Invoice':
-            logger.debug("Invoice bill, direct to invoice interface")
-            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
-        elif payment.type == 'Consignment':
-            logger.debug("Consignment bill, direct to Consignment interface")
-            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
-        elif payment.type == 'Consignment_out_sales':
-            logger.debug("Consignment_out_sales bill, direct to Consignment_out_sales interface")
-            return HttpResponseRedirect('/sales/Consignment_out_sales/'+str(bill.pk))                                
-        else:
-            logger.debug("Cash sales bill, direct to Recept interface")
-            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))     
+#def ConsignmentOutSale(request):
+#    salesDict = {}
+#    if request.method == 'GET':
+#        # check Counter 
+#        counters = None
+#        counters = Counter.objects.filter(active=True).order_by('-create_at')
+#        if counters.count() == 0:
+#            logger.warn("Can not found 'OPEN' Counter, direct to open page")
+#            return HttpResponseRedirect('/admin/kernal/counter/add/')    
+#        # process Request parameter
+#        salesDict = __convert_sales_URL_2_dict__(request)
+#        logger.debug("sales dict: %s" , salesDict)
+#        customer = __query_customer__(request, 'customer')
+#        bill = __build_bill__(request, customer, counters[0])
+#        payment = __build_payment__(request, bill, customer)
+#        __build_outstock_record__(request, bill, payment, salesDict, 'ConsignmentOutSales')      
+#        if payment.type == 'Invoice':
+#            logger.debug("Invoice bill, direct to invoice interface")
+#            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
+#        elif payment.type == 'Consignment':
+#            logger.debug("Consignment bill, direct to Consignment interface")
+#            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+#        elif payment.type == 'Consignment_out_sales':
+#            logger.debug("Consignment_out_sales bill, direct to Consignment_out_sales interface")
+#            return HttpResponseRedirect('/sales/Consignment_out_sales/'+str(bill.pk))                                
+#        else:
+#            logger.debug("Cash sales bill, direct to Recept interface")
+#            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))     
     
 def ConsignmentOutBalance(request):
     return __consignment_out_handler__(request, False)

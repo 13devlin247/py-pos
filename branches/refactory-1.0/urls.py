@@ -232,7 +232,7 @@ urlpatterns = patterns('',
     url(r'^extra/list/(?P<billID>[\x20-\x7E]+)*', login_required(ExtraCostList)),    
 
     url(r'^consignment/out/balance/confirm/$', ConsignmentOutBalance),
-    url(r'^consignment/out/sale/confirm/$', ConsignmentOutSale),
+    url(r'^consignment/out/sale/confirm/$', SalesConfirm),
     url(r'^consignment/in/balance/confirm/$', ConsignmentInBalance),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
     url(r'^sales/confirm/$', login_required(SalesConfirm)),
