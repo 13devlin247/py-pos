@@ -14,15 +14,15 @@
                 </th>  
                 <th style="width:auto">Ref.Bill ID
                 </th>				  
-                <th style="width:auto">Date
+                <th style="width:30%">Date
                 </th>  
-                <th style="width:15%;">Customer
+                <th style="width:auto;">Customer
                 </th>  
-                <th style="width:15%;">Cost
+                <th style="width:auto;">Cost
                 </th>                  
-                <th style="width:15%;">Price
+                <th style="width:auto;">Price
                 </th>  
-                <th style="width:15%;">Profit
+                <th style="width:auto">Profit
                 </th>                  
                 <th style="width:15%;">Description
                 </th>				  
@@ -33,7 +33,7 @@
 			{% if object_list %}
 				{% for result in object_list %}
                 <tr>
-                <td><a href="/sales/{% if result.type == 'Cash Sales'%}bill{% else %}{{result.type}}{% endif %}/{{result.pk}}">{{result.pk}}</a></td>
+                <td>{{result.pk}}</td>
                 <td>{{result.refBill}}</td>
                 <td>{{result.create_at}}</td>
                 <td>{{result.customer}}</td>
@@ -89,7 +89,7 @@
     function _genRowByPK(data){
         row = ""+
                 "<tr>"+
-                "<td><a href=\"/sales/{{display}}/"+data.pk+"\">"+data.pk+"</a></td>"+
+                "<td>"+data.pk+"</td>"+
                 "<td>"+data.fields.refBill+"</td>"+
                 "<td>"+data.fields.create_at+"</td>"+
                 "<td>"+data.fields.customer+"</td>"+

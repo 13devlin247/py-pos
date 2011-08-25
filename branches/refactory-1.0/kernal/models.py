@@ -64,7 +64,7 @@ class Product(models.Model):
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     uom = models.ForeignKey(UOM)
     active = models.BooleanField("actived product", True)
-    algo = models.ForeignKey(Algo, null = True)
+    algo = models.ForeignKey(Algo, null = True, default=Algo.objects.get(pk=1))
     def __unicode__(self):
         return self.name
 
