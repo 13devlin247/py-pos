@@ -9,15 +9,15 @@ os.environ['DJANGO_SETTINGS_MODULE'] = 'pos.settings'
 import django
 from pos.kernal.models import *
 
-file = open('D:\\django_project\\product_pos\\kernal_product.csv')
+file = open('D:\\django_project\\kernal_product.csv')
 lines = file.readlines()
 i = 0
 for line in lines:
     token = line.split('|')
     product = Product()
     product.pk = token[0]
-    product.name = token[2]
-    product.description = token[3]
+    product.name = token[2].replace('"', '')
+    product.description = token[3].replace('"', '')
     category = Category.objects.get(pk=int(token[4]))
     product.category = category
     brand = Brand.objects.get(pk=int(token[5]))
