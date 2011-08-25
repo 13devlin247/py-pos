@@ -1138,12 +1138,12 @@ def IMEIorBillIDList(request):
 def CategoryInfo(request):
     categorys = Category.objects.all()
     brands = Brand.objects.all()
-    types = Type.objects.all()
+#    types = Type.objects.all()
     categorys_str = __json_wrapper__(categorys).replace("[","").replace("]","")
     brands_str = __json_wrapper__(brands).replace("[","").replace("]","")
-    types_str = __json_wrapper__(types).replace("[","").replace("]","")
-    json = "["+categorys_str+", "+brands_str+", "+types_str+"]"
-#    json = "["+categorys_str+", "+brands_str+"]"
+#    types_str = __json_wrapper__(types).replace("[","").replace("]","")
+#    json = "["+categorys_str+", "+brands_str+", "+types_str+"]"
+    json = "["+categorys_str+", "+brands_str+"]"
     return HttpResponse(json, mimetype="application/json")
 
 def __search__(models, query):
@@ -1297,22 +1297,22 @@ def ProductSave(request, productID=None):
             product = form.save(commit = False)
             category_pk = request.GET.get('category','-1')
             brand_pk = request.GET.get('brand','-1')
-            type_pk = request.GET.get('type','-1')
+#            type_pk = request.GET.get('type','-1')
             category = None
             brand = None
             type = None
             try:
                 category = Category.objects.get(pk=int(category_pk))
                 brand = Brand.objects.get(pk=int(brand_pk))
-                type = Type.objects.get(pk=int(type_pk))
+#                type = Type.objects.get(pk=int(type_pk))
             except Category.DoesNotExist:
                 logger.error("ProductSave fail: Category.DoesNotExist")
                 return HttpResponseRedirect('/product/search/')    
             except Brand.DoesNotExist:
                 logger.error("ProductSave fail: Brand.DoesNotExist")
                 return HttpResponseRedirect('/product/search/')    
-            except Type.DoesNotExist:
-                logger.error("ProductSave fail: Type.DoesNotExist")
+#            except Type.DoesNotExist:
+#                logger.error("ProductSave fail: Type.DoesNotExist")
                 #return HttpResponseRedirect('/product/search/')                    
             product.category = category
             product.brand = brand
