@@ -297,6 +297,9 @@
         subTotal = $("#subTotal").val();
         discount = $("#discount").val();
         deposit =  $("#deposit").val();
+        if(deposit == undefined){
+            deposit = 0
+        }
         $("#total").attr("value", (subTotal-discount-deposit));
     }
     function calcChange(){
