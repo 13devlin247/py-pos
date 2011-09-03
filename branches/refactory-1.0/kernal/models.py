@@ -49,6 +49,7 @@ class UOM(models.Model):
 
 class Algo(models.Model):
     PERCENTAGE = "Percentage"
+    NO_SERIAL = "No_Serial"
     name = models.CharField(max_length=100)
     def __unicode__(self):
         return self.name    

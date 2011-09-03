@@ -181,7 +181,7 @@ th,td{
 					<table>   
                         <thead>
                         {% block extra_cost%}
-                        <div align=left>[+<a href="/sales/extra_cost/{{bill.pk}}"> Append Extra Cost </a>]</div>
+                        <div align=left id="AppendExtraCost">[+<a href="/sales/extra_cost/{{bill.pk}}"> Append Extra Cost </a>]</div>
                         {% endblock %}                    
 						  <tr>        
 							<td colspan="5" class="border-bottom"></td>    
@@ -273,11 +273,16 @@ th,td{
                 <tr>
                 <form action="/bill/void/" id="void_bill_form">
                 <input type="hidden" name="bill_id" value="{{bill.pk}}"/>
-                <table style="border: solid black 1px; width: 30%; background-color: #CCC">
+                <table id="void_bill_form_table" style="border: solid black 1px; width: 30%; background-color: #CCC">
                     <tr><th colspan=2 style="text-align: center"> Void this Bill</th></tr>
                     {{form}}
                     <tr><td colspan=2><input type="submit" value="VOID" onclick="checkField();return false;"/></td></tr>
                  </table>
+                <table id="complete_invoice" style="border: solid black 1px; width: 30%; background-color: #CCC">
+                    <tr><th colspan=2 style="text-align: center"> Complete Invoice </th></tr>
+                    {{form}}
+                    <tr><td colspan=2><input type="submit" value="VOID" onclick="checkField();return false;"/></td></tr>
+                 </table>					
                  </form>
                  </tr>
                  <script type="text/javascript">

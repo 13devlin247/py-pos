@@ -28,7 +28,7 @@
                 <td><a href="/sales/{{display}}/{{result.pk}}">{{result.pk}}</a></td>
                 <td>{{result.create_at}}</td>
                 <td>{{result.type}}</td>
-                <td>{{result.status}}</td>
+                <td><a href='/sales/invoice/completed/{{result.pk}}'>{{result.status}}</a></td>
                 </tr>					
 				{% endfor %}
 			{% endif %}
@@ -80,7 +80,7 @@
                 "<td><a href=\"/sales/{{display}}/"+data.pk+"\">"+data.pk+"</a></td>"+
                 "<td>"+data.fields.create_at+"</td>"+
                 "<td>"+data.fields.type+"</td>"+
-                "<td>"+data.fields.status+"</td>"+
+                "<td><a href='/sales/invoice/completed/"+data.pk+"'>"+data.fields.status+"</a></td>"+
                 "</tr>"
         ;    
         return row;

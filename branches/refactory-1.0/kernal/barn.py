@@ -394,6 +394,19 @@ class BarnMouse:
         except model.DoesNotExist:
             logger.error("Delete '%s', pk:'%', reason:'%s' Fail, Does Not Exist",Models, pk, reason)
 
+class Rats(BarnMouse):
+    def Cost(self, serial=None):
+        cost = 0
+        try:
+            logger.debug("look up Product: '%s' stockCost", self.product.pk)
+            query = StockCost.objects.get(product=self.product)
+            cost = query.avg_cost
+        except StockCost.DoesNotExist:
+            logger.warn("Product: '%s' not found on StockCount table, return avg cost: 0")
+            return 0
+        logger.debug("product:'%s', avg cost: '%s' ", self.product, cost)
+        return cost
+
 class MickyMouse(BarnMouse):
     def _check_foc_product(self):
         if "-foc-product" in self.product.name:
@@ -611,6 +624,9 @@ class BarnOwl:
             if product.algo.name == Algo.PERCENTAGE:
                 logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)
                 mouse = MickyMouse(product)
+            elif product.algo.name == Algo.NO_SERIAL:
+                logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)            
+                mouse = Rats(product)                
             else:
                 logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)            
                 mouse = BarnMouse(product)
@@ -885,6 +901,10 @@ class BarnOwl:
         mouse = None
         if product.algo.name == Algo.PERCENTAGE:
             mouse = MickyMouse(product)
+        elif product.algo.name == Algo.NO_SERIAL:
+            mouse = BarnMouse(product)
+            logger.debug("Product: '%s' algo is NO_SERIAL, return avg cost", product.name)
+            return mouse.Cost(None)    
         else:
             mouse = BarnMouse(product)
         return mouse.Cost(serial)
