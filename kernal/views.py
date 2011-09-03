@@ -79,6 +79,16 @@ def CashSalesReport(request):
         total += payment.bill.total_price
     return render_to_response('cash_sales_list.html',{'payments': payments, 'total': total, 'dateRange': str(startDate)+" to "+str(endDate)}, )
    
+def InvoiceComplete(request, billID):
+    bill = Bill.objects.get(pk = billID)
+    payments = Payment.objects.filter(bill = bill)
+    logger.debug("Bill: '%s' complete", bill.pk)
+    for payment in payments:
+        payment.status = 'Complete'
+        payment.save()
+        logger.debug("payment '%s' completed", payment.pk)
+    return HttpResponseRedirect('/search/invoice/')
+
 def InvoiceReport(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -131,7 +141,7 @@ def ReportDaily(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='sale')).filter(active = True)
+    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')).filter(active = True)
     profitTable = {}
     total_amount = 0
     total_profit = 0
@@ -1121,6 +1131,8 @@ def __find_payment_by_serial_no__(serialNoSet):
                 payment = payments.order_by("-create_at")[0]
                 logger.debug("found Serial: '%s' bill: '%s', payment: '%s' ", serial.serial_no, bill.pk, payment.pk)
                 ans.append(payment)
+            else:
+                logger.debug("No payment found on Serial: '%s' bill: '%s'", serial.serial_no, bill.pk)
     return ans
     
 def IMEIorBillIDList(request):    
@@ -1253,7 +1265,7 @@ def ExtraCostList(request, billID):
     return HttpResponse(json, mimetype="application/json")                
     
 def PaymentInfoByPK(request, pk):
-    logger.info("get '%s' payment info by PK: %s " , type, pk)
+    logger.info("get payment info by PK: %s " , pk)
     payments = __search__(Payment, Q(pk=pk))
     json = __json_wrapper__(payments.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                    
@@ -1489,7 +1501,7 @@ def PersonReport(request):
         
 def _build_users_sold_dict(product, startDate, endDate):
     #outStockRecordSet = OutStockRecord.objects.filter(product=product)
-    outStockRecordSet = OutStockRecord.objects.filter(product=product).filter(create_at__range=(startDate,endDate)).filter(bill__mode = "sale")
+    outStockRecordSet = OutStockRecord.objects.filter(product=product).filter(create_at__range=(startDate,endDate)).filter(Q(bill__mode = "cash")|Q(bill__mode = "invoice"))
     users = {}
     for outStockRecord in outStockRecordSet:
         user = outStockRecord.bill.sales_by

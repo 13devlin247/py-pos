@@ -67,3 +67,10 @@ td{
 	width: auto;
 }
 
+#void_bill_form_table{
+	display: none;
+}
+
+#AppendExtraCost{
+	display: none;
+}
