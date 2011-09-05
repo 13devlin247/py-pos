@@ -85,7 +85,7 @@ imei_list_view = {
     'queryset': Payment.objects.all().order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_imei.html', 
-    'extra_context': {'autocomplete_url': '/imei/ajax/','json_url': '/payment/info/', 'display':'bill' }
+    'extra_context': {'autocomplete_url': '/imei/ajax/','json_url': '/imei/info/', 'display':'bill' }
 }
 
 deposit_list_view = {
@@ -166,6 +166,7 @@ urlpatterns = patterns('',
     url(r'^product/save/(?P<productID>[\x20-\x7E]+)*', login_required(ProductSave)), # controller
     url(r'^product/info/(?P<query>[\x20-\x7E]+)*', login_required(ProductInfo)), # controller
     url(r'^product/inventory/cost/update/', login_required(ProductCostUpdate)), # controller
+    url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*/(?P<serial>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
     
     
@@ -185,12 +186,13 @@ urlpatterns = patterns('',
     url(r'^supplier/info/(?P<query>[\x20-\x7E]+)*', login_required(SupplierInfo)),    # supplier info json
     url(r'^payment/info/(?P<type>[\x20-\x7E]+)/(?P<query>[\x20-\x7E]+)', login_required(PaymentInfo)),    # payment info json
     url(r'^payment/info/(?P<pk>[\x20-\x7E]+)*', login_required(PaymentInfoByPK)),    # payment info json    
+    url(r'^imei/info/(?P<imei>[\x20-\x7E]+)*', login_required(ImeiInfo)),    # imei info json
 
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
     url(r'^product/ajax/$', login_required(ProductList)),    
     url(r'^payment/ajax/$', login_required(PaymentList)),    
-    url(r'^imei/ajax/$', login_required(IMEIorBillIDList)),
+    url(r'^imei/ajax/$', login_required(IMEIList)),
     url(r'^deposit/ajax/$', login_required(DepositList)),
     url(r'^service/ajax/$', login_required(ServiceList)),
     url(r'^repair/ajax/$', login_required(RepairList)),

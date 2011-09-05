@@ -29,6 +29,7 @@ from barn import BarnOwl
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
+from django.template.defaultfilters import register
 
 logging.basicConfig(
     level = logging.WARN,
@@ -1119,29 +1120,12 @@ def PaymentList(request):
     list += __autocomplete_wrapper__(paymentQuerySet, lambda model: str(model.pk))        
     return HttpResponse(list, mimetype="text/plain")    
 
-def __find_payment_by_serial_no__(serialNoSet):
-    ans = []
-    for serial in serialNoSet:
-        outStockRecords = OutStockRecord.objects.filter(serial_no = serial)
-        if outStockRecords.count() != 0:
-            outStockRecord = outStockRecords.order_by("-create_at")[0]
-            bill = outStockRecord.bill
-            payments = Payment.objects.filter(bill=bill)
-            if payments.count() != 0:
-                payment = payments.order_by("-create_at")[0]
-                logger.debug("found Serial: '%s' bill: '%s', payment: '%s' ", serial.serial_no, bill.pk, payment.pk)
-                ans.append(payment)
-            else:
-                logger.debug("No payment found on Serial: '%s' bill: '%s'", serial.serial_no, bill.pk)
-    return ans
-    
-def IMEIorBillIDList(request):    
+def IMEIList(request):    
     keyword = request.GET.get('q', "")
-    logger.debug("sarch imei or bill id list by keyword: %s", keyword)
+    logger.debug("sarch imei list by keyword: %s", keyword)
     serialNoSet = __search__(SerialNo, Q(serial_no__contains=keyword))
     if serialNoSet:
-        payments = __find_payment_by_serial_no__(serialNoSet)
-        list = __autocomplete_wrapper__(payments, lambda model: str(model.pk))        
+        list = __autocomplete_wrapper__(serialNoSet, lambda model: model.serial_no)
     return HttpResponse(list, mimetype="text/plain")        
 """
     auto-complete view end
@@ -1190,7 +1174,7 @@ def ProductInfo(request, query):
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
     
-def ProductInventory(request, productID):
+def ProductInventory(request, productID, serial=None):
     logger.info("check product: '%s'  inventory" % productID)
     product = Product.objects.get(pk=productID)
     mouse = None
@@ -1198,7 +1182,7 @@ def ProductInventory(request, productID):
         mouse = MickyMouse(product)
     else:
         mouse = BarnMouse(product)
-    qty = mouse.QTY()
+    qty = mouse.QTY(serial)
     json = "[{\"inventory\":"+str(qty)+"}]"
     return HttpResponse(json, mimetype="application/json")    
 
@@ -1263,6 +1247,42 @@ def ExtraCostList(request, billID):
     costs = ExtraCost.objects.filter(bill = bill)
     json = __json_wrapper__(costs.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
+
+def __find_payment_by_serial_no__(serial):
+    ans = []
+    outStockRecords = OutStockRecord.objects.filter(serial_no = serial).order_by("-create_at")
+    for outStockRecord in outStockRecords:
+        bill = outStockRecord.bill
+        payments = Payment.objects.filter(bill=bill)
+        if payments.count() != 0:
+            payment = payments.order_by("-create_at")[0]
+            logger.debug("found Serial: '%s' bill: '%s', payment: '%s' ", serial.serial_no, bill.pk, payment.pk)
+            ans.append(payment)
+        else:
+            logger.debug("No payment found on Serial: '%s' bill: '%s'", serial.serial_no, bill.pk)
+    return ans
+
+@register.filter
+def classname(obj, arg=None):
+    classname = obj.__class__.__name__.lower()
+    if arg:
+        if arg.lower() == classname:
+            return True
+        else:
+            return False
+    else:
+        return classname
+
+def __find_instockBatch_by_serial_no__(serial):
+    return serial.inStockRecord.inStockBatch
+
+def ImeiInfo(request, imei):
+    logger.info("get imei: '%s' info " , imei)
+    serial = SerialNo.objects.get(serial_no = imei)
+    result = __find_payment_by_serial_no__(serial)
+    result.append(__find_instockBatch_by_serial_no__(serial))
+    json = __json_wrapper__(result)
+    return HttpResponse(json, mimetype="application/json")                    
     
 def PaymentInfoByPK(request, pk):
     logger.info("get payment info by PK: %s " , pk)
