@@ -48,6 +48,7 @@ class UOM(models.Model):
         return self.name    
 
 class Algo(models.Model):
+    AVERAGE_COST = "Average Cost"
     PERCENTAGE = "Percentage"
     NO_SERIAL = "No_Serial"
     name = models.CharField(max_length=100)
@@ -245,7 +246,7 @@ class ExtraCost(models.Model):
     bill = models.ForeignKey(Bill, null=True)
     mode = models.CharField(max_length=100)
     key = models.CharField(max_length=100) 
-    price = models.DecimalField(max_digits=100, decimal_places=0)
+    price = models.DecimalField(max_digits=100, decimal_places=2)
     description = models.TextField(blank=True) 
     create_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(True)
