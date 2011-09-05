@@ -236,12 +236,21 @@
         /**
             query product inventory by ajax
         **/
+        queryStr = product.pk
+        if("imei" in product){
+            queryStr += "/"+product.imei
+        }
         $.ajax({
-            url: "/product/inventory/"+product.pk,
+            url: "/product/inventory/"+queryStr,
             type: "JSON",
             success: function(data){  
                 //$("#"+product.pk+"_stockCount").html(data[0].inventory);
-                productTable[product.pk].fields["stockCount"] = data[0].inventory;
+                if ("imei" in product){
+                    productTable[product.imei].fields["stockCount"] = data[0].inventory;
+                }else{
+                    productTable[product.pk].fields["stockCount"] = data[0].inventory;
+                }
+                
                 //alert(productTable[data.pk].fields["stockCount"]);
             },
             error: function(data){ 
@@ -340,7 +349,11 @@
         var price = parseFloat($("#"+pk+"_price").val());
 		var cost = parseFloat(productTable[pk].fields.cost);
 		if(cost > price){
-			alert(productTable[pk].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n');
+            product_name = productTable[pk].fields.name
+            if ('imei' in productTable[pk]){
+                product_name = productTable[pk].imei
+            }
+			alert( product_name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n');
 			
 		}
 	}

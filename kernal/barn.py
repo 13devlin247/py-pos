@@ -20,6 +20,12 @@ class SerialRequiredException(Exception):
     def __str__(self):
         return repr(self.value)
     
+class OutofStockException(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+    
 class SerialRejectException(Exception):
     def __init__(self, value):
         self.value = value
@@ -215,11 +221,16 @@ class BarnMouse:
         stockCost.outstock_create_at = self._query_last_record_datetime(OutStockRecord)
         stockCost.save()
 
-    def __lock_serial_no__(self, imei):
+    def __lock_serial_no__(self, imei, qty):
         serial_no = None
         try:
             serial_no = SerialNo.objects.get(serial_no = imei)
-            serial_no.active = False
+            if (serial_no.balance + qty) > serial_no.quantity:
+                raise OutofStockException("Requered: '%s' qty: '%s', stock:'%s' ", serial_no, qty, serial_no.balance)   
+            serial_no.balance = serial_no.balance + qty 
+            if serial_no.balance == serial_no.quantity:
+                logger.debug("Serial '%s' sold out", serial_no.serial_no)
+                serial_no.active = False
             serial_no.save()
             logger.debug("product found by imei : %s ", imei)
         except SerialNo.DoesNotExist:
@@ -256,7 +267,7 @@ class BarnMouse:
         outStockRecord = OutStockRecord()
         outStockRecord.bill = bill
         outStockRecord.product = self.product
-        serial_no = self.__lock_serial_no__(serials)
+        serial_no = self.__lock_serial_no__(serials, qty)
         outStockRecord.inStockRecord = self._query_inStockRecord(serial_no)
         outStockRecord.serial_no = serial_no
         outStockRecord.unit_sell_price = price
@@ -305,21 +316,26 @@ class BarnMouse:
         logger.debug("Product '%s' instock build success, cost: '%s', quantity:'%s' ", self.product.name, inStockRecord.cost, inStockRecord.quantity)
         return inStockRecord
         
-    def __build_serial_no__(self, inStockRecord, serials):   
+    def __build_serial_no__(self, inStockRecord, serials ):   
         logger.debug("build Serial Numbs ")
-        for serialNo in serials:
+        for serialNo in set(serials):
             if serialNo == '':
                 continue
             try:
                 serial = SerialNo.objects.get(serial_no = serialNo)
-                logger.debug("Serial no: %s found, unlock it", serialNo)
+                serial.quantity = int(serial.quantity) + int(inStockRecord.quantity)
+                serial.serial_no = serialNo
+                serial.save()
+                logger.debug("Serial no: %s found, unlock it, current qty: '%s'", serialNo, serial.quantity)
             except SerialNo.DoesNotExist:
                 serial = SerialNo()
                 logger.debug("build serial no: '%s' for product: '%s'", serialNo, inStockRecord.product.name)    
-            serial.inStockRecord = inStockRecord
-            serial.active = True
-            serial.serial_no = serialNo
-            serial.save()
+                serial.inStockRecord = inStockRecord
+                serial.active = True
+                serial.quantity = inStockRecord.quantity
+                serial.balance =  0
+                serial.serial_no = serialNo
+                serial.save()
     
     def StockValue(self):
         try:
@@ -333,8 +349,13 @@ class BarnMouse:
         return cost
 
     
-    def QTY(self):
+    def QTY(self, serial=None):
         try:
+            if serial:
+                serial = SerialNo.objects.get(serial_no=serial)
+                qty = serial.quantity - serial.balance
+                logger.debug("Product: '%s' serial:'%s' QTY: '%s'", self.product, serial, qty)
+                return qty
             query = StockCost.objects.get(product=self.product)
             qty = query.qty
         except StockCost.DoesNotExist:
@@ -471,7 +492,7 @@ class MickyMouse(BarnMouse):
     def StockValue(self):
         return 0
     
-    def QTY(self):
+    def QTY(self, serial = None):
         return 99999
     
     def Cost(self, serial=None):
@@ -845,7 +866,7 @@ class BarnOwl:
         inStockBatch.invoice_no = dict.get('inv_no', "-")
         inStockBatch.do_no = dict.get('do_no', "-")
         inStockBatch.refBill_no = dict.get('refBill_no', "-")
-        inStockBatch.status = 'Incomplete'
+        inStockBatch.status = 'Complete'
         inStockBatch.active = True
         inStockBatch.save();
         logger.debug("InStockBatch: '%s' build", inStockBatch.pk)
@@ -980,6 +1001,7 @@ class BarnOwl:
 class Hermes:
     CONSIGNMENT_OUT = "Consignment_OUT"
     CONSIGNMENT_OUT_RETURN  = "Consignment_OUT_RETURN"
+    CONSIGNMENT_OUT_SALE  = "Consignment_OUT_SALE"
     CONSIGNMENT_IN = "Consignment_IN"
     CONSIGNMENT_IN_RETURN = "Consignment_IN_Return"
     CONSIGNMENT_IN_STATUS_INCOMPLETE = "Incomplete"
@@ -1054,6 +1076,24 @@ class Hermes:
         
     def Profit(self, product):
         return False
+
+    def ConsignmentOutSale(self, product, qty, customer):
+        consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(outStockRecord__type=Hermes.CONSIGNMENT_OUT)&Q(outStockRecord__bill__customer = customer)&Q(outStockRecord__product=product))
+        logger.debug("Filter ConsignmentOutDetail, result:'%s'", len(consignmentInDetails))
+        counter = qty
+        for consignmentOutDetail in consignmentOutDetails:
+            consignmentQty = consignmentOutDetail.quantity - consignmentOutDetail.balance
+            if counter <= consignmentQty:
+                break
+                consignmentOutDetail.balance = consignmentOutDetail.quantity
+                consignmentOutDetail.save()
+            else:
+                counter = counter - consignmentQty
+                consignmentOutDetail.balance = consignmentOutDetail.quantity
+                consignmentOutDetail.save()
+                
+        
+            
 
     
     def ConsignmentOutReturn(self, inStockBatch):

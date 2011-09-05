@@ -84,7 +84,7 @@
 							{{record}}
 							<tr>
 							<td class="Receipt itemno"> {{forloop.counter}} {{inStockRecord.product.name}}</td>
-							<td class="Receipt">{{inStockRecord.product.description}} {% if  inStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMEI: {{inStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
+							<td class="Receipt">{{inStockRecord.product.description}}</td>
 							<td class="right qty">{{inStockRecord.quantity}}</td>
 							<td align="right" class="price"><input name="inStockRecord_{{inStockRecord.pk}}" value="{{inStockRecord.cost}}" size=10></input></td>
 							<td align="right" class="price">
@@ -104,7 +104,7 @@
 							<td class="Receipt itemno" style="padding: 0 0 0 4em" colspan = "5">
                                 <u> IMEI: </u> </br>
                                 {% for serial in inStockRecord.serialno_set.select_related %}
-                                    {{serial}} </br>
+                                    {{serial.serial_no}} </br>
                                 {% endfor %}
                             </td>
                             {% endif %}
