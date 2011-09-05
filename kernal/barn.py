@@ -319,14 +319,28 @@ class BarnMouse:
         logger.debug("Product '%s' instock build success, cost: '%s', quantity:'%s' ", self.product.name, inStockRecord.cost, inStockRecord.quantity)
         return inStockRecord
         
-    def __build_serial_no__(self, inStockRecord, serials ):   
+    def _serial_validation(self, qty, serials):
+        qty = int(qty)
+        serialSet = set(serials)
+        if len(serialSet) == qty:
+            return 1
+        elif len(serialSet) == 1:
+            return qty
+        else:
+            return -1
+        
+    def __build_serial_no__(self, inStockRecord, serials):   
         logger.debug("build Serial Numbs ")
+        qty = self._serial_validation(inStockRecord.quantity, serials)
+        if qty == -1:
+            logger.error("SERIAL Error")
+            return
         for serialNo in set(serials):
             if serialNo == '':
                 continue
             try:
                 serial = SerialNo.objects.get(serial_no = serialNo)
-                serial.quantity = int(serial.quantity) + int(inStockRecord.quantity)
+                serial.quantity = int(serial.quantity) + qty
                 serial.serial_no = serialNo
                 serial.save()
                 mapping = SerialNoMapping()
@@ -339,7 +353,7 @@ class BarnMouse:
                 logger.debug("build serial no: '%s' for product: '%s'", serialNo, inStockRecord.product.name)    
                 serial.inStockRecord = inStockRecord
                 serial.active = True
-                serial.quantity = inStockRecord.quantity
+                serial.quantity = qty
                 serial.balance =  0
                 serial.serial_no = serialNo
                 serial.save()
