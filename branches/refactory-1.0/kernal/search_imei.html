@@ -27,7 +27,7 @@
 			{% if object_list %}
 				{% for result in object_list %}
                 <tr>
-                <td><a href="/sales/{% if result.type == 'Cash Sales'%}bill{% else %}{{result.type}}{% endif %}/{{result.pk}}">{{result.pk}}</a></td>
+                <td><a target='_blank' href="/sales/{% if result.type == 'Cash Sales'%}bill{% else %}{{result.type}}{% endif %}/{{result.pk}}">{{result.pk}}</a></td>
                 <td>{{result.create_at}}</td>
                 <td>{{result|classname}}</td>                
                 <td>{{result.type}}</td>
@@ -83,11 +83,11 @@
         mode = data.model.replace("kernal.", "");
         if(data.model == "kernal.instockbatch"){
             link = "/inventory/result/"+data.pk;
-            type = data.fields.mode;
+            type = data.fields.status;
         }
         row = ""+
                 "<tr>"+
-                "<td><a href=\""+link+"\">"+data.pk+"</a></td>"+
+                "<td><a target='_blank' href=\""+link+"\">"+data.pk+"</a></td>"+
                 "<td>"+data.fields.create_at+"</td>"+
                 "<td>"+mode+"</td>"+
                 "<td>"+type+"</td>"+

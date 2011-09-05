@@ -2,7 +2,7 @@ from datetime import date, datetime
 from django.contrib.auth.models import User
 from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo, Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter,\
     ConsignmentInDetail, ConsignmentInDetailBalanceHistory, Algo, Deposit,\
-    ExtraCost
+    ExtraCost, SerialNoMapping
 import logging
 from django.db.models.query_utils import Q
 
@@ -302,7 +302,8 @@ class BarnMouse:
         inStockRecord.product = self.product
         inStockRecord.cost = cost
         inStockRecord.quantity = qty
-        inStockRecord.status = reason
+        inStockRecord.type = reason
+        inStockRecord.status = "Complete"
         inStockRecord.active = True
         inStockRecord.startIDX = index
         inStockRecord.save()
@@ -326,6 +327,10 @@ class BarnMouse:
                 serial.quantity = int(serial.quantity) + int(inStockRecord.quantity)
                 serial.serial_no = serialNo
                 serial.save()
+                mapping = SerialNoMapping()
+                mapping.inStockRecord = inStockRecord
+                mapping.serial_no = serial
+                mapping.save()                
                 logger.debug("Serial no: %s found, unlock it, current qty: '%s'", serialNo, serial.quantity)
             except SerialNo.DoesNotExist:
                 serial = SerialNo()
@@ -336,6 +341,11 @@ class BarnMouse:
                 serial.balance =  0
                 serial.serial_no = serialNo
                 serial.save()
+                mapping = SerialNoMapping()
+                mapping.inStockRecord = inStockRecord
+                mapping.serial_no = serial
+                mapping.save()
+                
     
     def StockValue(self):
         try:
