@@ -202,6 +202,13 @@ class SerialNo(models.Model):
     def __unicode__(self):
         return str(self.inStockRecord.product.name) + " " + str(self.serial_no) 
 
+class SerialNoMapping(models.Model):
+    serial_no = models.ForeignKey(SerialNo)
+    inStockRecord = models.ForeignKey(InStockRecord)
+    active = models.BooleanField(True)
+    create_at = models.DateTimeField(auto_now_add=True)
+    reason = models.CharField(max_length=100, null=True)
+    
 class Counter(models.Model):
     initail_amount = models.DecimalField(max_digits=100, decimal_places=2)
     close_amount = models.DecimalField(max_digits=100, decimal_places=2, null=True)

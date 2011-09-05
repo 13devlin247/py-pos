@@ -1274,13 +1274,17 @@ def classname(obj, arg=None):
         return classname
 
 def __find_instockBatch_by_serial_no__(serial):
-    return serial.inStockRecord.inStockBatch
+    serialNoMappings = SerialNoMapping.objects.filter(serial_no = serial)
+    result = set()
+    for serialNoMapping in serialNoMappings:
+        result.add(serialNoMapping.inStockRecord)
+    return result
 
 def ImeiInfo(request, imei):
     logger.info("get imei: '%s' info " , imei)
     serial = SerialNo.objects.get(serial_no = imei)
     result = __find_payment_by_serial_no__(serial)
-    result.append(__find_instockBatch_by_serial_no__(serial))
+    result.extend(__find_instockBatch_by_serial_no__(serial))
     json = __json_wrapper__(result)
     return HttpResponse(json, mimetype="application/json")                    
     
