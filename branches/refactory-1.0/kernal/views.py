@@ -185,11 +185,11 @@ def ReportDailyCategory(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='sale'))
+    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate))#.filter(Q(mode='sale'))
     categorysTitle = __categorys_arrays__()
     dateTable = {}
     for bill in bills:
-        bill_date = bill.create_at.strftime("%d/%m/%y")
+        bill_date = bill.create_at.strftime("%Y-%m-%d")
         if bill_date not in dateTable:
             categorysSummary = []
             for i in range(len(categorysTitle)):
@@ -666,6 +666,7 @@ def RepairSave(request):
     repair.mode = "repair"
     repair.status = "Incomplete"
     repair.active = True
+    repair.key = repair.key.strip()
     repair.save()
     logger.info("Service job '%s' create success", repair.pk)
     return HttpResponseRedirect('/search/repair/')
@@ -734,6 +735,28 @@ def SalesConfirm(request):
             logger.debug("Cash sales bill, direct to Recept interface")
             return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
 
+def ConsignmentOutSalesConfirm(request):
+    salesDict = {}
+    if request.method == 'GET':
+        bill_dict = __convert_sales_URL_2_bill_dict__(request)
+        salesDict = __convert_sales_URL_2_dict__(request)
+        owl = BarnOwl()
+        product_dict = owl._build_product_dict(salesDict)
+        
+        try:
+            thanatos = Thanatos()
+            customer = thanatos.Customer(bill_dict.get("customer"))
+            payments = Payment.objects.filter(Q(bill__customer = customer)&Q(type=Hermes.CONSIGNMENT_OUT))
+            hermes = Hermes()            
+            for payment in payments:
+                hermes.ConsignmentOutSale(payment, bill_dict, salesDict)
+            
+        except CounterNotReadyException as e:
+            logger.warn("Can not found 'OPEN' Counter, direct to open page")
+            return HttpResponseRedirect('/admin/kernal/counter/add/')    
+        return HttpResponseRedirect('/sales/bill/1')        
+
+
 def __consignment_out_handler__(request, is_sales):
     inventoryDict = {}
     if request.method == 'GET':
@@ -784,6 +807,7 @@ def __consignment_out_handler__(request, is_sales):
 #            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))     
     
 def ConsignmentOutBalance(request):
+#    ConsignmentOutSale
     return __consignment_out_handler__(request, False)
 
 def __record_as_disable_stock__(outStockRecord, inStockRecord, start_idx, qty, type, serialNo):

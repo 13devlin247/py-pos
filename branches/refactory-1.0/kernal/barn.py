@@ -40,6 +40,8 @@ class CounterNotReadyException(Exception):
 
 class BarnMouse:
     def _calc_last_index(self):
+        if self.foc_product:
+            return 
         logger.debug("calc last instock record and sell index for product '%s'", self.product.name)
         outStockRecords = OutStockRecord.objects.filter(product = self.product).filter(active = True).order_by("-create_at")
         if outStockRecords.count() == 0:
@@ -607,6 +609,7 @@ class BarnOwl:
         product.retail_price = 0
         product.cost = 0
         product.uom = uom
+        product.algo = Algo.objects.get(name = Algo.AVERAGE_COST)
         product.active = False
         product.save()
         return product    
@@ -642,16 +645,30 @@ class BarnOwl:
             return None
     
     
-    def __build_outstock_record__(self, bill, payment, dict , reason):
-        outStockRecords = []
+    def _build_product_dict(self, dict):
+        product_dict = {}
         # build OutStockRecord to save data
         for barcode in dict:
-            logger.debug("build OutStockRecord by: '%s'", barcode)
-            product = self._query_product(barcode)
-            qty = int(dict[barcode]['quantity'])
-            unit_sell_price = float(dict[barcode]['price'])
-            imei = dict[barcode].get('imei', 'None')
-            serial = self._is_serial_no(imei)
+            pk = dict[barcode]["pk"]
+            if barcode not in product_dict:
+                product_dict[pk] = {}
+            product_dict[pk]['product'] = self._query_product(pk)
+            product_dict[pk]['qty'] = int(dict[barcode]['quantity'])
+            product_dict[pk]['unit_sell_price'] = float(dict[barcode]['price'])
+            product_dict[pk]['serial'] = self._is_serial_no(dict[barcode].get('imei', 'None'))
+        logger.debug("product dict build: '%s'", product_dict)
+        return product_dict  
+
+    def __build_outstock_record__(self, bill, payment, dict , reason):
+        product_dict = self._build_product_dict(dict)
+        outStockRecords = []
+        # build OutStockRecord to save data
+        for product_dict in product_dict.itervalues():
+            logger.debug("build OutStockRecord by: '%s'", product_dict)
+            product = product_dict["product"]
+            qty = int(product_dict["qty"])
+            unit_sell_price = float(product_dict["unit_sell_price"])
+            serial = product_dict["serial"]
             if product.algo.name == Algo.PERCENTAGE:
                 logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)
                 mouse = MickyMouse(product)
@@ -664,6 +681,7 @@ class BarnOwl:
             outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial)
             outStockRecords.append(outStockRecord)
         return outStockRecords
+
     
     
     def __build_instock_records__(self, inStockBatch, inventoryDict, reason):
@@ -1087,24 +1105,54 @@ class Hermes:
     def Profit(self, product):
         return False
 
-    def ConsignmentOutSale(self, product, qty, customer):
-        consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(outStockRecord__type=Hermes.CONSIGNMENT_OUT)&Q(outStockRecord__bill__customer = customer)&Q(outStockRecord__product=product))
-        logger.debug("Filter ConsignmentOutDetail, result:'%s'", len(consignmentInDetails))
+    def ConsignmentOutSale(self, payment, bill_dict, out_stock_batch_dict):
+#        if payment.type != self.CONSIGNMENT_OUT:
+#            logger.debug("not ConsignmentOutSale payment: '%s', return", payment.type)
+#            return
+        bill = payment.bill
+        customer = payment.bill.customer
+        owl = BarnOwl()
+        product_dict = owl._build_product_dict(out_stock_batch_dict)
+        outStockRecords = OutStockRecord.objects.filter(bill = bill)
+        for outStockRecord in outStockRecords:
+            qty = product_dict[str(outStockRecord.product.pk)]['qty']
+            self._ConsignmentOutSale_detail(outStockRecord.product, qty, customer, outStockRecord.serial_no)
+            
+        
+    def _ConsignmentOutSale_detail(self, product, qty, customer, serial = None):
+        if serial:
+            consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(serialNo = serial)&Q(outStockRecord__bill__customer=customer))
+            for consignmentOutDetail in consignmentOutDetails:
+                consignmentOutDetail.balance += qty
+                if consignmentOutDetail.quantity == consignmentOutDetail.balance:
+                    consignmentOutDetail.active = False
+                    consignmentOutDetail.reason = "Complete"
+                    logger.debug("Consignment Out Sales: '%s' close", consignmentOutDetail.pk)
+                consignmentOutDetail.save()                
+            return
+        
+        consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(outStockRecord__type=Hermes.CONSIGNMENT_OUT)&
+                                                                    Q(outStockRecord__bill__customer = customer)&
+                                                                    Q(outStockRecord__product=product))
+        logger.debug("Filter ConsignmentOutDetail, result:'%s'", len(consignmentOutDetails))
         counter = qty
         for consignmentOutDetail in consignmentOutDetails:
             consignmentQty = consignmentOutDetail.quantity - consignmentOutDetail.balance
             if counter <= consignmentQty:
-                break
-                consignmentOutDetail.balance = consignmentOutDetail.quantity
+                consignmentOutDetail.balance += counter
+                if consignmentOutDetail.quantity == consignmentOutDetail.balance:
+                    consignmentOutDetail.active = False
+                    consignmentOutDetail.reason = "Complete"
+                    logger.debug("Consignment Out Sales: '%s' close", consignmentOutDetail.pk)
                 consignmentOutDetail.save()
+                logger.debug("Consignment Out Sales balance done.")
             else:
-                counter = counter - consignmentQty
-                consignmentOutDetail.balance = consignmentOutDetail.quantity
+                counter -= consignmentQty
+                consignmentOutDetail.balance += consignmentQty
+                consignmentOutDetail.active = False
+                consignmentOutDetail.reason = "Complete"                
                 consignmentOutDetail.save()
-                
-        
-            
-
+                logger.debug("Consignment Out Sales: '%s' close, balance not done. still have '%s' need to balance", consignmentOutDetail.pk, counter)
     
     def ConsignmentOutReturn(self, inStockBatch):
         if inStockBatch.mode == self.CONSIGNMENT_OUT_RETURN:

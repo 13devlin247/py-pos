@@ -1,15 +1,20 @@
 {% extends "product.php.html" %}
 
-{% block left_link %}
-    {% for name,link in main_link.items %}
-            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
-    {% endfor%}
-{% endblock %}
 
 {% block content %}   
 <style type="text/css">
-.innertable {
-	display: none;
+.container {
+    margin: 0 1em 0 1em;
+    width: auto;
+}
+#content_area {
+    float: left;
+    width: auto;
+}
+
+#content_area_wrapper{
+    float: left;
+    width: auto;
 }
 </style> 
 	<div id="content_area_wrapper">  
@@ -31,8 +36,8 @@
             </thead>  		
             <tbody>  						
 			{%for date, categorys in dateTable.items %}
-              <tr>  				
-                <td><a href="/sales/bill/{{bill.pk}}" target="_blank">{{date}}</a></td> 
+              <tr>  	
+                <td><a href="/report/daily/?start_date={{date}}&end_date={{date}}" target="_blank">{{date}}</a></td> 
 
                     {% for category in categorys%}
                     <td>{{category}}</td>
