@@ -338,6 +338,8 @@ class BarnMouse:
         for serialNo in set(serials):
             if serialNo == '':
                 continue
+            serialNo = inStockRecord.product.name +"-"+ serialNo
+            logger.debug("combine serial no: '%s'", serialNo)
             try:
                 serial = SerialNo.objects.get(serial_no = serialNo)
                 serial.quantity = int(serial.quantity) + qty
