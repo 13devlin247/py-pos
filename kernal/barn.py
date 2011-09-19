@@ -949,7 +949,7 @@ class BarnOwl:
         bill = result[0]
         payment = result[1]
         outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , reason)
-        bill.profit = self._summary_profit(outStockRecords) + float(bill.deposit_price) - self._summary_extra_cost(bill) 
+        bill.profit = self._summary_profit(outStockRecords) - self._summary_extra_cost(bill) 
         logger.debug("Bill: '%s' profit: '%s'", bill.pk, bill.profit)
         bill.save()
         return [bill, payment, outStockRecords]
