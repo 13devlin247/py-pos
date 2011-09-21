@@ -7,7 +7,7 @@ from pos.kernal.views import *
 from pos.kernal.models import *
 from django.db.models import Q
 from datetime import date
-
+from pos.kernal import filters
 #from pos.kernal.views import ajaxProductDetailView
 
 
