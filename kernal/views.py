@@ -29,7 +29,7 @@ from barn import BarnOwl
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
-from django.template.defaultfilters import register
+
 
 logging.basicConfig(
     level = logging.WARN,
@@ -1285,17 +1285,6 @@ def __find_payment_by_serial_no__(serial):
         else:
             logger.debug("No payment found on Serial: '%s' bill: '%s'", serial.serial_no, bill.pk)
     return ans
-
-@register.filter
-def classname(obj, arg=None):
-    classname = obj.__class__.__name__.lower()
-    if arg:
-        if arg.lower() == classname:
-            return True
-        else:
-            return False
-    else:
-        return classname
 
 def __find_instockBatch_by_serial_no__(serial):
     serialNoMappings = SerialNoMapping.objects.filter(serial_no = serial)
