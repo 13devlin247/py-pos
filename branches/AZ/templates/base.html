@@ -1,0 +1,150 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+ <head>
+  <title> HANDPHONE CMS</title>
+  <meta name="Generator" content="EditPlus">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+
+
+  <!-- Framework CSS -->
+	<link rel="stylesheet" href="/static/css/blueprint/screen.css" type="text/css" media="screen, projection">
+	<link rel="stylesheet" href="/static/css/blueprint/print.css" type="text/css" media="print">
+  <!--[if lt IE 8]><link rel="stylesheet" href="../../blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+	<!-- Import fancy-type plugin for the sample page. -->
+	<link rel="stylesheet" href="/static/css/blueprint/plugins/fancy-type/screen.css" type="text/css" media="screen, projection">
+<link rel="stylesheet" type="text/css" href="/static/css/style.css" />
+<style>
+th {
+width: 20%
+}
+
+select{
+margin:2.5px;
+
+border:1px solid gray;
+}
+
+input[type=text]{
+margin:2.5px;
+
+border:1px solid gray;
+}
+.find_category{
+border:1px solid gray;
+margin:0px;
+}
+</style>
+
+<script src="/static/js/jquery.js"></script>
+
+
+</head>
+
+
+<body>
+<div class='container'>
+	<div class='span-24' id='menubar' style='background-color:black;color:white;'>
+	<a href='role.php'><div class='span-3'><img src='/static/images/role.png' width='24' height='24'>ROLE</div></a><a href='master.php'><a href='stock.php'><div class='span-3'><img src='/static/images/form.png' width='24' height='24'>STOCK</div></a><a href='master.php'><div class='span-3'><img src='/static/images/form.png' width='24' height='24'> MASTER</div></a></a><a href='logout.php'><div class='span-3'><img src='/static/images/logout.png' width='24' height='24'>LOGOUT</div></a>
+</div>
+	<div class='span-24' style='background-color:#8DB255'>
+	<div class='span-5' id='leftmenu'>
+		{% block left_link %}
+		<div class='span-6 last'><a href='brand.php'>BRAND</a></div>
+		<div class='span-6 last'><a href='type.php'>TYPE</a></div>
+		<div class='span-6 last'><a href='category.php'>CATEGORY</a></div>
+		<div class='span-6 last'><a href='/product/create/'>PRODUCT</a></div>
+		<div class='span-6 last'><a href='supplier.php'>SUPPLIER</a></div>
+		<div class='span-6 last'><a href='customer.php'>CUSTOMER</a></div>
+		<div class='span-6 last'><a href='staff.php'>STAFF</a></div>
+		<div class='span-6 last'><a href='position.php'>POSITION</a></div>
+		<div class='span-6 last'><a href='branch.php'>BRANCH</a></div>
+		{% endblock %}
+	</div>
+
+	<div class='span-19 last' id='right_content'>
+	
+	<div class='span-18'>
+	<form action='search_product.php' method='POST'>
+		<div class='span-18'>
+		<div class='span-2' style='padding-top:4.5px;'>Product</div><div class='span-12'><input type='text' name='keyword' style='width:370px;border:1px solid gray;'><input type='submit' value='search'>
+		</div>
+		
+		
+		<div class='span-2 last'><a href='new_product.php'>New Product</a></div></div>
+		
+		
+		<div class='span-2' style='padding-top:4.5px;'>
+		Category</div><div class='span-12'><select name='find_category' class='find_category'>
+		<option value='x'>-- Category--</option><option value='2'>LED Light</option><option value='3'>Handphone</option><option value='4'>Batteries</option><option value='6'>Case</option>		</select>
+		
+		Brand<select name='find_brand'>
+		
+		<option value='x'>-- Brand -- </option><option value='2'>Nokia</option><option value='3'>Sony Ericsson</option><option value='4'>Motorola</option>		</select>
+		Type<select name='find_type'>
+		<option value='x'>-- Type --</option><option value='4'>Vesper</option><option value='3'>Charger</option><option value='6'>Earphone</option><option value='11'>Brooks</option>		
+		</select>
+		
+		</form>
+		
+		
+		</div>
+
+	
+	<div class='span-18'><br></div>
+	<hr>
+	
+	
+{% block content %}	
+		<form action='add_product.php' method='POST'>
+		<div id='headtitle'>New Product</div>
+		<br>
+				<div class='span-18'><div class='span-3'><label for='brand'>Brand</label></div>
+			<select name='brand' style='width:250px'>
+			
+			<option value='x'>-- Please Select Brand --</option>
+			<option value=2>Nokia</option><option value=3>Sony Ericsson</option><option value=4>Motorola</option>			</select></div>
+			<div class='span-18'><div class='span-3'><label for='category'>Category</label></div>
+			<select name='category' style='width:250px'><option value='x'>-- Please Select Category --</option><option value='2'>LED Light</option><option value='3'>Handphone</option><option value='4'>Batteries</option><option value='6'>Case</option></select>			
+			
+			<!-- <div class='span-10 last'><input type='text' name='category' style='width:250px'> 
+			
+			</div>-->
+			
+			</div>
+			<div class='span-18'><div class='span-3'><label for='type'>Type</label></div>
+			
+			<div class='span-10 last'>
+			<select name='type' style='width:250px'>
+			
+			<option value='x'> -- Please Select Type -- </option>
+			<option value='4'>Vesper</option><option value='3'>Charger</option><option value='6'>Earphone</option><option value='11'>Brooks</option>			</select>
+			</div>
+			
+			</div>
+			<div class='span-18'><div class='span-3'><label for='product_name'>Product Name</label></div><div class='span-10 last'><input type='text' name='product_name' style='width:250px'></div></div>
+			<div class='span-18'><div class='span-3'><label for='unit_price'>Unit Price</label></div><div class='span-10 last'><input type='text' name='unit_price' style='width:250px'></div></div>
+			<div class='span-18'><div class='span-3'><label for='uom'>Uom</label></div><div class='span-10 last'><input type='text' name='uom' style='width:250px'></div></div>
+			<div class='span-18'><br></div>
+			<hr>
+			<div class='span-18' id='headtitle'>Commission<br></div>
+			<div class='span-18'><br></div>
+			<div class='span-18'><div class='span-3'><label for='fixed_rate'>Fixed Rate</label></div><div class='span-10 last'><input type='text' name='fixed_rate' style='width:250px'></div></div>
+			<div class='span-18'><div class='span-3'><label for='percentage'>Percentage</label></div><div class='span-10 last'><input type='text' name='percentage' style='width:250px'></div></div>
+			<div class='span-18'><br></div>
+			<div class='span-18'><input type='submit' value='Add'></div>
+		
+		
+		
+		
+		</form>
+        {% endblock %}        
+	</div>
+		</div>
+	</div>
+</div>
+</body>
+
+
+</html>

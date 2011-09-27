@@ -1,0 +1,151 @@
+{% extends "stock_base.html" %}
+
+{% block css %}
+{% endblock %}
+
+{% block hiddenValue %}
+    <input type="hidden" name="mode" value="Consignment_OUT"/>
+{% endblock %}
+
+{% block title %}
+        <div id="page_title" style="margin-bottom:8px;">Consignment OutStock
+        </div>  
+{% endblock %}
+
+{% block mode_form %}
+{% endblock %}
+
+{% block bill_infor %}
+            <label >Issue by: 
+            </label>{{request.user.username}} <br>
+            <label >Sales by: 
+            </label>  		
+			<select name="salesby">
+				<option value="{{request.user.pk}}">{{request.user.username}}</option>
+				{% for user in users %}
+					<option value="{{user.pk}}">{{user.username}}</option>
+				{% endfor %}
+			</select>
+            <br>			
+			{% block Customer %}
+            <label id="customer_label" for="customer">Select Customer
+            </label>  		
+            <input type="text" name="customer" value="Cash" id="customer" size="30"  />		
+            <script type="text/javascript">
+                $("#customer").autocomplete("/customer/ajax/", {
+                    width: 260,
+                    selectFirst: false
+                });
+                $("#customer").result(function(event, data, formatted)
+                {
+                    customerName = $("#customer").val();
+                    $("#supplierDetail").html(customerName);
+                        $.ajax({
+                            url: "/customer/info/"+customerName,
+                            type: "JSON",
+                            success: function(data){  
+                                var customerShow = '<div style="text-align: left">';
+                                customerShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
+                                customerShow += "<div>Term: "+data[0].fields.term+"</div>";
+                                customerShow += "<div>phone: "+data[0].fields.phone+"</div>";
+                                customerShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
+                                customerShow += "</div>";
+                                
+                                $("#supplierDetail").html(customerShow);
+                            },
+                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
+                            complete: function(data){},
+                        });            
+                });              
+            </script>
+            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
+			{% endblock %}
+          
+            		
+          </div>  		
+          <div class="clearfix">&nbsp;
+          </div>  		 	
+          <div id='sale_details'>  		
+            <div class="float_left" style="width:50%;">Sub Total:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="subTotal" id="subTotal" value="0.00" readonly=false size="10" style="border: none; background: transparent;"/>
+            </div>    				
+            <div class="float_left" style='width:50%;'>Discount:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
+            </div>  		 		
+            <div class="float_left" style='width:50%;'>Total:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
+            </div>  	
+			{% block AmountTendered %}
+            <div class="float_left" style='width:50%;'>Amount Tendered:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="amountTendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
+            </div>  	
+			<div id="change_block">
+				<div class="float_left" style='width:50%;'>Change:
+				</div>  		
+				<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="change" value="0.00" id="change" size="10" style="border: none; background: transparent;"/>
+				</div>  	
+			</div>		
+			<div id="creaditCard_block" style="display: none">
+					<div class="float_left" style='width:50%;'>Transaction No:
+					</div>  		
+					<div class="float_left" style="width:50%;font-weight:bold;"><input type="text" name="transactionNo" id="transactionNo" size="10" />
+					</div>  	
+			</div>			
+			{% endblock %}	
+          </div>          	     	
+          <div class="clearfix" style="margin-bottom:1px;">&nbsp;
+          </div>  		    
+          <div id="Payment_Types" >    		
+            <div style="">    			
+              <div id="add_payment_form">			
+                <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				
+                  <span>Confirm
+                  </span>  			
+                </div>  		
+            </div>  		
+			{% block CreaditCard %}
+			<div style="">    			               
+			  <div>			                 
+				<div class='small_button' id='creadit_card' style='float:right;margin-top:5px;'>  				                   
+				  <span>Creadit Card                   
+				  </span>  			                 
+				</div>  		             
+			  </div>  		             
+			  <div style="">    			               
+				<div>			                 
+				  <div class='small_button' id='cash' style='float:right;margin-top:5px;display:none'>  				                   
+					<span>Cash                   
+					</span>  			                 
+				  </div>  		             
+				</div>  		             
+			  </div>    		     	           
+			</div>    	
+            <script type="text/javascript">
+                $("#creadit_card").click(function(){
+                    calcTotalPrice();
+                    $("#amount_tendered").attr("value",$("#total").val());
+                    calcChange();
+                    $("#creadit_card").css("display","none");
+                    $("#cash").css("display","block");
+                    $("#change_block").css("display","none");
+                    $("#creaditCard_block").css("display","block");
+
+                });  
+
+                $("#cash").click(function(){
+                    $("#creadit_card").css("display","block");
+                    $("#cash").css("display","none");
+                    $("#change_block").css("display","block");
+                    $("#creaditCard_block").css("display","none");
+                });  
+            </script>            
+			{% endblock %}
+        </div>  
+        <div class="clearfix" style="margin-bottom:30px;">&nbsp;
+        </div>      
+      </div>  
+{% endblock %}

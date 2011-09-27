@@ -1,0 +1,161 @@
+{% extends "bill.html" %}
+{% block CompanyProfile %}
+{% endblock %}
+
+					{% block PageTitle %}
+						<div id="error_msg">{{error_msg}}</div>
+						<div id="PageTitle">
+							Receiving Record
+						</div>					
+					{% endblock %}
+                    
+                    {% block paging%}
+					<div class="pagination">
+						<span class="step-links">
+							{% if inStockRecordset.has_previous %}
+								<a href="?page={{ inStockRecordset.previous_page_number }}">previous</a>
+							{% endif %}
+
+							<span class="current">
+								Page {{ inStockRecordset.number }} of {{ inStockRecordset.paginator.num_pages }}.
+							</span>
+
+							{% if inStockRecordset.has_next %}
+								<a href="?page={{ inStockRecordset.next_page_number }}">next</a>
+							{% endif %}
+						</span>
+					</div>				
+                    {% endblock %}                    
+			  {% block BillTitle %}
+              <tr>        
+                <td class="Receipt label">            Batch No<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{inStockBatch.pk}}        </b></td>    
+                <td class="Receipt label">            Date<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{inStockBatch.create_at}}</b>        </td>    				
+              </tr>    
+              <tr>        
+                <td class="Receipt label">            Receiver<span>:</span>          </td>        
+                <td class="Receipt">            <b>{{inStockBatch.user.username}}        </b></td>        
+                <!---->        
+                <td class="Receipt label" >            Mode<span>:</span>         </td>        
+                <td class="Receipt" >             <b>{{inStockBatch.mode}}</td>    				
+              </tr>    
+              <tr>        
+                <td class="Receipt label">            Supplier<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{inStockBatch.supplier}}                    </b></td>        
+                <td class="Receipt label">      DO No.<span>:</span>              </td>        
+                <td class="Receipt"><b>{{inStockBatch.do_no}}</b></td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt label">            PO No.<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{inStockBatch.invoice_no}}                    </b></td>        
+                <td class="Receipt label">      DO Date<span>:</span>              </td>        
+                <td class="Receipt"><b>{{inStockBatch.do_date}}</b></td>    
+              </tr>
+              <tr>        
+                <td class="Receipt label">            </td>        
+                <td class="Receipt">            </td>        
+                <td class="Receipt label">      Ref.Bill No<span>:</span>              </td>        
+                <td class="Receipt"><b>{{inStockBatch.refBill_no}}</b></td>    
+              </tr>					              
+			  {% endblock %}                    
+              
+                {% block bill_detail %}
+                    <script type="text/javascript">
+                    var sub_total = 0;
+                    </script>
+                    <form action="/product/inventory/cost/update/">
+                    <input type=hidden name="inStockBatch_pk" value="{{inStockBatch.pk}}"/>
+					<table>   
+						  <tr>        
+							<td colspan="5" class="border-bottom"></td>    
+						  </tr>   
+						  <tr>        
+							<td class="Receipt itemno">            ITEM NO.         </td>        
+							<td class="Receipt">            DESCRIPTION         </td>        
+							<td class="right qty">            QTY         </td>        
+							<td align="right" class="price">            U.PRICE         </td>        
+							<td align="right" class="price">            AMOUNT         </td>    
+						  </tr>    
+						  <tr>        
+							<td colspan="5" class="border-top"></td>    
+						  </tr>    
+						{% for inStockRecord in inStockRecordset.object_list %}
+							{{record}}
+							<tr>
+							<td class="Receipt itemno"> {{forloop.counter}} {{inStockRecord.product.name}}</td>
+							<td class="Receipt">{{inStockRecord.product.description}} {% if  inStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMEI: {{inStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
+							<td class="right qty">{{inStockRecord.quantity}}</td>
+							<td align="right" class="price"><input name="inStockRecord_{{inStockRecord.pk}}" value="{{inStockRecord.cost}}" size=10></input></td>
+							<td align="right" class="price">
+                                <script>
+                                    function roundNumber(number, decimals) { // Arguments: number to round, number of decimal places
+                                        var newnumber = new Number(number+'').toFixed(parseInt(decimals));
+                                        return parseFloat(newnumber); // Output the result to the form field (change for your purposes)
+                                    }                      
+                                    total = roundNumber({{inStockRecord.cost}}*{{inStockRecord.quantity}}, 2)
+                                    document.write(total)
+                                    sub_total += total;
+                                </script>
+                            </td>
+							</tr>
+							<tr>
+                            {% if inStockRecord.serialno_set.select_related %}
+							<td class="Receipt itemno" style="padding: 0 0 0 4em" colspan = "5">
+                                <u> IMEI: </u> </br>
+                                {% for serial in inStockRecord.serialno_set.select_related %}
+                                    {{serial}} </br>
+                                {% endfor %}
+                            </td>
+                            {% endif %}
+							</tr>                            
+						{% endfor %}			  
+					</table>
+					<input type="Submit" value="Update Cost"/>
+					</form>				
+                {% endblock %}        
+
+            {% block bill_summary%}
+            <tfoot>
+              <tr id="bill_summary">        
+				<td class="summary Receipt"  colspan=3></td>        
+                <td  align="right" class="summary" >            Total         </td>        
+                <td align="right" class="summary" >            <script>document.write(sub_total) </script>      </td>    
+              </tr>            
+              <tr>        
+				<td  align="right" class="summary" >            </td>        			  
+				<td  align="right" class="summary" >            </td>        
+				<td  align="right" class="summary" >            </td>        
+                <td  align="right" class="summary" >            </td>        
+                <td align="right" class="summary" >             </td>    
+              </tr>            
+              <tr>        
+				<td  align="right" class="summary" >            </td>        			  
+                <td align="right" class="summary" >             </td>        
+                <td align="right" class="summary" >            </td>    
+                <td  align="right" class="summary border-bottom" >                     </td>        
+                <td align="right" class="summary border-bottom" id="total_amount"></td>    
+              </tr>                          
+
+              <tr>        
+				<td class="signature"> ____________________         </td>
+                <td class="signature"> ____________________         </td>
+                <td align="right" class="summary" >            </td>    
+                <td align="right" class="summary" >                </td>        
+                <td align="right" class="summary" >             </td>    			  
+			  </tr>                          
+			  
+              <tr>        
+				<td class="signature">                 Supplier Signature         </td>        
+                <td class="signature">                 Authorised By         </td>    
+                <td align="right" class="summary" >            </td>    
+                <td align="right" class="summary" >               </td>        
+                <td align="right" class="summary" >                    </td>    
+			  </tr>                          
+				
+              <tr>        
+                <td colspan="10">            
+                  <hr>        </td>    
+              </tr>        
+            </tfoot>
+            {% endblock %}                

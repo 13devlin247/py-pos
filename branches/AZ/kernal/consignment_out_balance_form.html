@@ -1,0 +1,65 @@
+{% extends "inventory_base.html" %}
+
+{% block title %}
+        <div id="page_title" style="margin-bottom:8px;">Consignment OutStock Balance
+        </div>  
+{% endblock %}
+
+{% block hiddenValue %}
+    <input type="hidden" name="mode" value="Consignment"/>
+{% endblock %}
+
+{% block mode_form %}
+{% endblock %}
+
+{% block bill_infor %}
+        <table id="supplierForm">                    
+          <th colspan=2 style="border-bottom: black 1.5px solid;"> Receivings Record
+          </th>                    {{form}}                              
+        </table> 
+        <script type="text/javascript">
+             $("#id_supplier").autocomplete("/customer/ajax/", {
+                width: 260,
+                selectFirst: false
+            });
+            $("#id_supplier").result(function(event, data, formatted)
+            {
+                supplierName = $("#id_supplier").val();
+                $("#supplierDetail").html(supplierName);
+                    $.ajax({
+                        url: "/customer/info/"+supplierName,
+                        type: "JSON",
+                        success: function(data){  
+                            var supplierShow = '<div style="text-align: left">';
+                            supplierShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
+                            supplierShow += "<div>mobile: "+data[0].fields.phone_mobile+"</div>";
+                            supplierShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
+                            supplierShow += "</div>";
+                            
+                            $("#supplierDetail").html(supplierShow);
+                        },
+                        error: function(data){ alert("Product Not found! please check your barcode: " + $("#id_supplier").val()) },
+                        complete: function(data){},
+                    });            
+            });              
+            $("#id_do_date").datepicker({dateFormat: 'yy-mm-dd'});
+        </script>
+        <div class="clearfix">&nbsp;           
+        </div>  		 	           
+        <div id='sale_details'>  		           
+          <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		           
+          </div> 	           
+        </div>          	     	           
+        <div class="clearfix" style="margin-bottom:1px;">&nbsp;           
+        </div>  		               
+        <div id="Payment_Types" >    		             
+          <div style="">    			               
+            <div id="add_payment_form">			                 
+              <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				                   
+                <span>Confirm                   
+                </span>  			                 
+              </div>  		             
+            </div>  		             
+          </div>    		     	           
+        </div>    
+{% endblock %}
