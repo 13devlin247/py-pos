@@ -1067,7 +1067,7 @@ def DepositList(request):
     
     querySet = __search__(Deposit, Q(customer__name__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword)))
     list = __autocomplete_wrapper__(querySet, lambda model: str(model.pk))    
-    return HttpResponse(list, mimetype="text/plain")
+    return HttpResponse(list.encode("utf-8"), mimetype="text/plain")
 
 def ServiceList(request):
     keyword = request.GET.get('q', "")
