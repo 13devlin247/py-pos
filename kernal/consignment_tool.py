@@ -10,6 +10,7 @@ from django.db.models import Q
 from pos.kernal.models import SerialNo
 # import the logging library
 import logging
+from pos.kernal.barn import Hermes
 
 logging.basicConfig(
     level = logging.WARN,
@@ -217,7 +218,7 @@ def __build_consignment_in_by_instockrecords__(inStockRecords, serials):
         consignmentInDetail.serialNo = serialNo
         consignmentInDetail.quantity = inStockRecord.quantity
         consignmentInDetail.balance = 0
-        consignmentInDetail.status = 'Incomplete'
+        consignmentInDetail.status = Hermes.CONSIGNMENT_IN_STATUS_INCOMPLETE
         consignmentInDetail.save()        
         logger.debug("Consignment IN record build! '%s'", consignmentInDetail.pk)
         

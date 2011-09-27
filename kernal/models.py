@@ -8,6 +8,7 @@ from django.contrib.localflavor.us.models import PhoneNumberField
 from django.contrib.auth.models import User
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
+from django.conf.locale import tr
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),  
@@ -46,6 +47,13 @@ class UOM(models.Model):
     def __unicode__(self):
         return self.name    
 
+class Algo(models.Model):
+    PERCENTAGE = "Percentage"
+    NO_SERIAL = "No_Serial"
+    name = models.CharField(max_length=100)
+    def __unicode__(self):
+        return self.name    
+
 class Product(models.Model):
     barcode = models.CharField(max_length=100, blank=True)
     name = models.CharField("code",max_length=100)
@@ -57,9 +65,20 @@ class Product(models.Model):
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     uom = models.ForeignKey(UOM)
     active = models.BooleanField("actived product", True)
-    
+    algo = models.ForeignKey(Algo, null = True, default=Algo.objects.get(pk=1))
     def __unicode__(self):
         return self.name
+
+class StockCost(models.Model):
+    on_hand_value = models.DecimalField(max_digits=100,  decimal_places=2) 
+    product = models.ForeignKey(Product, primary_key=True)    
+    qty = models.DecimalField(max_digits=100,  decimal_places=2) 
+    avg_cost = models.DecimalField(max_digits=100,  decimal_places=2)
+    instock_create_at = models.DateTimeField(null = True)
+    outstock_create_at = models.DateTimeField(null = True)
+
+    def natural_key(self):
+        return (self.avg_cost)    
 
 class Company(models.Model):
     name = models.CharField(max_length=100)
@@ -112,17 +131,47 @@ class CustomerAdmin(admin.ModelAdmin):
     ordering = ['-customer_code']
     list_per_page = 25
     search_fields = ['customer_code', 'name', 'contact_person', 'phone', 'email']
+
+class ServiceJob(models.Model):
+    imei = models.CharField(max_length=100, primary_key = True) 
+    description = models.TextField(blank=True)
+    customer = models.ForeignKey(Customer)
+    cost = models.DecimalField(max_digits=100,  decimal_places=2)
+    price = models.DecimalField(max_digits=100,  decimal_places=2)
+    profit = models.DecimalField(max_digits=100,  decimal_places=2)
+    active = models.BooleanField(True)
+    refBill = models.CharField("ref. Bill no", max_length=100, null = True)
+    reason = models.CharField(max_length=100, null = True)
+    create_at = models.DateTimeField(auto_now_add = True)    
+     
+    def __unicode__(self):
+        return self.imei    
+
+class Deposit(models.Model):
+    description = models.TextField(blank=True)
+    customer = models.ForeignKey(Customer)
+    price = models.DecimalField(max_digits=100,  decimal_places=2)
+    active = models.BooleanField(True)
+    refBill = models.CharField("ref. Bill no", max_length=100, null = True)
+    reason = models.CharField(max_length=100, null = True)
+    create_at = models.DateTimeField(auto_now_add = True)    
+     
+    def __unicode__(self):
+        return self.pk    
     
 class InStockBatch(models.Model):
     supplier = models.ForeignKey(Supplier)
     do_date = models.DateField(auto_now_add = False)
-    invoice_no = models.CharField(max_length=100)
-    do_no = models.CharField(max_length=100)
+    invoice_no = models.CharField(max_length=100, blank = True)
+    do_no = models.CharField(max_length=100, blank = True)
+    refBill_no = models.CharField(max_length=100, null = True, blank = True)    
     user = models.ForeignKey(User)
     mode = models.CharField(max_length=150) 
     status = models.CharField(max_length=150) 
     create_at = models.DateTimeField(auto_now_add = True)
-    
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)    
+
 class InStockRecord(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
     barcode = models.CharField(max_length=100)
@@ -132,7 +181,10 @@ class InStockRecord(models.Model):
     create_at = models.DateTimeField(auto_now_add = True)
     type = models.CharField(max_length=100)
     status = models.CharField(max_length=100)
-    
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    startIDX = models.DecimalField(max_digits=100,  decimal_places=0)
+            
     def natural_key(self):
         return (self.product.name)    
         
@@ -162,6 +214,8 @@ class Bill(models.Model):
     subtotal_price = models.DecimalField(max_digits=100,  decimal_places=2)
     discount = models.DecimalField(max_digits=100,  decimal_places=2)
     total_price = models.DecimalField(max_digits=100,  decimal_places=2)
+    deposit_price = models.DecimalField(max_digits=100,  decimal_places=2, blank = True)
+    deposit = models.ForeignKey(Deposit, null = True) 
     tendered_amount = models.DecimalField(max_digits=100,  decimal_places=2)
     profit = models.DecimalField(max_digits=100,  decimal_places=2)
     change = models.DecimalField(max_digits=100,  decimal_places=2)
@@ -171,14 +225,30 @@ class Bill(models.Model):
     sales_by = models.ForeignKey(User, related_name="sales_by")
     issue_by = models.ForeignKey(User, related_name="issue_by")
     mode = models.CharField(max_length=100)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
     def __unicode__(self):
         # return self.customer.name 
         return str(self.pk).zfill(6)
 
+class ExtraCost(models.Model):
+    bill = models.ForeignKey(Bill, null = True)
+    mode = models.CharField(max_length=100)
+    key = models.CharField(max_length=100) 
+    price = models.DecimalField(max_digits=100,  decimal_places=0)
+    description = models.TextField(blank=True) 
+    create_at = models.DateTimeField(auto_now_add = True)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    refBill = models.CharField(max_length=100, blank = True, null = True)
+    status = models.CharField(max_length=100, null = True)
+     
 class OutStockRecord(models.Model):
     bill = models.ForeignKey(Bill)
     barcode = models.CharField(max_length=100)
-    product = models.ForeignKey(Product) 
+    product = models.ForeignKey(Product)
+    inStockRecord = models.ForeignKey(InStockRecord, null = True) 
     unit_sell_price = models.DecimalField(max_digits=100,  decimal_places=2)
     cost = models.DecimalField(max_digits=100,  decimal_places=2)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
@@ -188,7 +258,9 @@ class OutStockRecord(models.Model):
     profit = models.DecimalField(max_digits=100,  decimal_places=2, blank=True)
     type = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add = True)
-
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
     def __unicode__(self):
         return "barcode: "+self.barcode + " index: " + str(self.sell_index) + " profit: " + str(self.profit)
 
@@ -199,7 +271,9 @@ class Payment(models.Model):
     status = models.CharField(max_length=100, choices=PAYMENT_STATUS)
     transaction_no = models.CharField(max_length=100, blank = True)
     create_at = models.DateTimeField(auto_now_add = True)
-
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
     def __unicode__(self):
         return str(self.bill) + " " + self.type + " " + self.status 
 
@@ -218,16 +292,23 @@ class VoidBill(models.Model):
     user = models.ForeignKey(User)
     create_at = models.DateTimeField(auto_now_add = True)
     
-    
 class ConsignmentInDetail(models.Model):
     inStockBatch = models.ForeignKey(InStockBatch)
     create_at = models.DateTimeField(auto_now_add = True)
     inStockRecord = models.ForeignKey(InStockRecord)
-    serialNo = models.ForeignKey(SerialNo, null = True)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
     status = models.CharField(max_length=100)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
 
+class ConsignmentInDetailBalanceHistory(models.Model):
+    consignmentInDetail = models.ForeignKey(ConsignmentInDetail)
+    outStockRecord = models.ForeignKey(OutStockRecord)
+    create_at = models.DateTimeField(auto_now_add = True)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
 class ConsignmentOutDetail(models.Model):
     payment = models.ForeignKey(Payment)
     create_at = models.DateTimeField(auto_now_add = True)
@@ -235,7 +316,9 @@ class ConsignmentOutDetail(models.Model):
     serialNo = models.ForeignKey(SerialNo, null = True)
     quantity = models.DecimalField(max_digits=100,  decimal_places=0)
     balance = models.DecimalField(max_digits=100,  decimal_places=0)
-
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null = True)
+    
 class ProductForm(ModelForm):
     class Meta:
         model = Product
@@ -279,11 +362,27 @@ class InStockBatchForm(forms.Form):
     do_date = forms.DateField(widget=AdminDateWidget)
     do_no = forms.CharField(max_length=150)
     inv_no = forms.CharField(max_length=150)
+    ref_Bill_no = forms.CharField(max_length=150)
     
 class VoidBillForm(ModelForm):        
     class Meta:
         model = VoidBill
         exclude = ('user','bill',)
+
+class ServiceJobForm(ModelForm):   
+    class Meta:
+        model = ServiceJob
+        fields = ('imei', 'cost', 'price', 'refBill', 'description')
+
+class RepairForm(ModelForm):   
+    class Meta:
+        model = ExtraCost
+        fields = ('key', 'price', 'refBill', 'description')
+        
+class DepositForm(ModelForm):   
+    class Meta:
+        model = Deposit
+        fields = ('refBill', 'price', 'description')        
 
 class ConsignmentInBalanceForm(forms.Form):        
     supplier = forms.CharField(max_length=150)
