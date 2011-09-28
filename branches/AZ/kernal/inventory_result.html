@@ -10,6 +10,12 @@
 					{% endblock %}
                     
                     {% block paging%}
+<style type="text/css">
+.total_qty{
+    text-align: center;
+}
+
+</style>                    
 					<div class="pagination">
 						<span class="step-links">
 							{% if inStockRecordset.has_previous %}
@@ -119,8 +125,9 @@
             {% block bill_summary%}
             <tfoot>
               <tr id="bill_summary">        
-				<td class="summary Receipt"  colspan=3></td>        
-                <td  align="right" class="summary" >            Total         </td>        
+                <td class="summary Receipt" colspan=1></td>        
+				<td class="summary Receipt" colspan=1><div style="float: right; margin: 0 8em 0 0" >{{total_qty}}</div></td>        
+                <td  align="right" class="summary"  colspan=2>            Total         </td>        
                 <td align="right" class="summary" >            <script>document.write(sub_total) </script>      </td>    
               </tr>            
               <tr>        
