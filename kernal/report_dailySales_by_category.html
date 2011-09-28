@@ -6,6 +6,11 @@
     {% endfor%}
 {% endblock %}
 
+{% block extrastyle %}
+    <link rel="stylesheet" href="/static/css/screen.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/static/css/print.css" type="text/css" media="print"><!--[if lt IE 8]><link rel="stylesheet" href="../../blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+{% endblock %}
+
 {% block content %}   
 <style type="text/css">
 .innertable {
@@ -32,8 +37,8 @@
             <tbody>  						
 			{%for date, categorys in dateTable.items %}
               <tr>  				
-                <td><a href="/sales/bill/{{bill.pk}}" target="_blank">{{date}}</a></td> 
-
+                <!-- <td><a href="/sales/bill/{{bill.pk}}" target="_blank">{{date}}</a></td>  -->
+                <td>{{date}}</td> 
                     {% for category in categorys%}
                     <td>{{category}}</td>
                     {% endfor %}
