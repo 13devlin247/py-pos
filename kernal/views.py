@@ -958,11 +958,14 @@ def QueryInventory(request, inStockBatchID, error_msg = None):
         inStockRecordSet = paginator.page(1)
     except EmptyPage:
         # If page is out of range (e.g. 9999), deliver last page of results.
-        inStockRecordSet = paginator.page(paginator.num_pages)    
+        inStockRecordSet = paginator.page(paginator.num_pages)
+    total_qty = 0    
+    for inStockRecord in inStockRecordSet.object_list:
+        total_qty += inStockRecord.quantity
     company = Company.objects.all()[0]    
     if not error_msg:
         error_msg = ""
-    return render_to_response('inventory_result.html',{'inStockBatch': inStockBatch ,  'inStockRecordset': inStockRecordSet, 'error_msg': error_msg})
+    return render_to_response('inventory_result.html',{'inStockBatch': inStockBatch , 'total_qty': total_qty, 'inStockRecordset': inStockRecordSet, 'error_msg': error_msg})
 
 def __count_product_stock__(starttime, endtime, stockRecords, product):
     summary = [0, 0, 0, 0] #  statistic less than starttime, statistic fall in time, total statistic, cost
