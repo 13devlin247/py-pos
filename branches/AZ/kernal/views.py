@@ -184,7 +184,7 @@ def ReportDailyCategory(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='sale'))
+    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
     categorysTitle = __categorys_arrays__()
     dateTable = {}
     for bill in bills:
