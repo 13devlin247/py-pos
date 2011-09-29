@@ -1033,15 +1033,15 @@ def CountInventory(request):
     products = Product.objects.filter(Q(active=True)).order_by("name")
     list = []
     for product in products:
-        owl = BarnOwl()
+        stockCost = StockCost.objects.get(product=product)
         result = []
         result.append(product.name)
         result.append(product.description)
         result.append(0) #old_Stock
         result.append(0) #current_inStock
         result.append(0) # current_outStock
-        result.append(owl.QTY(product))
-        result.append(owl.QTY(product) * owl.Cost(product))        
+        result.append(stockCost.qty)
+        result.append(stockCost.on_hand_value)        
         list.append(result) 
 #        list.append(__count_inventory_stock__(starttime, endtime, product)) 
     return render_to_response('stock_take.html',{'stockList': list, 'dateRange': str(startDate)+" to "+str(endDate)}, )
@@ -1105,7 +1105,7 @@ def SupplierList(request):
 def ProductList(request):    
     keyword = request.GET.get('q', "")
     logger.debug("search product list by keyword: %s", keyword)
-    productQuerySet = __search__(Product, Q(barcode__contains=keyword)|Q(name__contains=keyword))
+    productQuerySet = __search__(Product, Q(active=True)&(Q(barcode__contains=keyword)|Q(name__contains=keyword)))
     productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
 
     serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True))
@@ -1189,7 +1189,7 @@ def ProductInfo(request, query):
             return HttpResponse(newJson, mimetype="application/json")    
     except SerialNo.DoesNotExist:
         logger.info("SerialNo '%s' Not Found!! try search product barcode and name " % query)
-    productSet = __search__(Product, (Q(barcode__exact=query)|Q(name__exact=query)))
+    productSet = __search__(Product, (Q(active = True)&(Q(barcode__exact=query)|Q(name__exact=query))))
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
     

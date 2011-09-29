@@ -72,7 +72,7 @@ class Product(models.Model):
 class StockCost(models.Model):
     on_hand_value = models.DecimalField(max_digits=100,  decimal_places=2) 
     product = models.ForeignKey(Product, primary_key=True)    
-    qty = models.DecimalField(max_digits=100,  decimal_places=2) 
+    qty = models.DecimalField(max_digits=100,  decimal_places=4) 
     avg_cost = models.DecimalField(max_digits=100,  decimal_places=2)
     instock_create_at = models.DateTimeField(null = True)
     outstock_create_at = models.DateTimeField(null = True)
