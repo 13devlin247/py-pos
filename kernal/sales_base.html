@@ -15,13 +15,15 @@
           <div id="mode_form">
             <span>Register Mode
             </span>  
-            <select name="mode" onchange="$('#mode_form').submit();">  
+            <select name="mode" id="mode" onchange="$('#mode_form').submit();">  
               <option value="cash" selected="selected">Sale
               </option>  
               <option value="trade-in">Trade-in
               </option>  			  
               <option value="warranty">Warranty
               </option>  
+              <option value="pawning">Pawning
+              </option> 
             </select>
           </div>  
 {% endblock %}

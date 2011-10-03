@@ -1127,6 +1127,22 @@ def SupplierList(request):
 def ProductList(request):    
     keyword = request.GET.get('q', "")
     logger.debug("search product list by keyword: %s", keyword)
+    mode = request.GET.get('mode','purchase')
+    if mode == 'pawning':        
+        serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True))
+        serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
+        list = serialNoList
+        return HttpResponse(list, mimetype="text/plain")
+    else:
+        productQuerySet = __search__(Product, Q(barcode__contains=keyword)|Q(name__contains=keyword))
+        productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
+        
+        serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True)).exclude(inStockRecord__inStockBatch__mode__exact='pawning')
+        serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
+        list = productList+serialNoList
+        return HttpResponse(list, mimetype="text/plain")    
+        
+    
     productQuerySet = __search__(Product, Q(barcode__contains=keyword)|Q(name__contains=keyword))
     productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
 
