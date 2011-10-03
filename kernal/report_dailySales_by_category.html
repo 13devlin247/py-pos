@@ -8,6 +8,10 @@
 
 {% block content %}   
 <style type="text/css">
+.innertable {
+	display: none;
+}
+
 .container {
     margin: 0 1em 0 1em;
     width: auto;
@@ -20,6 +24,9 @@
 #content_area_wrapper{
     float: left;
     width: auto;
+}
+td{
+    text-align:center;
 }
 </style> 
 	<div id="content_area_wrapper">  
@@ -40,7 +47,7 @@
               </tr>  		
             </thead>  		
             <tbody>  						
-			{%for date, categorys in dateTable.items %}
+			{%for date, categorys in dateTable %}
               <tr>  	
                 <td><a href="/report/daily/?start_date={{date}}&end_date={{date}}" target="_blank">{{date}}</a></td> 
 
