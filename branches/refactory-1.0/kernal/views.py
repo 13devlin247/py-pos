@@ -160,7 +160,7 @@ def ReportDaily(request):
 
 def __categorys_arrays__():
     category_arr = []
-    categorys = Category.objects.all()
+    categorys = Category.objects.all().exclude(category_name = 'FOC')
     for category in categorys:
         category_arr.append(category.category_name)
     return category_arr
@@ -171,7 +171,11 @@ def __statistic_bill_detail_by_category__(bill, categorysTitle):
         categorySummary.append(0)
     outStockRecords = OutStockRecord.objects.filter(bill=bill)
     for outStockRecord in outStockRecords:
-        index = categorysTitle.index(outStockRecord.product.category.category_name)
+        index = -1
+        try:
+            index = categorysTitle.index(outStockRecord.product.category.category_name)
+        except ValueError:
+            pass
         if  index == -1:
             logger.error("Category '%s' not found in databases !! ", outStockRecord.product.category.category_name)
         categorySummary[index] = categorySummary[index] + outStockRecord.amount
@@ -185,7 +189,7 @@ def ReportDailyCategory(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
+    bills = Bill.objects.filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
     categorysTitle = __categorys_arrays__()
     dateTable = {}
     for bill in bills:
@@ -199,7 +203,7 @@ def ReportDailyCategory(request):
         total_summary = dateTable[bill_date]
         for i in range(len(categorysTitle)):
             total_summary[i] = total_summary[i] + statistic_result[i]
-    return render_to_response('report_dailySales_by_category.html',{'dateTable': dateTable, 'categorysTitle':categorysTitle ,  'dateRange': str(startDate)+" to "+str(endDate)}, )
+    return render_to_response('report_dailySales_by_category.html',{'dateTable': sorted(dateTable.iteritems(), reverse=True), 'categorysTitle':categorysTitle ,  'dateRange': str(startDate)+" to "+str(endDate)}, )
     
 def printData(request):
     txt = ""
