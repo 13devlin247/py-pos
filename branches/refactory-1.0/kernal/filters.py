@@ -2,7 +2,10 @@ from django.template.defaultfilters import register
 
 @register.filter
 def IMEIOnly(obj):
-    return obj.split("-")[1]
+    if '-' in obj:
+        return obj.split("-")[1]
+    else:
+        return obj
 
 @register.filter
 def classname(obj, arg=None):
