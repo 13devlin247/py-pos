@@ -550,7 +550,7 @@ class BarnOwl:
     def __init__(self):
         # instock
         self.purchase = "purchase"
-        
+        self.pawning= "pawning"
         # outstock
         self.cash = "Cash Sales"
         self.invoice =  "Invoice"
@@ -910,7 +910,10 @@ class BarnOwl:
         inStockBatch.invoice_no = dict.get('inv_no', "-")
         inStockBatch.do_no = dict.get('do_no', "-")
         inStockBatch.refBill_no = dict.get('refBill_no', "-")
-        inStockBatch.status = 'Complete'
+        if mode == self.pawning:
+            inStockBatch.status = 'Incomplete'
+        else:
+            inStockBatch.status = 'Complete'
         inStockBatch.active = True
         inStockBatch.save();
         logger.debug("InStockBatch: '%s' build", inStockBatch.pk)
