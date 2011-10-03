@@ -22,7 +22,7 @@
           <div id="mode_form">
             <span>Register Mode
             </span>  
-            <select name="mode" onchange="$('#mode_form').submit();">  
+            <select name="mode" id="mode">  
               <option value="sale" selected="selected">Sale
               </option>  
               <option value="trade-in">Trade-in
@@ -168,7 +168,10 @@
 
 	$("#item").autocomplete ("/product/ajax/", {
 		width: 260,
-        selectFirst: false
+        selectFirst: false,
+        extraParams: {
+                    mode: function(){ return $("#mode").attr('value'); }
+                }
     });      
 
 	function _checkInputData(){
