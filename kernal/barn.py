@@ -439,7 +439,7 @@ class BarnMouse:
                 self._recalc_cost()
             else:
                 logger.debug("OutStockRecord '%s' has been delete, recalc sell index", pk)
-                self._recalc_sell_index()
+                self._recalc_sell_index(model)
         except model.DoesNotExist:
             logger.error("Delete '%s', pk:'%', reason:'%s' Fail, Does Not Exist",Models, pk, reason)
 
