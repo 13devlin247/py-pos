@@ -25,10 +25,10 @@
 			{% if object_list %}
 				{% for result in object_list %}
                 <tr>
-                <td><a href="/sales/{{display}}/{{result.pk}}">{{result.pk}}</a></td>
+                <td><a href="/inventory/result/{{result.pk}}">{{result.pk}}</a></td>
                 <td>{{result.create_at}}</td>
                 <td>{{result.type}}</td>
-                <td><a href='/sales/invoice/completed/{{result.pk}}'>{{result.status}}</a></td>
+                <td>{{result.status}}</td>
                 </tr>					
 				{% endfor %}
 			{% endif %}
