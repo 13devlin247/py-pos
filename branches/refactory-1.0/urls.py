@@ -140,7 +140,12 @@ gadai_status_view = {
     'extra_context': {'autocomplete_url': '/gadai/ajax/','json_url': '/gadai/info/' , 'display':'invoice' }
 }
 
-
+void_bill_report_view = {
+    'queryset': Bill.objects.filter(active = False).order_by('-create_at'),
+    'allow_empty': True,
+    'template_name': 'search_void_bill.html',
+    'extra_context':{'autocomplete_url':'/void_bill/ajax/','json_url':'/void_bill/info/','display':'bill' }
+}
 
 sales_do_list_view = {
     'queryset': Payment.objects.filter(type='Invoice').order_by('-create_at'),                      
@@ -198,7 +203,7 @@ urlpatterns = patterns('',
     url(r'^payment/info/(?P<pk>[\x20-\x7E]+)*', login_required(PaymentInfoByPK)),    # payment info json    
     url(r'^imei/info/(?P<imei>[\x20-\x7E]+)*', login_required(ImeiInfo)),    # imei info json
     url(r'^gadai/info/(?P<query>[\x20-\x7E]+)*', login_required(GadaiInfo)),
-
+    url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)*', login_required(VoidBillInfo)),
 
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
@@ -209,7 +214,7 @@ urlpatterns = patterns('',
     url(r'^service/ajax/$', login_required(ServiceList)),
     url(r'^repair/ajax/$', login_required(RepairList)),
 	url(r'^gadai/ajax/$', login_required(GadaiList)),
-	
+    url(r'^void_bill/ajax/$',login_required(VoidBillList)),
 	
 
             
@@ -295,7 +300,8 @@ urlpatterns = patterns('',
     url(r'^search/deposit/$', login_required(list_detail.object_list), deposit_list_view),
     url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
     url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
-    url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),   
+    url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),
+    url(r'^search/void_bill/$',login_required(list_detail.object_list),void_bill_report_view),	
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
