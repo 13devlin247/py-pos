@@ -451,4 +451,4 @@ class ProductAdmin(admin.ModelAdmin):
     list_per_page = 25
     search_fields = ['name', 'description', 'category__category_name', 'brand__brand_name']
     
-    
+

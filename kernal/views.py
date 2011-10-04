@@ -1280,6 +1280,18 @@ def GadaiInfo(request,query):
         gadai = gadai.order_by("-create_at")
     json =__json_wrapper__(gadai)
     return HttpResponse(json, mimetype="application/json")
+    
+def VoidBillList(request):
+    keyword = request.GET.get('q',"")
+    voidBillQuerySet = __search__(Bill,(Q(reason__contains = keyword)))
+    list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.reason))
+    return HttpResponse(list,mimetype="text/plain")
+
+def VoidBillInfo(request,query):
+    logger.debug("voidbill : %s",query)
+    void_bill = __search__(Bill, (Q(active = False)&Q(reason__contains = query)))
+    json = __json_wrapper__(void_bill.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
 
 def DepositInfo(request, query):
     logger.info("get deposit info by keyword: %s " , query)
