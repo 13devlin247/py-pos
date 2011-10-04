@@ -26,6 +26,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template import RequestContext
 from barn import BarnOwl 
 # import the logging library
+
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
@@ -1157,6 +1158,8 @@ def ProductList(request):
     serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
     list = productList+serialNoList
     return HttpResponse(list, mimetype="text/plain")
+	
+	
 
 def PaymentList(request):    
     keyword = request.GET.get('q', "")
@@ -1256,7 +1259,27 @@ def PaymentInfo(request, type, query):
     logger.info("get '%s' payment info by keyword: %s " , type, query)
     payments = __search__(Payment, (Q(bill__customer__name__exact=query) & Q(type__exact=type)))
     json = __json_wrapper__(payments.order_by("-create_at"))
-    return HttpResponse(json, mimetype="application/json")                
+    return HttpResponse(json, mimetype="application/json")
+
+def GadaiList(request):
+    logger.info("gaidai query %s:")
+    keyword = request.GET.get('q',"")
+    gadaiQuerySet = __search__(InStockBatch,Q(supplier__name__contains = keyword)|Q(refBill_no__contains = keyword))
+    list = __autocomplete_wrapper__(gadaiQuerySet, lambda model: str(model.pk))
+    gadaiStatusQuerySet = __search__(SerialNo, Q(serial_no__contains = keyword)&Q(inStockRecord__inStockBatch__mode__exact='pawning'))
+    list +=__autocomplete_wrapper__(gadaiStatusQuerySet,lambda model:str(model.pk))
+    return HttpResponse(list,mimetype="text/plain")
+	
+def GadaiInfo(request,query):	
+    logger.info("gaidai query %s:",query)
+    gadai = __search__(InStockBatch,(Q(supplier__name__contains = query)))
+    if gadai.count() == 0:
+        serial = SerialNo.objects.get(serial_no = query)
+        gadai = [serial.inStockRecord.inStockBatch]
+    else:
+        gadai = gadai.order_by("-create_at")
+    json =__json_wrapper__(gadai)
+    return HttpResponse(json, mimetype="application/json")
 
 def DepositInfo(request, query):
     logger.info("get deposit info by keyword: %s " , query)
@@ -1488,6 +1511,8 @@ def __check_available_inStock_qty__(inStockRecord):
     logger.debug("inStockRecord '%s' recornized, available '%s', unAvailable: '%s' ", inStockRecord.pk, availableQTY, unAvailableQTY)        
     return [availableQTY, unAvailableQTY]
 
+
+	
 #def __count_sales_index__(product, sales_index, quantity):
 #    logger.debug("Count '%s' sales index, last idx: '%s', QTY: '%s' ", product.pk, sales_index, quantity)
 #    inStockRecordSet = InStockRecord.objects.filter(product=product).order_by('create_at')

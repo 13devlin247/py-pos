@@ -9,7 +9,8 @@ from django.db.models import Q
 from datetime import date
 from pos.kernal import filters
 #from pos.kernal.views import ajaxProductDetailView
-
+from pos.kernal.models import InStockBatch
+from pos.kernal.views import GadaiList
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -132,6 +133,15 @@ invoice_list_view = {
 }
 
 
+gadai_status_view = {
+    'queryset': InStockBatch.objects.filter(mode = 'pawning').filter(status='Incomplete').order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_gadai.html', 
+    'extra_context': {'autocomplete_url': '/gadai/ajax/','json_url': '/gadai/info/' , 'display':'invoice' }
+}
+
+
+
 sales_do_list_view = {
     'queryset': Payment.objects.filter(type='Invoice').order_by('-create_at'),                      
     'allow_empty': True,                      
@@ -187,6 +197,8 @@ urlpatterns = patterns('',
     url(r'^payment/info/(?P<type>[\x20-\x7E]+)/(?P<query>[\x20-\x7E]+)', login_required(PaymentInfo)),    # payment info json
     url(r'^payment/info/(?P<pk>[\x20-\x7E]+)*', login_required(PaymentInfoByPK)),    # payment info json    
     url(r'^imei/info/(?P<imei>[\x20-\x7E]+)*', login_required(ImeiInfo)),    # imei info json
+    url(r'^gadai/info/(?P<query>[\x20-\x7E]+)*', login_required(GadaiInfo)),
+
 
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
@@ -196,6 +208,10 @@ urlpatterns = patterns('',
     url(r'^deposit/ajax/$', login_required(DepositList)),
     url(r'^service/ajax/$', login_required(ServiceList)),
     url(r'^repair/ajax/$', login_required(RepairList)),
+	url(r'^gadai/ajax/$', login_required(GadaiList)),
+	
+	
+
             
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
     url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
@@ -208,7 +224,7 @@ urlpatterns = patterns('',
     url(r'^out_stock_record/create/$', login_required(create_update.create_object), out_stock_record_crud_view), 
     url(r'^out_stock_record/search/$', login_required(list_detail.object_list),  out_stock_record_list_view), 
     url(r'^out_stock_record/save/$', login_required(OutStockRecordSave)), 
-    url(r'^sales/order/$', login_required(direct_to_template),  {'template': 'pos.html'}),
+    url(r'^sales/order/$', direct_to_template,  {'template': 'pos.html'}),
     url(r'^sales/$', login_required(direct_to_template),  {'template': 'sales.html'}),
     url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
     url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
@@ -279,6 +295,7 @@ urlpatterns = patterns('',
     url(r'^search/deposit/$', login_required(list_detail.object_list), deposit_list_view),
     url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
     url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
+    url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),   
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
