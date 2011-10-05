@@ -14,9 +14,9 @@
                 </th>  
                 <th style="width:auto">Date
                 </th>  
-                <th style="width:15%;">Type
+                <th style="width:15%;">Initial Amount
                 </th>  
-                <th style="width:15%;">Status
+                <th style="width:15%;">Closing Amount
                 </th>  
               </tr>  
             </thead>  
@@ -27,8 +27,8 @@
                 <tr>
                 <td><a href="/inventory/result/{{result.pk}}">{{result.pk}}</a></td>
                 <td>{{result.create_at}}</td>
-                <td>{{result.type}}</td>
-                <td>{{result.status}}</td>
+                <td>{{result.initail_amount}}</td>
+                <td>{{result.close_amount}}</td>
                 </tr>					
 				{% endfor %}
 			{% endif %}
