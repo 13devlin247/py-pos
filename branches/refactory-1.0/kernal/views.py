@@ -1292,6 +1292,21 @@ def VoidBillInfo(request,query):
     void_bill = __search__(Bill, (Q(active = False)&Q(reason__contains = query)))
     json = __json_wrapper__(void_bill.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")
+	
+def CloseCounterList(request):
+    keyword = request.GET.get('q',"")
+    logger.debug("keyword is :%s",keyword)
+    #closeCounterQuerySet = __search__(Counter,Q(user__username__contains = keyword))
+    #logger.debug("closeCounterQuerySet :%s ",closeCounterQuerySet.count())
+    #list = __autocomplete_wrapper__(closeCounterQuerySet,lambda model:str(model.pk))
+    
+    return HttpResponse("",mimetype="text/plain")
+	
+def CloseCounterInfo(request,query):
+    close_counter = __search__(Counter,Q(user__username__contains = query ))
+    json = __json_wrapper__(close_counter.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
+    
 
 def DepositInfo(request, query):
     logger.info("get deposit info by keyword: %s " , query)
