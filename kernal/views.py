@@ -1159,8 +1159,19 @@ def ProductList(request):
     list = productList+serialNoList
     return HttpResponse(list, mimetype="text/plain")
 	
-	
+def ProductNameSearch(request):
+    keyword = request.GET.get('q',"")
+    logger.debug("search product name by keyword:%s",keyword)
+    product = __search__(Product,Q(name__contains = keyword))
+    list = __autocomplete_wrapper__(product,lambda model: model.name)
+    return HttpResponse(list,mimetype="text/plain")
 
+def ProductNameInfo(request,query):
+    logger.debug(" search product name by keyword: %s",query)    
+    productSet = __search__(Product, Q(name__contains= query))
+    json = __json_wrapper__(productSet)
+    return HttpResponse(json, mimetype="application/json")
+   
 def PaymentList(request):    
     keyword = request.GET.get('q', "")
     logger.debug("sarch payment list by keyword: %s", keyword)
