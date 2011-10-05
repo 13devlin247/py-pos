@@ -31,8 +31,9 @@ product_list_view = {
     'allow_empty': True,                      
     'template_name': 'product_list.html', 
     'paginate_by': 25,
-    'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link},    
+    'extra_context': {'autocomplete_url':'/productname/ajax/','json_url': '/productname/info/', 'display':'bill','form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link},    
 }
+
 
 counter_list_view = {
     'queryset': Counter.objects.filter(active=True),                      
@@ -213,6 +214,7 @@ urlpatterns = patterns('',
     url(r'^gadai/info/(?P<query>[\x20-\x7E]+)*', login_required(GadaiInfo)),
     url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)*', login_required(VoidBillInfo)),
     url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)*', login_required(CloseCounterInfo)),	
+    url(r'^productname/info/(?P<query>[\x20-\x7E]+)*', login_required(ProductNameInfo)),
 
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
@@ -225,6 +227,7 @@ urlpatterns = patterns('',
 	url(r'^gadai/ajax/$', login_required(GadaiList)),
     url(r'^void_bill/ajax/$',login_required(VoidBillList)),
     url(r'^close_counter/ajax/$',login_required(CloseCounterList)),	
+    url(r'^productname/ajax/$',login_required(ProductNameSearch)),
 
             
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
