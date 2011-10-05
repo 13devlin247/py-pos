@@ -10,7 +10,7 @@ from datetime import date
 from pos.kernal import filters
 #from pos.kernal.views import ajaxProductDetailView
 from pos.kernal.models import InStockBatch
-from pos.kernal.views import GadaiList
+from pos.kernal.views import GadaiList,CloseCounterList
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -147,6 +147,13 @@ void_bill_report_view = {
     'extra_context':{'autocomplete_url':'/void_bill/ajax/','json_url':'/void_bill/info/','display':'bill' }
 }
 
+close_counter_view = {
+    'queryset': Counter.objects.all(),
+    'allow_empty': True,
+    'template_name': 'search_close_counter.html',
+    'extra_context':{'autocomplete_url':'/close_counter/ajax/','json_url':'/close_counter/info/','display':'close_counter'}
+}
+
 sales_do_list_view = {
     'queryset': Payment.objects.filter(type='Invoice').order_by('-create_at'),                      
     'allow_empty': True,                      
@@ -158,6 +165,7 @@ out_stock_record_crud_view  = {
     'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
+
 
 
 
@@ -204,6 +212,7 @@ urlpatterns = patterns('',
     url(r'^imei/info/(?P<imei>[\x20-\x7E]+)*', login_required(ImeiInfo)),    # imei info json
     url(r'^gadai/info/(?P<query>[\x20-\x7E]+)*', login_required(GadaiInfo)),
     url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)*', login_required(VoidBillInfo)),
+    url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)*', login_required(CloseCounterInfo)),	
 
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
@@ -215,7 +224,7 @@ urlpatterns = patterns('',
     url(r'^repair/ajax/$', login_required(RepairList)),
 	url(r'^gadai/ajax/$', login_required(GadaiList)),
     url(r'^void_bill/ajax/$',login_required(VoidBillList)),
-	
+    url(r'^close_counter/ajax/$',login_required(CloseCounterList)),	
 
             
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
@@ -301,7 +310,8 @@ urlpatterns = patterns('',
     url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
     url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
     url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),
-    url(r'^search/void_bill/$',login_required(list_detail.object_list),void_bill_report_view),	
+    url(r'^search/void_bill/$',login_required(list_detail.object_list),void_bill_report_view),
+    url(r'^search/close_counter/$',login_required(list_detail.object_list),close_counter_view),
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
