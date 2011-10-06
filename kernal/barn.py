@@ -552,7 +552,7 @@ class ServiceMouse(MickyMouse):
         outStockRecord.bill = bill
         outStockRecord.product = self.product
         outStockRecord.inStockRecord = None
-        outStockRecord.serial_no = None
+        outStockRecord.serial_no = serials
         outStockRecord.unit_sell_price = price
         outStockRecord.quantity = qty
         outStockRecord.amount = price * qty 
@@ -827,6 +827,10 @@ class BarnOwl:
         payment_dict['service_type'] = 'Service'
         payment_dict['service_status'] = 'Complete'
 
+        payment_dict['pawning_term'] = 'Service'
+        payment_dict['pawning_type'] = 'Service'
+        payment_dict['pawning_status'] = 'Complete'
+
         payment = Payment()
         payment.active = True
         payment.bill = bill
@@ -994,6 +998,12 @@ class BarnOwl:
         bill = result[0]
         payment = result[1]
         outStockRecords = self.__build_outstock_record__(bill, payment, out_stock_batch_dict , reason)
+        if bill.mode == 'pawning':
+            for outStockRecord in outStockRecords:
+                inStockBatch = outStockRecord.serial_no.inStockRecord.inStockBatch
+                inStockBatch.status = "Complete"
+                inStockBatch.save()
+        
         bill.profit = self._summary_profit(outStockRecords) - self._summary_extra_cost(bill) 
         logger.debug("Bill: '%s' profit: '%s'", bill.pk, bill.profit)
         bill.save()
