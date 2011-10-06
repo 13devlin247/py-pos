@@ -546,6 +546,26 @@ class MickyMouse(BarnMouse):
         except model.DoesNotExist:
             logger.error("Delete '%s', pk:'%', reason:'%s' Fail, Does Not Exist",Models, pk, reason)
 
+class ServiceMouse(MickyMouse):
+    def OutStock(self, bill, qty, price, reason, serials, cost):
+        outStockRecord = OutStockRecord()
+        outStockRecord.bill = bill
+        outStockRecord.product = self.product
+        outStockRecord.inStockRecord = None
+        outStockRecord.serial_no = None
+        outStockRecord.unit_sell_price = price
+        outStockRecord.quantity = qty
+        outStockRecord.amount = price * qty 
+        outStockRecord.sell_index = 0;
+        outStockRecord.cost = cost * qty;
+        outStockRecord.profit = float(outStockRecord.amount) - float(outStockRecord.cost);
+        outStockRecord.type = reason
+        outStockRecord.active = True
+        outStockRecord.save()
+        logger.info("Product: '%s' OutStockRecord build: '%s' , bill pk: '%s', qty: '%s', price: '%s', reason: '%s', serials: '%s', amout:'%s', cost:'%s', profit: '%s' ", self.product.name, outStockRecord.pk, bill.pk, qty, price, reason, serials, float(outStockRecord.amount), float(outStockRecord.cost), outStockRecord.profit)
+        return outStockRecord
+
+
 class BarnOwl:
     def __init__(self):
         # instock
@@ -671,6 +691,11 @@ class BarnOwl:
             product_dict[pk]['product'] = self._query_product(pk)
             product_dict[pk]['qty'] = int(dict[barcode]['quantity'])
             product_dict[pk]['unit_sell_price'] = float(dict[barcode]['price'])
+            try:
+                product_dict[pk]['cost'] = float(dict[barcode]['cost'])
+            except Exception:
+                logger.error("COST not found")
+                pass
             product_dict[pk]['serial'] = self._is_serial_no(dict[barcode].get('imei', 'None'))
         logger.debug("product dict build: '%s'", product_dict)
         return product_dict  
@@ -678,6 +703,18 @@ class BarnOwl:
     def __build_outstock_record__(self, bill, payment, dict , reason):
         product_dict = self._build_product_dict(dict)
         outStockRecords = []
+        if reason == "service":
+            for product_dict in product_dict.itervalues():
+                logger.debug("build Service OutStockRecord by: '%s'", product_dict)
+                product = product_dict["product"]
+                qty = int(product_dict["qty"])
+                cost = int(product_dict["cost"])
+                unit_sell_price = float(product_dict["unit_sell_price"])
+                serial = product_dict["serial"]
+                mouse = ServiceMouse(product)
+                outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial, cost)
+                outStockRecords.append(outStockRecord)
+            return outStockRecords
         # build OutStockRecord to save data
         for product_dict in product_dict.itervalues():
             logger.debug("build OutStockRecord by: '%s'", product_dict)
@@ -753,6 +790,7 @@ class BarnOwl:
         bill.tendered_amount = dict.get('amountTendered', '0')
         bill.change = dict.get('change', '0')
         bill.customer = customer
+        bill.refbill = dict.get('refbill', '')
         bill.profit = 0
         bill.counter = counter
         bill.sales_by = User.objects.get(pk=int(dict.get('salesby','-1')))
@@ -784,6 +822,10 @@ class BarnOwl:
         payment_dict['Consignment_OUT_term'] = 'Consignment OUT'
         payment_dict['Consignment_OUT_type'] = 'Consignment_OUT'
         payment_dict['Consignment_OUT_status'] = 'Incomplete'
+
+        payment_dict['service_term'] = 'Service'
+        payment_dict['service_type'] = 'Service'
+        payment_dict['service_status'] = 'Complete'
 
         payment = Payment()
         payment.active = True

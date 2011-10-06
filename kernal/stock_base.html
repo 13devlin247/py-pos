@@ -55,6 +55,7 @@
               </tr>  
             </thead> 
 		{% endblock %}			
+        {% block table_foot %}
 			<tbody id="sell_detail"></tbody>			
             <tfoot>
               <tr>  
@@ -74,7 +75,7 @@
             </tfoot>
           </table>  
         </div>      
-
+        {% endblock %}		
         <div id="overall_sale">  	
 		{% block bill_infor %}
             <label >Issue by: 
@@ -165,6 +166,7 @@
 	  {% endblock %}
     </div>  
 </form>    
+
 <script type="text/javascript">
 	var productTable = new Array();
 
@@ -217,7 +219,7 @@
     });                	
 
 
-    
+{% block product_append_algo %}        
     function _localProductStore(pk, data){
         if ( productTable[pk] == undefined){
             // row = $('#sell_detail').html();
@@ -236,6 +238,7 @@
         }    
         calcItemSum();
     }
+{% endblock %}	
     
     function _queryInventory(product){
         /**
@@ -295,6 +298,7 @@
             var currentQuantity = parseInt(quantityField.val());
             quantityField.attr("value", currentQuantity+1);
     }
+{% block summaryCalcScript %}    
     function calcAmount(pk){
         var currentQuantity = parseInt($("#"+pk+"_quantity").val());
         var price = $("#"+pk+"_price").val();
@@ -377,6 +381,7 @@
         calcSubTotalPrice();
         calcTotalPrice();
     }
+{% endblock %}		
 
     $("#confirm").click(function(){
 		{% block ajaxCheckBeforeSend %}
@@ -396,7 +401,7 @@
 		$("#sales").submit();
 		
     });
-	
+
 {% block extendJavascript %}
 {% endblock %}	
   </script>	
