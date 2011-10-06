@@ -1088,7 +1088,12 @@ def CountInventory(request):
     products = Product.objects.filter(Q(active=True)).order_by("name")
     list = []
     for product in products:
-        stockCost = StockCost.objects.get(product=product)
+        stockCost = None
+        try:
+            stockCost = StockCost.objects.get(product=product)
+        except StockCost.DoesNotExist:
+            BarnMouse(product)
+            stockCost = StockCost.objects.get(product=product)
         if stockCost.qty == 0:
             continue
         result = []
