@@ -653,17 +653,42 @@ def DepositSave(request):
     return HttpResponseRedirect('/search/deposit/')
 
 def ServiceSave(request):
-    cname = request.GET.get("customer")
-    thanatos = Thanatos()
-    customer = thanatos.Customer(cname)
-    form = ServiceJobForm(request.GET)
-    service = form.save(commit=False)
-    service.customer = customer
-    service.profit = float(service.price) - float(service.cost)
-    service.active = True
-    service.save()
-    logger.info("Service job '%s' create success", service.pk)
-    return HttpResponseRedirect('/search/service/')
+    salesDict = {}
+    if request.method == 'GET':
+        bill_dict = __convert_sales_URL_2_bill_dict__(request)
+        salesDict = __convert_sales_URL_2_dict__(request)
+        owl = BarnOwl()
+        try:
+            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            payment = bills_and_payments[1]
+            outStockRecords = bills_and_payments[2]
+        except CounterNotReadyException as e:
+            logger.warn("Can not found 'OPEN' Counter, direct to open page")
+            return HttpResponseRedirect('/admin/kernal/counter/add/')    
+        # process Request parameter
+        bill = bills_and_payments[0]
+        payment = bills_and_payments[1]
+        if payment.type == 'Invoice':
+            logger.debug("Invoice bill, direct to invoice interface")
+            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
+        elif payment.type == 'Consignment':
+            logger.debug("Consignment bill, direct to Consignment interface")
+            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+        else:
+            logger.debug("Cash sales bill, direct to Recept interface")
+            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
+    
+#    cname = request.GET.get("customer")
+#    thanatos = Thanatos()
+#    customer = thanatos.Customer(cname)
+#    form = ServiceJobForm(request.GET)
+#    service = form.save(commit=False)
+#    service.customer = customer
+#    service.profit = float(service.price) - float(service.cost)
+#    service.active = True
+#    service.save()
+#    logger.info("Service job '%s' create success", service.pk)
+#    return HttpResponseRedirect('/search/service/')
 
 def RepairSave(request):
     form = RepairForm(request.GET)
@@ -1064,6 +1089,8 @@ def CountInventory(request):
     list = []
     for product in products:
         stockCost = StockCost.objects.get(product=product)
+        if stockCost.qty == 0:
+            continue
         result = []
         result.append(product.name)
         result.append(product.description)
@@ -1106,8 +1133,8 @@ def ServiceList(request):
     keyword = request.GET.get('q', "")
     logger.debug("search Service list by keyword: %s", keyword)
     
-    querySet = __search__(ServiceJob, Q(imei__contains=keyword)|Q(customer__name__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword)))
-    list = __autocomplete_wrapper__(querySet, lambda model: str(model.imei))    
+    querySet = __search__(Bill, Q(refbill__contains=keyword)|Q(customer__name__contains=keyword))
+    list = __autocomplete_wrapper__(querySet, lambda model: str(model.pk))    
     return HttpResponse(list, mimetype="text/plain")
 
 def RepairList(request):
@@ -1327,8 +1354,10 @@ def DepositInfo(request, query):
 
 def ServiceInfo(request, query):
     logger.info("get Service job info by keyword: %s " , query)
-    services = __search__(ServiceJob, (Q (imei = query) | Q(customer__name__contains=query) | Q(refBill = query) | Q(pk=_str_2_int(query)) ))
-    json = __json_wrapper__(services.order_by("-create_at"))
+#    services = __search__(ServiceJob, (Q (imei = query) | Q(customer__name__contains=query) | Q(refBill = query) | Q(pk=_str_2_int(query)) ))
+    #querySet = __search__(Bill, Q(refbill__contains=query)|Q(customer__name__contains=query))
+    querySet = __search__(Bill, Q(pk__exact=query))
+    json = __json_wrapper__(querySet.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
 
 def RepairInfo(request, query):
@@ -1618,6 +1647,8 @@ def PersonReport(request):
     salesReport = {}
     for product in products:
         users = _build_users_sold_dict(product, startDate, endDate)
+        if len(users) == 0:
+            continue
         salesReport[product] = users
     
     return render_to_response('report_personalSales.html',{'session': request.session,  'salesReport': salesReport, 'dateRange': str(startDate)+" to "+str(endDate)}, )

@@ -98,7 +98,7 @@ deposit_list_view = {
 }
 
 service_list_view = {
-    'queryset': ServiceJob.objects.filter(active = True).order_by('-create_at'),                      
+    'queryset': Bill.objects.filter(Q(active = True)&Q(mode='service')).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_service.html', 
     'extra_context': {'autocomplete_url': '/service/ajax/','json_url': '/service/info/', 'display':'bill' }
