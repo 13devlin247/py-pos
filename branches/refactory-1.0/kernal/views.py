@@ -143,7 +143,7 @@ def ReportDaily(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')).filter(active = True)
+    bills = Bill.objects.all().filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='pawning')).filter(active = True)
     profitTable = {}
     total_amount = 0
     total_profit = 0
@@ -1103,7 +1103,8 @@ def CountInventory(request):
         result.append(0) #current_inStock
         result.append(0) # current_outStock
         result.append(stockCost.qty)
-        result.append(stockCost.on_hand_value)        
+        result.append(stockCost.on_hand_value)
+        result.append(stockCost.avg_cost)        
         list.append(result) 
 #        list.append(__count_inventory_stock__(starttime, endtime, product)) 
     return render_to_response('stock_take.html',{'stockList': list, 'dateRange': str(startDate)+" to "+str(endDate)}, )
@@ -1118,6 +1119,9 @@ def __autocomplete_wrapper__(querySet, filter):
         string = filter(result) + "\n"
         list = list + string
         logger.debug("wrapper str: '%s'", string)
+    token = list.split('\n')
+    token.sort(cmp=lambda x1, x2: len(x1)- len(x2))
+    list = '\n'.join(token)
     return list
 
 def _str_2_int(string):
@@ -1174,7 +1178,7 @@ def ProductList(request):
         list = serialNoList
         return HttpResponse(list, mimetype="text/plain")
     else:
-        productQuerySet = __search__(Product, Q(barcode__contains=keyword)|Q(name__contains=keyword))
+        productQuerySet = __search__(Product, Q(barcode__contains=keyword)|Q(name__contains=keyword)).order_by("name")
         productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
         
         serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True)).exclude(inStockRecord__inStockBatch__mode__exact='pawning')
@@ -1201,6 +1205,7 @@ def ProductNameSearch(request):
 def ProductNameInfo(request,query):
     logger.debug(" search product name by keyword: %s",query)    
     productSet = __search__(Product, Q(name__contains= query))
+
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
    
@@ -1249,10 +1254,11 @@ def ProductInfo(request, query):
     try:
         #serialNo = SerialNo.objects.get(serial_no=query)
         serialNo = SerialNo.objects.get(serial_no=query)
+        owl = BarnOwl()
         if serialNo:
             logger.info("SerialNo '%s' Found!! entry serial-no process flow." % str(serialNo.serial_no))
             product = serialNo.inStockRecord.product
-            product.cost = serialNo.inStockRecord.cost
+            product.cost = owl.Cost(product,serialNo)
             serial_no = serialNo.serial_no
             productSet = []
             productSet.append(product)
@@ -1266,6 +1272,7 @@ def ProductInfo(request, query):
     productSet = __search__(Product, (Q(active = True)&(Q(barcode__exact=query)|Q(name__exact=query))))
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
+
     
 def ProductInventory(request, productID, serial=None):
     logger.info("check product: '%s'  inventory" % productID)
@@ -1277,13 +1284,21 @@ def ProductInventory(request, productID, serial=None):
         mouse = BarnMouse(product)
     qty = mouse.QTY(serial)
     json = "[{\"inventory\":"+str(qty)+"}]"
-    return HttpResponse(json, mimetype="application/json")    
+    return HttpResponse(json, mimetype="application/json")
 
+def ProductRealCost(request, productID, serial=None):
+    logger.info("check product: '%s'  inventory" % productID)
+    product = Product.objects.get(pk=productID)
+    owl = BarnOwl()
+    cost = owl.Cost(product)
+    json = "[{\"Cost\":"+str(cost)+"}]"    
+    return HttpResponse(json, mimetype="application/json")
+    
 def __json_wrapper__(querySet):
     if len(querySet) == 0:
         logger.debug("queryset count is 0")
         return '[]'
-    json = serializers.serialize("json",  querySet)
+    json = serializers.serialize("json",  querySet , use_natural_keys=True)
     return json
 
 def CustomerInfo(request, query):
@@ -1636,8 +1651,10 @@ def __check_available_inStock_qty__(inStockRecord):
 def DeleteBill(request):
     logger.info("Void Bill")
     pk = request.GET.get('bill_id','')
-    owl = BarnOwl()
+    owl = BarnOwl()    
     owl.DeleteBill(pk, request.GET.get("reason",""))
+    owl.RecalcBill(pk)
+    
     return HttpResponseRedirect('/report/daily/')
     
 def PersonReport(request):

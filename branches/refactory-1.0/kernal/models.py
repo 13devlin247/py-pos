@@ -24,13 +24,19 @@ PAYMENT_STATUS = (
 class Category(models.Model):
     category_name = models.CharField(max_length=100)
 
+    def natural_key(self):
+        return (self.category_name)    
+
     def __unicode__(self):
         return self.category_name
         
 class Brand(models.Model):
     category = models.ForeignKey(Category)
     brand_name = models.CharField(max_length=100)
-    
+
+    def natural_key(self):
+        return (self.brand_name)
+        
     def __unicode__(self):
         return self.brand_name
 
@@ -55,6 +61,10 @@ class Algo(models.Model):
     def __unicode__(self):
         return self.name    
 
+class ProductManager(models.Manager):
+    def get_by_natural_key(self, category, brand):
+        return self.get(category=category_name, brand=brand_name)        
+        
 class Product(models.Model):
     barcode = models.CharField(max_length=100, blank=True)
     name = models.CharField("code", max_length=100)
@@ -67,6 +77,7 @@ class Product(models.Model):
     uom = models.ForeignKey(UOM)
     active = models.BooleanField("actived product", True)
     algo = models.ForeignKey(Algo, null=True, default=Algo.objects.get(pk=1))
+
     def __unicode__(self):
         return self.name
 

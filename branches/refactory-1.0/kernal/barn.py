@@ -192,7 +192,7 @@ class BarnMouse:
     def _recalc_sell_index(self, outStockRecord):
         logger.debug("Re-Calc Sell Index since '%s'", outStockRecord.pk)
         pass
-    
+
     def _recalc_cost(self):
         startDate = str(date.min)+" 00:00:00"
         endDate = str(date.max)+" 23:59:59"
@@ -283,9 +283,10 @@ class BarnMouse:
         outStockRecord.save()
         logger.info("Product: '%s' OutStockRecord build: '%s' , bill pk: '%s', qty: '%s', price: '%s', reason: '%s', serials: '%s' ", self.product.name, outStockRecord.pk, bill.pk, qty, price, reason, serials)
         
-        stockCost = StockCost.objects.get(product = self.product)
-        stockCost.qty = stockCost.qty - qty 
-        stockCost.save()
+        self._recalc_cost()
+        #stockCost = StockCost.objects.get(product = self.product)
+        #stockCost.qty = stockCost.qty - qty 
+        #stockCost.save()
         return outStockRecord
     
     def InStock(self, inStockBatch, qty, cost, reason, serials):

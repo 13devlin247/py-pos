@@ -192,8 +192,8 @@ urlpatterns = patterns('',
     url(r'^product/inventory/cost/update/', login_required(ProductCostUpdate)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*/(?P<serial>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
-    
-    
+    url(r'^product/returncost/(?P<productID>[\x20-\x7E]+)*', login_required(ProductRealCost)),
+
 
     url(r'^supplier/create/$', login_required(create_update.create_object), supplier_form), 
     url(r'^supplier/search/$', login_required(list_detail.object_list), product_list_view),
