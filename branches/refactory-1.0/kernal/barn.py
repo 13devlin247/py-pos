@@ -686,7 +686,9 @@ class BarnOwl:
         product_dict = {}
         # build OutStockRecord to save data
         for barcode in dict:
-            pk = dict[barcode]["pk"]
+            pk = self._is_serial_no(dict[barcode].get('imei', 'None'))
+            if not pk:
+                pk = dict[barcode]["pk"]
             if barcode not in product_dict:
                 product_dict[pk] = {}
             product_dict[pk]['product'] = self._query_product(pk)
