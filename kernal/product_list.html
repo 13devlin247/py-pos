@@ -100,12 +100,53 @@
 						
 						$('#sell_detail').append(row);						
                     }
-                },
-                error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
-                complete: function(data){ 
-                },
-            });            
-    });
+                            
+            $('a[name=modal]').click(function(e) {
+                //Cancel the link behavior
+                e.preventDefault();
+                //Get the A tag
+                var id = "#dialog";
+                var link = $(this).attr('href');
+                
+                $.ajax({
+                    url: link,
+                    success: function(html){
+                        $("#dialog").html(html);
+                    },
+                });
+
+                
+                //Get the screen height and width
+                //var maskHeight = $(document).height();
+                var maskHeight =1000;
+                        var maskWidth = $(window).width();
+             
+                //Set height and width to mask to fill up the whole screen
+                $('#mask').css({'width':maskWidth,'height':maskHeight});
+                 
+                //transition effect     
+                $('#mask').fadeIn(100);    
+                $('#mask').fadeTo("slow",0.8);  
+             
+                //Get the window height and width
+                var winH = $(window).height();
+                var winW = $(window).width();
+                       
+                //Set the popup window to center
+               // $(id).css('top',  winH/2-$(id).height()/2);
+               // $(id).css('left', winW/2-$(id).width()/2);
+                                $(id).css('top');
+                                $(id).css('left');
+                //transition effect
+                $(id).fadeIn(200); 
+             
+            });                    
+                        },
+                        error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
+                        complete: function(data){ 
+                        },
+                    });            
+            });
 
     function _genRowByPK(data){
 		var pk = "x";
