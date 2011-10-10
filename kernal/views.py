@@ -159,6 +159,33 @@ def ReportDaily(request):
         profitTable[bill.pk] = total_proift
     return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
 
+    
+def ReportDailySales(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    
+    total_amount = 0
+    total_profit = 0    
+    
+    outstocks = OutStockRecord.objects.all().filter(create_at__range=(startDate,endDate))
+    for outstock in outstocks:
+       
+        outstock.tt = outstock.unit_sell_price * outstock.quantity
+        outstock.user = outstock.bill.sales_by.username
+        total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
+            
+    profitTable = {}
+
+    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
+
+
+    
+    
 def __categorys_arrays__():
     category_arr = []
     categorys = Category.objects.all().exclude(category_name = 'FOC')

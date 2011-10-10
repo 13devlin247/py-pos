@@ -285,7 +285,9 @@ urlpatterns = patterns('',
     
     
     url(r'^report/daily/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/'} }),                                    
-    url(r'^report/daily/$', login_required(ReportDaily)),                        
+    url(r'^report/daily_sales/filter/$', login_required(direct_to_template),  {'template': 'report_daily_sales_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily_sales/'} }), 
+    url(r'^report/daily/$', login_required(ReportDaily)),
+    url(r'^report/daily_sales/$', login_required(ReportDailySales)),    
     url(r'^report/stocktake/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/stock/take/'} }),                                    
     url(r'^stock/take/$', login_required(CountInventory)),             
     url(r'^bill/void/$', login_required(DeleteBill)),             
