@@ -52,7 +52,27 @@
               </tr>  
             </thead> 
 {% endblock %}
-
+        {% block table_foot %}
+			<tbody id="sell_detail"></tbody>			
+            <tfoot>
+              <tr>  
+                <td style="widtd:auto">
+                </td>              
+                <td style="widtd:auto">
+                </td>
+                <td style="widtd:auto">
+                </td>                  
+                <td style="widtd:10%;" id="cost_total">0
+                </td>  
+                <td style="widtd:5%;" id="quantity_total">0
+                </td>  
+                <td style="widtd:15%;">
+                </td>  
+              </tr>              
+            </tfoot>
+          </table>  
+        </div>      
+        {% endblock %}	
 {% block bill_infor %}
             <label >Issue by: 
             </label>{{request.user.username}} <br>
