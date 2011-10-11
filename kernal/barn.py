@@ -959,7 +959,7 @@ class BarnOwl:
         inStockBatch.invoice_no = dict.get('inv_no', "-")
         inStockBatch.do_no = dict.get('do_no', "-")
         inStockBatch.refBill_no = dict.get('refBill_no', "-")
-        if mode == self.pawning:
+        if mode == self.pawning or mode == Hermes.CONSIGNMENT_IN:
             inStockBatch.status = 'Incomplete'
         else:
             inStockBatch.status = 'Complete'
