@@ -30,6 +30,7 @@ from barn import BarnOwl
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
+from pos.kernal.excel import ExcelWriter
 
 
 logging.basicConfig(
@@ -181,7 +182,40 @@ def ReportDailySales(request):
             
     profitTable = {}
 
-    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
+    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
+
+def _wrapper_download_file(text, filename):
+    response = HttpResponse(text, mimetype="application/vnd.ms-excel; charset=utf-8")
+    response['Content-Disposition'] = 'attachment; filename='+filename     
+    return response
+
+def ReportDailySalesExcel(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate
+    endDate = endDate
+    
+    total_amount = 0
+    total_profit = 0    
+    
+    outstocks = OutStockRecord.objects.filter(create_at__range=(startDate,endDate))
+    headers = ['Inv No', 'Product', 'Cashier', 'Total', 'Type', 'Date']
+    contents = []
+    for outstock in outstocks:
+        outstock.tt = outstock.unit_sell_price * outstock.quantity
+        outstock.user = outstock.bill.sales_by.username
+        total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
+        contents.append(';'.join([str(outstock.pk),outstock.product.name,outstock.user,str(outstock.tt),outstock.bill.mode,str(outstock.create_at)]))
+    
+    contents.append(';;Total:;'+str(total_amount)+';;;')
+    profitTable = {}
+    
+    filename = "test.xls"
+    ExcelWriter(filename).export(headers, contents)
+    return _wrapper_download_file(open(filename, 'rb'), filename)
 
 
     
