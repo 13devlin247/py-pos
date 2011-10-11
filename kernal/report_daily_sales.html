@@ -18,7 +18,7 @@
         </div>  
         <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
         </div>  
-        <div id="table_holder">  	
+        <div id="table_holder"> <a href='/report/daily_sales/excel/?start_date={{start_date}}&end_date={{end_date}}'>Download Excel</a>
           <table class="tablesorter report" id="sortable_table">  		
             <thead>  			
               <tr>  				
@@ -45,14 +45,12 @@
 			{%endfor%}
             </tbody>  	
             <tfoot>
-                <th>
-                    <td colspan=2>Total:</td>
+                <tr>
+                    <td colspan=3>Total:</td>
                     <td>{{total_amount}}</td>
                     <td></td>
                     <td></td>
-                    <td></td>
-                    <td></td>
-                </th>
+                </tr>
             </tfoot>
           </table>  
         </div>  
