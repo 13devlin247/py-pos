@@ -122,7 +122,7 @@ def ReportConsignmentInBalance(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    consignmentInDetails = ConsignmentInDetail.objects.all().filter(create_at__range=(startDate,endDate)).filter(inStockBatch__status='Incomplete')
+    consignmentInDetails = ConsignmentInDetail.objects.filter(create_at__range=(startDate,endDate)).filter(inStockBatch__status='Incomplete')
     return render_to_response('report_consignment_in_balance.html',{'consignmentInDetails': consignmentInDetails, 'dateRange': str(startDate)+" to "+str(endDate)}, )
     
 def ReportConsignmentOutBalance(request):
@@ -199,7 +199,6 @@ def ReportDailySalesExcel(request):
     endDate = endDate
     
     total_amount = 0
-    total_profit = 0    
     
     outstocks = OutStockRecord.objects.filter(create_at__range=(startDate,endDate))
     headers = ['Inv No', 'Product', 'Cashier', 'Total', 'Type', 'Date']
@@ -211,9 +210,7 @@ def ReportDailySalesExcel(request):
         contents.append(';'.join([str(outstock.pk),outstock.product.name,outstock.user,str(outstock.tt),outstock.bill.mode,str(outstock.create_at)]))
     
     contents.append(';;Total:;'+str(total_amount)+';;;')
-    profitTable = {}
-    
-    filename = "test.xls"
+    filename = "report.xls"
     ExcelWriter(filename).export(headers, contents)
     return _wrapper_download_file(open(filename, 'rb'), filename)
 
