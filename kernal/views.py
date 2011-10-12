@@ -1369,7 +1369,9 @@ def ProductRealCost(request, productID, serial=None):
     logger.info("check product: '%s'  inventory" % productID)
     product = Product.objects.get(pk=productID)
     owl = BarnOwl()
-    cost = owl.Cost(product)
+    if serial:
+        serial = SerialNo.objects.get(serial_no=serial)
+    cost = owl.Cost(product, serial)
     json = "[{\"Cost\":"+str(cost)+"}]"    
     return HttpResponse(json, mimetype="application/json")
     

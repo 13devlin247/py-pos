@@ -42,6 +42,11 @@ class BarnMouse:
     def _calc_last_index(self):
         if self.foc_product:
             return 
+        inStockRecords = InStockRecord.objects.filter(product = self.product).filter(active = True).order_by("create_at")
+        if inStockRecords.count() == 0:
+            logger.debug(" '%s' not instock record found ", self.product.name)
+            return 
+ 
         logger.debug("calc last instock record and sell index for product '%s'", self.product.name)
         outStockRecords = OutStockRecord.objects.filter(product = self.product).filter(active = True).order_by("-create_at")
         if outStockRecords.count() == 0:

@@ -192,6 +192,7 @@ urlpatterns = patterns('',
     url(r'^product/inventory/cost/update/', login_required(ProductCostUpdate)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*/(?P<serial>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
+    url(r'^product/returncost/(?P<productID>[\x20-\x7E]+)*/(?P<serial>[\x20-\x7E]+)*', login_required(ProductRealCost)),
     url(r'^product/returncost/(?P<productID>[\x20-\x7E]+)*', login_required(ProductRealCost)),
 
 

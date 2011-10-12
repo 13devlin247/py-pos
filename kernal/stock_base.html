@@ -269,7 +269,7 @@
             type: "JSON",
             success: function(data){ 
             
-                     var pk_cost = "#"+queryStr+"_avgcost";
+                     var pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
 
                   $(pk_cost).html(data[0].Cost);
                   
