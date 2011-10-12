@@ -1238,7 +1238,7 @@ def ProductList(request):
         list = serialNoList
         return HttpResponse(list, mimetype="text/plain")
     else:
-        productQuerySet = __search__(Product, Q(barcode__contains=keyword)|Q(name__contains=keyword)).order_by("name")
+        productQuerySet = __search__(Product, Q(active=True)&(Q(barcode__contains=keyword)|Q(name__contains=keyword))).order_by("name")
         productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
         
         serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True)).exclude(inStockRecord__inStockBatch__mode__exact='pawning')
