@@ -913,7 +913,7 @@ class BarnOwl:
         # process Request parameter
         thanatos = Thanatos()
         customer = None
-        if dict.get("mode", '') == Hermes.CONSIGNMENT_IN_RETURN:
+        if dict.get("mode", '') == Hermes.CONSIGNMENT_IN_RETURN or dict.get("mode", '') == Hermes.CONSIGNMENT:
             customer = thanatos.Customer(dict.get("supplier"))
         else:
             customer = thanatos.Customer(dict.get("customer"))
@@ -1101,6 +1101,7 @@ class BarnOwl:
             logger.error("Delete Error")
 
 class Hermes:
+    CONSIGNMENT = "Consignment"
     CONSIGNMENT_OUT = "Consignment_OUT"
     CONSIGNMENT_OUT_RETURN  = "Consignment_OUT_RETURN"
     CONSIGNMENT_OUT_SALE  = "Consignment_OUT_SALE"
@@ -1179,6 +1180,13 @@ class Hermes:
     def Profit(self, product):
         return False
 
+    def _checkConsignmentBillClose(self, payment):
+        consignmentOutDetails = ConsignmentOutDetail.objects.filter(payment = payment)
+        for consignmentOutDetail in consignmentOutDetails:
+            if consignmentOutDetail.active == True:
+                return False
+        return True    
+
     def ConsignmentOutSale(self, payment, bill_dict, out_stock_batch_dict):
 #        if payment.type != self.CONSIGNMENT_OUT:
 #            logger.debug("not ConsignmentOutSale payment: '%s', return", payment.type)
@@ -1191,7 +1199,12 @@ class Hermes:
         for outStockRecord in outStockRecords:
             qty = product_dict[str(outStockRecord.product.pk)]['qty']
             self._ConsignmentOutSale_detail(outStockRecord.product, qty, customer, outStockRecord.serial_no)
-            
+        
+        if self._checkConsignmentBillClose(payment):
+            logger.debug("Payment: '%s' '%s' complete", payment.pk, payment.type)
+            payment.status = 'Complete'
+            payment.save()
+        
         
     def _ConsignmentOutSale_detail(self, product, qty, customer, serial = None):
         if serial:
