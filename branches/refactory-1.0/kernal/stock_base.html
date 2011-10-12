@@ -58,7 +58,8 @@
         {% block table_foot %}
 			<tbody id="sell_detail"></tbody>			
             <tfoot>
-              <tr>  
+              <tr><td style="widtd:auto">
+                </td>    
                 <td style="widtd:auto">
                               
                 <td style="widtd:10%;" id="cost_total">0
@@ -417,7 +418,7 @@
         $("#"+pk+"_tr").remove();
         calcSubTotalPrice();
         calcTotalPrice();
-        
+        calcItemSum();
     }
 {% endblock %}		
 
