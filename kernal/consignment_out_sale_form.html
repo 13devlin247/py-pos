@@ -15,3 +15,12 @@
 {% block mode_form %}
 {% endblock %}
 
+{% block autocomplete_search %}  
+	$("#item").autocomplete ("/consignmentout/ajax/", {
+		width: 260,
+        selectFirst: false,
+        extraParams: {
+                    mode: function(){ return $("#mode").attr('value'); }
+                }
+    });      
+{% endblock %}
