@@ -835,14 +835,16 @@ def ConsignmentOutSalesConfirm(request):
             thanatos = Thanatos()
             customer = thanatos.Customer(bill_dict.get("customer"))
             payments = Payment.objects.filter(Q(bill__customer = customer)&Q(type=Hermes.CONSIGNMENT_OUT))
-            hermes = Hermes()            
+            hermes = Hermes()
+            bill_id = None            
             for payment in payments:
+                bill_id = payment.bill.pk
                 hermes.ConsignmentOutSale(payment, bill_dict, salesDict)
             
         except CounterNotReadyException as e:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
             return HttpResponseRedirect('/admin/kernal/counter/add/')    
-        return HttpResponseRedirect('/sales/bill/1')        
+        return HttpResponseRedirect('/sales/bill/'+str(bill_id))        
 
 
 def __consignment_out_handler__(request, is_sales):
@@ -1542,7 +1544,7 @@ def ProductSave(request, productID=None):
             brand = None
             type = None
             try:
-                category = Category.objects.get(pk=int(category_pk))
+                category = Category.objects.get(category_name=category_pk)
                 brand = Brand.objects.get(pk=int(brand_pk))
 #                type = Type.objects.get(pk=int(type_pk))
             except Category.DoesNotExist:
