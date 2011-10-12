@@ -92,7 +92,7 @@
 							<td class="Receipt itemno"> {{forloop.counter}} {{inStockRecord.product.name}}</td>
 							<td class="Receipt">{{inStockRecord.product.description}}</td>
 							<td class="right qty">{{inStockRecord.quantity}}</td>
-							<td align="right" class="price"><input name="inStockRecord_{{inStockRecord.pk}}" value="{{inStockRecord.cost}}" size=10></input></td>
+							<td align="right" class="price"><input type=text name="inStockRecord_{{inStockRecord.pk}}" value="{{inStockRecord.cost}}" size=10></input></td>
 							<td align="right" class="price">
                                 <script>
                                     function roundNumber(number, decimals) { // Arguments: number to round, number of decimal places
