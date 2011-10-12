@@ -40,7 +40,7 @@
 			{%for outstock in outstocks %}
               <tr>  				
                 <td>
-                  <a href="/sales/bill/{{bill.pk}}" target="_blank">{{outstock.pk}}</a></td>  <td>{{outstock.product}}</td>  <td>{{outstock.user}}</td>  <td>{{outstock.tt}}</td>  <td>{{outstock.bill.mode}}</td>  <td>{{outstock.create_at}}</td>
+                  <a href="/sales/bill/{{outstock.bill.pk}}" target="_blank">{{outstock.pk}}</a></td>  <td>{{outstock.product}}</td>  <td>{{outstock.user}}</td>  <td>{{outstock.tt}}</td>  <td>{{outstock.bill.mode}}</td>  <td>{{outstock.create_at}}</td>
               </tr>  			
 			{%endfor%}
             </tbody>  	
