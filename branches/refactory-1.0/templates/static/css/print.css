@@ -74,3 +74,14 @@ td{
 #AppendExtraCost{
 	display: none;
 }
+
+input[type=text]{
+    font-size: 12pt;
+    text-align: right;
+    border-style: none;
+    background:none;
+}
+
+input[type=submit]{
+    display: none;
+}
