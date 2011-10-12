@@ -716,6 +716,7 @@ def __build_outstock_record__(request, bill, payment, dict , type):
             consignmentOut.serialNo = serial_no
             consignmentOut.quantity = outStockRecord.quantity
             consignmentOut.balance = 0
+            consignmentOut.active = True
             consignmentOut.save()
             logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
         return outStockRecords
@@ -1203,7 +1204,7 @@ def __autocomplete_wrapper__(querySet, filter):
         logger.debug("wrapper str: '%s'", string)
     token = list.split('\n')
     token.sort(cmp=lambda x1, x2: len(x1)- len(x2))
-    list = '\n'.join(token)
+    list = '\n'.join(set(token))
     return list
 
 def _str_2_int(string):
@@ -1249,7 +1250,17 @@ def SupplierList(request):
     querySet = __search__(Supplier, Q(name__contains=keyword)|Q(supplier_code__contains=keyword))
     list = __autocomplete_wrapper__(querySet, lambda model: model.name)    
     return HttpResponse(list, mimetype="text/plain")
-    
+
+def ConsignmentOutProductList(request):
+    keyword = request.GET.get('q', "")
+    logger.debug("search product list by keyword: %s", keyword)
+    serialNoQuerySet = __search__(ConsignmentOutDetail, Q(active = True)&Q(serialNo__serial_no__contains=keyword))
+    serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serialNo.serial_no)
+    productQuerySet = __search__(ConsignmentOutDetail, Q(active = True)&Q(outStockRecord__product__name__contains=keyword))
+    productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.outStockRecord.product.name)            
+    list = serialNoList + productList 
+    return HttpResponse(list, mimetype="text/plain")    
+        
 def ProductList(request):    
     keyword = request.GET.get('q', "")
     logger.debug("search product list by keyword: %s", keyword)

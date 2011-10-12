@@ -1179,6 +1179,7 @@ class Hermes:
                 consignmentOut.serialNo = outStockRecord.serial_no
                 consignmentOut.quantity = outStockRecord.quantity
                 consignmentOut.balance = 0
+                consignmentOut.active = True
                 consignmentOut.save()
                 logger.debug("build Prodict '%s' OutStockRecord '%s' consignment detail.", outStockRecord.product.name, outStockRecord.pk )
         

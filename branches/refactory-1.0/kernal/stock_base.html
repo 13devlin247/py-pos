@@ -168,7 +168,7 @@
 
 <script type="text/javascript">
 	var productTable = new Array();
-
+{% block autocomplete_search %}  
 	$("#item").autocomplete ("/product/ajax/", {
 		width: 260,
         selectFirst: false,
@@ -176,7 +176,7 @@
                     mode: function(){ return $("#mode").attr('value'); }
                 }
     });      
-
+{% endblock %}  
 	function _checkInputData(){
 		{% block ajaxSubmitCheck %}
 			return true;
