@@ -246,7 +246,10 @@ def __statistic_bill_detail_by_category__(bill, categorysTitle):
 def _combine_list(amount_list, qty_list):
     result = []
     for i in xrange(len(amount_list)):
-        result.append(str(qty_list[i])+' / $'+str(amount_list[i]))
+        if qty_list[i] == 0:
+            result.append('')
+        else:
+            result.append(str(qty_list[i])+' / $'+str(amount_list[i]))
     return result
 
 def ReportDailyCategory(request):
@@ -271,12 +274,12 @@ def ReportDailyCategory(request):
             dateTable[bill_date] = amount_summary, qty_summary
         amount_summary, qty_summary = __statistic_bill_detail_by_category__(bill, categorysTitle)
         total_summary = dateTable[bill_date]
-        for i in range(len(categorysTitle)):
-            amount_sum = total_summary[0]
-            qty_sum = total_summary[1]
-            for i in xrange(len(amount_summary)):
-                amount_sum[i] += amount_summary[i] 
-                qty_sum[i] += qty_summary[i]
+
+        amount_sum = total_summary[0]
+        qty_sum = total_summary[1]
+        for i in xrange(len(amount_summary)):
+            amount_sum[i] += amount_summary[i] 
+            qty_sum[i] += qty_summary[i]
     
     for day in dateTable:
         dateTable[day] = _combine_list(dateTable[day][0], dateTable[day][1])
