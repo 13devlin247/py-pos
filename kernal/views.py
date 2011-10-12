@@ -1734,7 +1734,87 @@ def PersonReport(request):
         salesReport[product] = users
     
     return render_to_response('report_personalSales.html',{'session': request.session,  'salesReport': salesReport, 'dateRange': str(startDate)+" to "+str(endDate)}, )
-        
+
+
+def PersonSalesReport(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    users = User.objects.all()
+    group = {}
+    for user in users:
+        #outstocks = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+        outstocks = _build_person_sold_dict(user, startDate, endDate)
+        if len(outstocks)==0:
+            continue
+        group[user] = outstocks
+
+    return render_to_response('report_personal_sales.html',{'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+
+
+def ReportSalesItem(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    products = Product.objects.all()
+    group = {}
+    for product in products:
+        #outstocks = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+        outstocks = _build_item_sold_dict(product, startDate, endDate)
+        if len(outstocks)==0:
+            continue
+        group[product] = outstocks
+
+    return render_to_response('report_item_sales.html',{'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+
+
+def CommissionTitle(search):
+    if search=='newhp/':
+        title = "New HP "
+    elif search == '2ndhp/':
+        title = "2nd HP "    
+    elif search == 'trade-in/':
+        title = "Trade-in "
+    elif search == 'gadai/':
+        title = "Gadai "       
+    elif search == 'acc/':
+        title = "Accessories "    
+    else:
+        pass
+    return title    
+
+   
+
+    
+def Commission(request,search):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    users = User.objects.all()
+    title = CommissionTitle(search)
+    group = []
+    for user in users:
+        #outstocks = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+        outstocks = _build_commission_sold_dict(user, startDate, endDate, search)
+        if len(outstocks)==0:
+            continue
+        group.append(outstocks) 
+
+     
+    return render_to_response('report_commission.html',{'session': request.session, 'title' : title , 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+  
 def _build_users_sold_dict(product, startDate, endDate):
     #outStockRecordSet = OutStockRecord.objects.filter(product=product)
     outStockRecordSet = OutStockRecord.objects.filter(product=product).filter(create_at__range=(startDate,endDate)).filter(Q(bill__mode = "cash")|Q(bill__mode = "invoice"))
@@ -1760,7 +1840,95 @@ def _build_users_sold_dict(product, startDate, endDate):
         users[user].append(outStockRecord)
         logger.info("add %s's  outStockRecord" % user )
     return users
-        
+ 
+def _build_person_sold_dict(user, startDate, endDate):
+    #outStockRecordSet = OutStockRecord.objects.filter(product=product)
+    outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+    users = {}
+    for outStockRecord in outStockRecordSet:
+        user = outStockRecord.bill.sales_by
+        if user not in users:
+            logger.info("create %s in users" % user )
+            summaryOutStockRecord = OutStockRecord()
+            summaryOutStockRecord.bill = outStockRecord.bill
+            summaryOutStockRecord.unit_sell_price = 0
+            summaryOutStockRecord.cost = 0
+            summaryOutStockRecord.quantity = 0
+            summaryOutStockRecord.profit = 0
+            summaryOutStockRecord.amount = 0
+            users[user] = [summaryOutStockRecord]
+        users[user][0].unit_sell_price = users[user][0].unit_sell_price + outStockRecord.unit_sell_price
+        users[user][0].cost = users[user][0].cost + outStockRecord.cost
+        users[user][0].quantity = users[user][0].quantity + outStockRecord.quantity
+        users[user][0].profit = users[user][0].profit + outStockRecord.profit
+        logger.debug("product: '%s' outstockrecord: '%s' profit: '%s', total: profit: '%s'", outStockRecord.product.pk, outStockRecord.pk, outStockRecord.profit, users[user][0].profit)
+        users[user][0].amount = users[user][0].amount + outStockRecord.amount
+        users[user].append(outStockRecord)
+        logger.info("add %s's  outStockRecord" % user )
+    return users 
+
+def _build_commission_sold_dict(user, startDate, endDate,search):
+    #outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+    if search=='newhp/':
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(create_at__range=(startDate,endDate))
+    elif search == 'trade-in/':
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(create_at__range=(startDate,endDate))
+    elif search == 'gadai/':
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(create_at__range=(startDate,endDate))
+    elif search == 'acc/':
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(product__category__category_name__exact = 'ACCESSORIES').filter(create_at__range=(startDate,endDate))
+    else:
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'accessories').filter(create_at__range=(startDate,endDate))
+    users = {}    
+    for outStockRecord in outStockRecordSet:
+        user = outStockRecord.bill.sales_by
+        if user not in users:
+            logger.info("create %s in users" % user )
+            summaryOutStockRecord = OutStockRecord()
+            summaryOutStockRecord.bill = outStockRecord.bill
+            summaryOutStockRecord.unit_sell_price = 0
+            summaryOutStockRecord.cost = 0
+            summaryOutStockRecord.quantity = 0
+            summaryOutStockRecord.profit = 0
+            summaryOutStockRecord.amount = 0
+            users[user] = [summaryOutStockRecord]
+        users[user][0].unit_sell_price = users[user][0].unit_sell_price + outStockRecord.unit_sell_price
+        users[user][0].cost = users[user][0].cost + outStockRecord.cost
+        users[user][0].quantity = users[user][0].quantity + outStockRecord.quantity
+        users[user][0].profit = users[user][0].profit + outStockRecord.profit
+        logger.debug("product: '%s' outstockrecord: '%s' profit: '%s', total: profit: '%s'", outStockRecord.product.pk, outStockRecord.pk, outStockRecord.profit, users[user][0].profit)
+        users[user][0].amount = users[user][0].amount + outStockRecord.amount
+        users[user].append(outStockRecord)
+        logger.info("add %s's  outStockRecord" % user )
+    return users     
+    
+def _build_item_sold_dict(product1, startDate, endDate):
+    #outStockRecordSet = OutStockRecord.objects.filter(product=product)
+    outStockRecordSet = OutStockRecord.objects.filter(product = product1).filter(create_at__range=(startDate,endDate))
+    products = {}
+    for outStockRecord in outStockRecordSet:
+        product = outStockRecord.product
+        if product not in products:
+            logger.info("create %s in products" % product )
+            summaryOutStockRecord = OutStockRecord()
+            summaryOutStockRecord.bill = outStockRecord.bill
+            summaryOutStockRecord.unit_sell_price = 0
+            summaryOutStockRecord.cost = 0
+            summaryOutStockRecord.quantity = 0
+            summaryOutStockRecord.profit = 0
+            summaryOutStockRecord.amount = 0
+            summaryOutStockRecord.product = outStockRecord.product
+            products[product] = [summaryOutStockRecord]
+        products[product][0].unit_sell_price = products[product][0].unit_sell_price + outStockRecord.unit_sell_price
+        products[product][0].cost = products[product][0].cost + outStockRecord.cost
+        products[product][0].quantity = products[product][0].quantity + outStockRecord.quantity
+        products[product][0].profit = products[product][0].profit + outStockRecord.profit
+        logger.debug("product: '%s' outstockrecord: '%s' profit: '%s', total: profit: '%s'", outStockRecord.product.pk, outStockRecord.pk, outStockRecord.profit, products[product][0].profit)
+        products[product][0].amount = products[product][0].amount + outStockRecord.amount
+        products[product].append(outStockRecord)
+        logger.info("add %s's  outStockRecord" % product )
+    return products 
+   
 #def __find_SalesIdx__(product):
 #    sales_index = 0
 #    #find last time sell record
