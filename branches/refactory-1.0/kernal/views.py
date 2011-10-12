@@ -225,9 +225,11 @@ def __categorys_arrays__():
     return category_arr
 
 def __statistic_bill_detail_by_category__(bill, categorysTitle):
-    categorySummary = []
+    amount_summary = []
+    qty_summary = []
     for i in range(len(categorysTitle)):
-        categorySummary.append(0)
+        amount_summary.append(0)
+        qty_summary.append(0)
     outStockRecords = OutStockRecord.objects.filter(bill=bill)
     for outStockRecord in outStockRecords:
         index = -1
@@ -237,9 +239,16 @@ def __statistic_bill_detail_by_category__(bill, categorysTitle):
             pass
         if  index == -1:
             logger.error("Category '%s' not found in databases !! ", outStockRecord.product.category.category_name)
-        categorySummary[index] = categorySummary[index] + outStockRecord.amount
-    return categorySummary
-    
+        amount_summary[index] = amount_summary[index] + outStockRecord.amount
+        qty_summary[index] = qty_summary[index] + outStockRecord.quantity
+    return amount_summary, qty_summary
+
+def _combine_list(amount_list, qty_list):
+    result = []
+    for i in xrange(len(amount_list)):
+        result.append(str(qty_list[i])+' / $'+str(amount_list[i]))
+    return result
+
 def ReportDailyCategory(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -254,14 +263,24 @@ def ReportDailyCategory(request):
     for bill in bills:
         bill_date = bill.create_at.strftime("%Y-%m-%d")
         if bill_date not in dateTable:
-            categorysSummary = []
+            amount_summary = []
+            qty_summary = []
             for i in range(len(categorysTitle)):
-                categorysSummary.append(0)
-            dateTable[bill_date] = categorysSummary
-        statistic_result = __statistic_bill_detail_by_category__(bill, categorysTitle)
+                amount_summary.append(0)
+                qty_summary.append(0)
+            dateTable[bill_date] = amount_summary, qty_summary
+        amount_summary, qty_summary = __statistic_bill_detail_by_category__(bill, categorysTitle)
         total_summary = dateTable[bill_date]
         for i in range(len(categorysTitle)):
-            total_summary[i] = total_summary[i] + statistic_result[i]
+            amount_sum = total_summary[0]
+            qty_sum = total_summary[1]
+            for i in xrange(len(amount_summary)):
+                amount_sum[i] += amount_summary[i] 
+                qty_sum[i] += qty_summary[i]
+    
+    for day in dateTable:
+        dateTable[day] = _combine_list(dateTable[day][0], dateTable[day][1])
+#            total_summary[i] = total_summary[i] + statistic_result[i]
     return render_to_response('report_dailySales_by_category.html',{'dateTable': sorted(dateTable.iteritems(), reverse=True), 'categorysTitle':categorysTitle ,  'dateRange': str(startDate)+" to "+str(endDate)}, )
     
 def printData(request):
