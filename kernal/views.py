@@ -1905,15 +1905,16 @@ def _build_person_sold_dict(user, startDate, endDate):
 def _build_commission_sold_dict(user, startDate, endDate,search):
     #outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
     if search=='newhp/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(create_at__range=(startDate,endDate))
-    elif search == 'trade-in/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(create_at__range=(startDate,endDate))
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        logger.debug("*********outStock********%s", outStockRecordSet)
+    elif search == '2ndhp/':
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'gadai/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(create_at__range=(startDate,endDate))
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'acc/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(product__category__category_name__exact = 'ACCESSORIES').filter(create_at__range=(startDate,endDate))
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(product__category__category_name__exact = 'ACCESSORIES').filter(create_at__range=(startDate,endDate)).filter(active=True)
     else:
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'accessories').filter(create_at__range=(startDate,endDate))
+        pass
     users = {}    
     for outStockRecord in outStockRecordSet:
         user = outStockRecord.bill.sales_by
