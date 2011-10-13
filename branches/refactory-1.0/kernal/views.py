@@ -284,7 +284,7 @@ def ReportDailyCategory(request):
     for day in dateTable:
         dateTable[day] = _combine_list(dateTable[day][0], dateTable[day][1])
 #            total_summary[i] = total_summary[i] + statistic_result[i]
-    return render_to_response('report_dailySales_by_category.html',{'dateTable': sorted(dateTable.iteritems(), reverse=True), 'categorysTitle':categorysTitle ,  'dateRange': str(startDate)+" to "+str(endDate)}, )
+    return render_to_response('report_dailySales_by_category.html',{'dateTable': sorted(dateTable.iteritems(), reverse=True), 'categorysTitle': categorysTitle,'tableHeader':sorted(dateTable.keys(), reverse=True) ,  'dateRange': str(startDate)+" to "+str(endDate)}, )
     
 def printData(request):
     txt = ""
@@ -857,13 +857,11 @@ def ConsignmentOutSalesConfirm(request):
         try:
             thanatos = Thanatos()
             customer = thanatos.Customer(bill_dict.get("customer"))
-            payments = Payment.objects.filter(Q(bill__customer = customer)&Q(type=Hermes.CONSIGNMENT_OUT))
+            payments = Payment.objects.filter(Q(bill__customer = customer)&Q(type=Hermes.CONSIGNMENT_OUT)&Q(active=True))
             hermes = Hermes()
             bill_id = None            
             for payment in payments:
-                bill_id = payment.bill.pk
-                hermes.ConsignmentOutSale(payment, bill_dict, salesDict)
-            
+                bill_id = hermes.ConsignmentOutSale(payment, bill_dict, salesDict)
         except CounterNotReadyException as e:
             logger.warn("Can not found 'OPEN' Counter, direct to open page")
             return HttpResponseRedirect('/admin/kernal/counter/add/')    
