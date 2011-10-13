@@ -1187,6 +1187,8 @@ class Hermes:
         return False
 
     def _checkConsignmentBillClose(self, payment):
+        if payment.active == False:
+            return True
         consignmentOutDetails = ConsignmentOutDetail.objects.filter(payment = payment)
         for consignmentOutDetail in consignmentOutDetails:
             if consignmentOutDetail.active == True:
@@ -1197,24 +1199,37 @@ class Hermes:
 #        if payment.type != self.CONSIGNMENT_OUT:
 #            logger.debug("not ConsignmentOutSale payment: '%s', return", payment.type)
 #            return
-        bill = payment.bill
         customer = payment.bill.customer
         owl = BarnOwl()
         product_dict = owl._build_product_dict(out_stock_batch_dict)
-        outStockRecords = OutStockRecord.objects.filter(bill = bill)
-        for outStockRecord in outStockRecords:
-            qty = product_dict[str(outStockRecord.product.pk)]['qty']
-            self._ConsignmentOutSale_detail(outStockRecord.product, qty, customer, outStockRecord.serial_no)
         
+        for id, map in product_dict.items():
+            product = map['product']
+            serial = None
+            if 'serial' in map and map['serial']:
+                serial = SerialNo.objects.get(serial_no = map.get('serial', ''))
+            qty= map['qty']
+            self._ConsignmentOutSale_detail(payment, product, qty, customer, serial = serial)
+        
+        
+#        outStockRecords = OutStockRecord.objects.filter(bill = bill)
+#        for outStockRecord in outStockRecords:
+#            qty = product_dict[str(outStockRecord.product.pk)]['qty']
+#            self._ConsignmentOutSale_detail(outStockRecord.product, qty, customer, outStockRecord.serial_no)
+        
+        id = "1"
         if self._checkConsignmentBillClose(payment):
             logger.debug("Payment: '%s' '%s' complete", payment.pk, payment.type)
             payment.status = 'Complete'
             payment.save()
+        return str(payment.bill.pk)
         
-        
-    def _ConsignmentOutSale_detail(self, product, qty, customer, serial = None):
+    def _ConsignmentOutSale_detail(self, payment, product, qty, customer, serial = None):
         if serial:
-            consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(serialNo = serial)&Q(outStockRecord__bill__customer=customer))
+            consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(payment = payment)&
+                                                                        Q(outStockRecord__product = product)&
+                                                                        Q(serialNo = serial)&
+                                                                        Q(outStockRecord__bill__customer=customer)).order_by('create_at')
             for consignmentOutDetail in consignmentOutDetails:
                 consignmentOutDetail.balance += qty
                 if consignmentOutDetail.quantity == consignmentOutDetail.balance:
@@ -1224,9 +1239,9 @@ class Hermes:
                 consignmentOutDetail.save()                
             return
         
-        consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(outStockRecord__type=Hermes.CONSIGNMENT_OUT)&
-                                                                    Q(outStockRecord__bill__customer = customer)&
-                                                                    Q(outStockRecord__product=product))
+        consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(payment = payment)&
+                                                                    Q(outStockRecord__product = product)&
+                                                                    Q(outStockRecord__bill__customer=customer)).order_by('create_at')
         logger.debug("Filter ConsignmentOutDetail, result:'%s'", len(consignmentOutDetails))
         counter = qty
         for consignmentOutDetail in consignmentOutDetails:

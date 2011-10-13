@@ -10,7 +10,10 @@ def IMEIOnly(obj):
 @register.filter
 def FOCHidden(obj):
     return obj.replace("-foc-product", '')
-    
+
+@register.filter
+def Get(obj, idx):
+    return obj[idx]
 
 @register.filter
 def classname(obj, arg=None):
