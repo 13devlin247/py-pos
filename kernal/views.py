@@ -1817,7 +1817,7 @@ def CommissionTitle(search):
     elif search == 'trade-in/':
         title = "Trade-in "
     elif search == 'gadai/':
-        title = "Gadai "       
+        title = "Pawning "       
     elif search == 'acc/':
         title = "Accessories "    
     else:
