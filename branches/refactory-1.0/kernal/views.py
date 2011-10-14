@@ -195,8 +195,6 @@ def ReportDailySalesExcel(request):
     if startDate == '' or endDate == '':
         startDate = str(date.min)
         endDate = str(date.max)
-    startDate = startDate
-    endDate = endDate
     
     total_amount = 0
     
@@ -213,9 +211,6 @@ def ReportDailySalesExcel(request):
     filename = "report.xls"
     ExcelWriter(filename).export(headers, contents)
     return _wrapper_download_file(open(filename, 'rb'), filename)
-
-
-    
     
 def __categorys_arrays__():
     category_arr = []
@@ -252,6 +247,55 @@ def _combine_list(amount_list, qty_list):
             result.append(str(qty_list[i])+' / $'+str(amount_list[i]))
     return result
 
+def ReportDailyCategoryExcel(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+
+    bills = Bill.objects.filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
+    categorysTitle = __categorys_arrays__()
+    dateTable = {}
+    for bill in bills:
+        bill_date = bill.create_at.strftime("%Y-%m-%d")
+        if bill_date not in dateTable:
+            amount_summary = []
+            qty_summary = []
+            for i in range(len(categorysTitle)):
+                amount_summary.append(0)
+                qty_summary.append(0)
+            dateTable[bill_date] = amount_summary, qty_summary
+        amount_summary, qty_summary = __statistic_bill_detail_by_category__(bill, categorysTitle)
+        total_summary = dateTable[bill_date]
+
+        amount_sum = total_summary[0]
+        qty_sum = total_summary[1]
+        for i in xrange(len(amount_summary)):
+            amount_sum[i] += amount_summary[i] 
+            qty_sum[i] += qty_summary[i]
+    
+    for day in dateTable:
+        dateTable[day] = _combine_list(dateTable[day][0], dateTable[day][1])    
+    
+    
+    contents = []
+    idx = 0
+    headers = sorted(dateTable.keys(), reverse=True)
+    headers.insert(0, '')
+    date_data_list = sorted(dateTable.iteritems(), reverse=True)
+    for category in categorysTitle:
+        content = category+';'
+        for day, categorys in date_data_list:
+            content += categorys[idx]+';'
+        content = content[0:len(content)-1] # remove last ';'
+        idx += 1
+        contents.append(content)
+    
+    filename = "report.xls"
+    ExcelWriter(filename).export(headers, contents)
+    return _wrapper_download_file(open(filename, 'rb'), filename)    
+
 def ReportDailyCategory(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -284,8 +328,8 @@ def ReportDailyCategory(request):
     for day in dateTable:
         dateTable[day] = _combine_list(dateTable[day][0], dateTable[day][1])
 #            total_summary[i] = total_summary[i] + statistic_result[i]
-    return render_to_response('report_dailySales_by_category.html',{'dateTable': sorted(dateTable.iteritems(), reverse=True), 'categorysTitle': categorysTitle,'tableHeader':sorted(dateTable.keys(), reverse=True) ,  'dateRange': str(startDate)+" to "+str(endDate)}, )
-    
+    return render_to_response('report_dailySales_by_category.html',{'dateTable': sorted(dateTable.iteritems(), reverse=True), 'categorysTitle': categorysTitle,'tableHeader':sorted(dateTable.keys(), reverse=True) ,  'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),},)
+
 def printData(request):
     txt = ""
     salesDict = {}
