@@ -31,11 +31,12 @@ td{
 </style> 
 	<div id="content_area_wrapper">  
       <div id="content_area">  
-        <div id="page_title" style="margin-bottom:8px;"><h1>Daily Sales Report</h1>
+        <div id="page_title" style="margin-bottom:8px;"><h1>Daily Sales Summary Report</h1>
         </div>  
-        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}} 
         </div>  
         <div id="table_holder">  	
+            <a href='/report/daily/category/excel/?start_date={{start_date}}&end_date={{end_date}}'>Download Excel</a>            
           <table class="tablesorter report" id="sortable_table">  		
             <thead>  			
               <tr>  				
