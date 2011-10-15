@@ -1243,6 +1243,10 @@ class Hermes:
                                                                     Q(outStockRecord__product = product)&
                                                                     Q(outStockRecord__bill__customer=customer)).order_by('create_at')
         logger.debug("Filter ConsignmentOutDetail, result:'%s'", len(consignmentOutDetails))
+        
+        self._balance_consignment_out_detail(consignmentOutDetails, qty)
+                
+    def _balance_consignment_out_detail(self, consignmentOutDetails, qty):
         counter = qty
         for consignmentOutDetail in consignmentOutDetails:
             consignmentQty = consignmentOutDetail.quantity - consignmentOutDetail.balance
@@ -1261,23 +1265,29 @@ class Hermes:
                 consignmentOutDetail.reason = "Complete"                
                 consignmentOutDetail.save()
                 logger.debug("Consignment Out Sales: '%s' close, balance not done. still have '%s' need to balance", consignmentOutDetail.pk, counter)
+
+    
+    def _mining_serials_by_instockrecord(self, inStockRecord):
+        serials = set()
+        serialNoMappings = SerialNoMapping.objects.filter(inStockRecord = inStockRecord)
+        for serialNoMapping in serialNoMappings:
+            serials.add(serialNoMapping.serial_no)
+        return serials
     
     def ConsignmentOutReturn(self, inStockBatch):
         if inStockBatch.mode == self.CONSIGNMENT_OUT_RETURN:
             logger.debug("Consignment out return found, consignemnt out balance.")
             supplier = inStockBatch.supplier
-            payments = Payment.objects.filter(Q(supplier = supplier))
             inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
             for inStockRecord in inStockRecords:
-                consignmentInDetail = ConsignmentInDetail()
-                consignmentInDetail.inStockBatch = inStockRecord.inStockBatch
-                consignmentInDetail.inStockRecord = inStockRecord
-                consignmentInDetail.quantity = inStockRecord.quantity
-                consignmentInDetail.balance = 0
-                consignmentInDetail.active = True
-                consignmentInDetail.status = Hermes.CONSIGNMENT_IN_STATUS_INCOMPLETE
-                consignmentInDetail.save()        
-                logger.debug("Consignment IN record build! '%s'", consignmentInDetail.pk)
+                product = inStockRecord.product
+                qty = inStockRecord.quantity
+                serials = self._mining_serials_by_instockrecord(inStockRecord)
+                if serials:
+                    pass
+                else:
+                    consignmentOutDetails = ConsignmentOutDetail.objects.filter(Q(payment__bill__customer__name = supplier.name)&Q(outStockRecord__product = product)).order_by('create_at')
+                    self._balance_consignment_out_detail(consignmentOutDetails, qty)
         else:
             logger.debug("InStock mode: %s", inStockBatch.mode)
     
