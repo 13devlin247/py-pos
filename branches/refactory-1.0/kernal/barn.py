@@ -1024,7 +1024,8 @@ class BarnOwl:
         bill.profit = self._summary_profit(outStockRecords) + float(bill.deposit_price) - self._summary_extra_cost(bill) 
         logger.debug("Bill: '%s' profit: '%s'", bill.pk, bill.profit)
         bill.save()        
-        
+        return bill
+    
     def Cost(self, product, serial=None):
         mouse = None
         if product.algo.name == Algo.PERCENTAGE:
@@ -1143,7 +1144,7 @@ class Hermes:
 
     def ReCalcCounterByPK(self, counterID, recalc_bill_profit = False):
         counter = Counter.objects.get(pk=counterID)
-        bills = Bill.objects.filter(counter=counter)
+        bills = Bill.objects.filter(counter=counter).filter(active=True)
         totalAmount = counter.initail_amount
         for bill in bills:
             logger.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
