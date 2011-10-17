@@ -269,7 +269,7 @@ urlpatterns = patterns('',
     url(r'^repair/binding/(?P<imei>[\x20-\x7E]+)*/(?P<billID>[\x20-\x7E]+)*', login_required(RepairBinding)),
     url(r'^extra/list/(?P<billID>[\x20-\x7E]+)*', login_required(ExtraCostList)),    
 
-    url(r'^consignment/out/balance/confirm/$', SalesConfirm),
+    url(r'^consignment/out/balance/confirm/$', InventoryConfirm),
     url(r'^consignment/out/sale/confirm/$', ConsignmentOutSalesConfirm),
     url(r'^consignment/in/balance/confirm/$', ConsignmentInBalance),
     url(r'^sales/list1/$', login_required(direct_to_template),  {'template': 'sales_form.html'}),
