@@ -1790,9 +1790,12 @@ def DeleteBill(request):
     pk = request.GET.get('bill_id','')
     owl = BarnOwl()    
     owl.DeleteBill(pk, request.GET.get("reason",""))
-    owl.RecalcBill(pk)
+    delete_bill = owl.RecalcBill(pk)
+    relc_counter = delete_bill.counter
+    hermes = Hermes()
+    hermes.ReCalcCounterByPK(relc_counter.pk, recalc_bill_profit = True)
+    return HttpResponseRedirect('/counter/close/') 
     
-    return HttpResponseRedirect('/report/daily/')
     
 def PersonReport(request):
     startDate = request.GET.get('start_date','')
