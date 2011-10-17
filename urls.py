@@ -64,7 +64,7 @@ customer_form = {
 }
 
 in_stock_record_list_view = {
-    'queryset': InStockRecord.objects.all(),                      
+    'queryset': InStockRecord.objects.filter(active=True),                      
     'allow_empty': True,                      
     'template_name': 'product_list.html', 
     'extra_context': {'main_link': main_link}, 
@@ -77,14 +77,14 @@ in_stock_record_crud_view  = {
 }
 
 out_stock_record_list_view = {
-    'queryset': OutStockRecord.objects.all().order_by('bill__user'),                      
+    'queryset': OutStockRecord.objects.filter(active=True).order_by('bill__user'),                      
     'allow_empty': True,                      
     'template_name': 'report_personalSales.html', 
     'extra_context': {'main_link': main_link},
 }
 
 imei_list_view = {
-    'queryset': Payment.objects.all().order_by('-create_at'),                      
+    'queryset': Payment.objects.filter(active=True).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_imei.html', 
     'extra_context': {'autocomplete_url': '/imei/ajax/','json_url': '/imei/info/', 'display':'bill' }
@@ -112,14 +112,14 @@ repair_list_view = {
 }
 
 cashsales_list_view = {
-    'queryset': Payment.objects.filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'),                      
+    'queryset': Payment.objects.filter(active=True).filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_payment.html', 
     'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Cash Sales/', 'display':'bill' }
 }
 
 consignment_list_view = {
-    'queryset': Payment.objects.filter(Q(type__exact='Consignment')|Q(status__exact = 'Incomplete')).order_by('create_at'),                      
+    'queryset': Payment.objects.filter(active=True).filter(Q(type__exact='Consignment')|Q(status__exact = 'Incomplete')).order_by('create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_consignment.html', 
     'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Cash Sales/', 'display':'invoice' }
@@ -127,7 +127,7 @@ consignment_list_view = {
 
 
 invoice_list_view = {
-    'queryset': Payment.objects.filter(create_at__gt = date.today()).filter(type='Invoice').order_by('-create_at'),                      
+    'queryset': Payment.objects.filter(active=True).filter(create_at__gt = date.today()).filter(type='Invoice').order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_payment.html', 
     'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Invoice/' , 'display':'invoice' }
@@ -135,7 +135,7 @@ invoice_list_view = {
 
 
 gadai_status_view = {
-    'queryset': InStockBatch.objects.filter(mode = 'pawning').filter(status='Incomplete').order_by('-create_at'),                      
+    'queryset': InStockBatch.objects.filter(active=True).filter(mode = 'pawning').filter(status='Incomplete').order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_gadai.html', 
     'extra_context': {'autocomplete_url': '/gadai/ajax/','json_url': '/gadai/info/' , 'display':'invoice' }
@@ -156,7 +156,7 @@ close_counter_view = {
 }
 
 sales_do_list_view = {
-    'queryset': Payment.objects.filter(type='Invoice').order_by('-create_at'),                      
+    'queryset': Payment.objects.filter(active=True).filter(type='Invoice').order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'do_list.html', 
 }

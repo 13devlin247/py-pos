@@ -54,7 +54,7 @@ def InventoryReturnReport(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    inStockBatchs = InStockBatch.objects.filter(mode='return').filter(create_at__range=(startDate,endDate)).order_by('-create_at')
+    inStockBatchs = InStockBatch.objects.filter(active=True).filter(mode='return').filter(create_at__range=(startDate,endDate)).order_by('-create_at')
     return render_to_response('inventory_return_list.html',{'inStockBatchs': inStockBatchs, 'dateRange': str(startDate)+" to "+str(endDate)}, )
    
 def SalesReturnReport(request):
@@ -65,7 +65,7 @@ def SalesReturnReport(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.filter(mode='return').filter(create_at__range=(startDate,endDate)).order_by('-create_at')
+    bills = Bill.objects.filter(mode='return').filter(active=True).filter(create_at__range=(startDate,endDate)).order_by('-create_at')
     return render_to_response('sales_return_list.html',{'bills': bills, 'dateRange': str(startDate)+" to "+str(endDate)}, )
    
 def CashSalesReport(request):
@@ -76,7 +76,7 @@ def CashSalesReport(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    payments = Payment.objects.all().filter(create_at__range=(startDate,endDate)).filter(type='Cash Sales').order_by('-create_at')
+    payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(type='Cash Sales').order_by('-create_at')
     total = 0
     for payment in payments:
         total += payment.bill.total_price
@@ -100,7 +100,7 @@ def InvoiceReport(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    payments = Payment.objects.all().filter(create_at__range=(startDate,endDate)).filter(type='Invoice').order_by('-create_at')
+    payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(type='Invoice').order_by('-create_at')
     return render_to_response('do_list.html',{'payments': payments, 'dateRange': str(startDate)+" to "+str(endDate)}, )
 
 def ReportInventoryReceipt(request):    
@@ -173,7 +173,7 @@ def ReportDailySales(request):
     total_amount = 0
     total_profit = 0    
     
-    outstocks = OutStockRecord.objects.all().filter(create_at__range=(startDate,endDate))
+    outstocks = OutStockRecord.objects.all().filter(create_at__range=(startDate,endDate)).filter(active=True)
     for outstock in outstocks:
        
         outstock.tt = outstock.unit_sell_price * outstock.quantity
@@ -198,7 +198,7 @@ def ReportDailySalesExcel(request):
     
     total_amount = 0
     
-    outstocks = OutStockRecord.objects.filter(create_at__range=(startDate,endDate))
+    outstocks = OutStockRecord.objects.filter(create_at__range=(startDate,endDate)).filter(active=True)
     headers = ['Inv No', 'Product', 'Cashier', 'Total', 'Type', 'Date']
     contents = []
     for outstock in outstocks:
@@ -254,7 +254,7 @@ def ReportDailyCategoryExcel(request):
         startDate = str(date.min)
         endDate = str(date.max)
 
-    bills = Bill.objects.filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
+    bills = Bill.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
     categorysTitle = __categorys_arrays__()
     dateTable = {}
     for bill in bills:
@@ -304,7 +304,7 @@ def ReportDailyCategory(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
+    bills = Bill.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
     categorysTitle = __categorys_arrays__()
     dateTable = {}
     for bill in bills:
@@ -1920,7 +1920,7 @@ def _build_users_sold_dict(product, startDate, endDate):
  
 def _build_person_sold_dict(user, startDate, endDate):
     #outStockRecordSet = OutStockRecord.objects.filter(product=product)
-    outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+    outStockRecordSet = OutStockRecord.objects.filter(active=True).filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
     users = {}
     for outStockRecord in outStockRecordSet:
         user = outStockRecord.bill.sales_by
@@ -1982,7 +1982,7 @@ def _build_commission_sold_dict(user, startDate, endDate,search):
     
 def _build_item_sold_dict(product1, startDate, endDate):
     #outStockRecordSet = OutStockRecord.objects.filter(product=product)
-    outStockRecordSet = OutStockRecord.objects.filter(product = product1).filter(create_at__range=(startDate,endDate))
+    outStockRecordSet = OutStockRecord.objects.filter(active=True).filter(product = product1).filter(create_at__range=(startDate,endDate))
     products = {}
     for outStockRecord in outStockRecordSet:
         product = outStockRecord.product
