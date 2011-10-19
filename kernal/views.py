@@ -1846,16 +1846,89 @@ def ReportSalesItem(request):
     endDate = endDate+" 23:59:59"
     products = Product.objects.all()
     group = {}
+    total_cost = 0             
+    total_quantity = 0      
+    total_amount = 0      
+    total_profit = 0      
+    total_unit_sell_price = 0 
+    
     for product in products:
-        #outstocks = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+
         outstocks = _build_item_sold_dict(product, startDate, endDate)
+        totalRecordSet = OutStockRecord.objects.filter(active=True).filter(product = product).filter(create_at__range=(startDate,endDate))
+        
+        for record in totalRecordSet:
+            total_cost = total_cost + record.cost
+            total_quantity = total_quantity + record.quantity
+            total_amount = total_amount + record.amount
+            total_profit = total_profit + record.profit
+            total_unit_sell_price = total_unit_sell_price + record.unit_sell_price
+
         if len(outstocks)==0:
             continue
         group[product] = outstocks
 
-    return render_to_response('report_item_sales.html',{'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+    return render_to_response('report_item_sales.html',{'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+
+def StockTitle(search):
+    #title = "aaa"
+    if search == 'newhp_stock/':
+        title = "New Hp "
+    elif search == 'Sndhp_stock/':
+        title = "2nd Hp "
+    elif search == 'pawning_stock/':
+        title = "Pawning "
+    else:
+        pass
+    return title
 
 
+def StockAvailable(request,search):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    products = Product.objects.all()
+    
+    title = StockTitle(search)
+    group = []
+    for product in products:
+        #outstocks = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product__exact = product).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+
+        outstocks = _build_stock_sold_dict(product, startDate, endDate, search)
+        if len(outstocks)==0:
+            continue
+        group.append(outstocks)
+        
+    return render_to_response('report_stock.html',{'session': request.session, 'title' : title , 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+  
+def StockSales(request,search):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    products = Product.objects.all()
+    
+    title = StockTitle(search)
+    group = []
+    for product in products:
+        #outstocks = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product__exact = product).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+
+        outstocks = _build_sales_sold_dict(product, startDate, endDate, search)
+        if len(outstocks)==0:
+            continue
+        group.append(outstocks)
+        
+    return render_to_response('report_product_sales.html',{'session': request.session, 'title' : title , 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+  
+
+  
 def CommissionTitle(search):
     if search=='newhp/':
         title = "New HP "
@@ -1982,11 +2055,99 @@ def _build_commission_sold_dict(user, startDate, endDate,search):
         users[user].append(outStockRecord)
         logger.info("add %s's  outStockRecord" % user )
     return users     
+
+def _build_stock_sold_dict(productg, startDate, endDate,search):
+    if search == 'newhp_stock/':
+        #inStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        
+        logger.debug("*********outStock********%s", inStockRecordSet)
+    elif search == 'Sndhp_stock/':
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        logger.debug("*********outStock********%s", inStockRecordSet)
+    elif search == 'pawning_stock/':
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        logger.debug("*********outStock********%s", inStockRecordSet)
+    else:
+        pass
+    goods = {}    
+    for inStockRecord in inStockRecordSet:
+        inStockRecord.serial_no =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        #logger.debug("serialno: %s ->instockRecord: %s",inStockRecord.serial_no,inStockRecord.pk)
+        #serial_nos =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        """
+        for serial in serial_nos:
+            theno = serial.serial_no
+            logger.debug("the serial no:%s",theno)
+            sellstock = OutStockRecord.objects.filter(serial_no__exact=theno)
+            shownow = sellstock.serial_no
+            logger.debug("sale stock %s",sellstock)  
+        """
+        good = inStockRecord.product
+        if good not in goods:
+            logger.info("create %s in goods" % good )
+            summaryInStockRecord = InStockRecord()
+            summaryInStockRecord.cost = 0
+            summaryInStockRecord.quantity = 0
+            summaryInStockRecord.status = 0
+            summaryInStockRecord.amount = 0
+            goods[good] = [summaryInStockRecord]
+
+        productno = StockCost.objects.get(product =inStockRecord.product)
+        qty = productno.qty
+          
+        goods[good][0].cost = goods[good][0].cost + (inStockRecord.cost * inStockRecord.quantity)
+        #goods[good][0].quantity = qty
+        goods[good][0].quantity = goods[good][0].quantity + inStockRecord.quantity
+        goods[good].append(inStockRecord)
+        logger.info("add %s's  inStockRecord" % good )
+    return goods         
+
+
+
+
+def _build_sales_sold_dict(productg, startDate, endDate,search):
+    if search == 'newhp_stock/':
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        
+        logger.debug("*********outStock********%s", inStockRecordSet)
+    elif search == 'Sndhp_stock/':
+        
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        logger.debug("*********outStock********%s", inStockRecordSet)
+    elif search == 'pawning_stock/':
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        logger.debug("*********outStock********%s", inStockRecordSet)
+    else:
+        pass
+    goods = {}    
+    for inStockRecord in inStockRecordSet:
+        
+        logger.debug("serialno: %s ->instockRecord: %s",inStockRecord.serial_no,inStockRecord.pk)
+        
+
+        good = inStockRecord.product
+        if good not in goods:
+            logger.info("create %s in goods" % good )
+            summaryInStockRecord = InStockRecord()
+            summaryInStockRecord.cost = 0
+            summaryInStockRecord.quantity = 0
+            summaryInStockRecord.status = 0
+            summaryInStockRecord.amount = 0
+            goods[good] = [summaryInStockRecord]  
+        goods[good][0].cost = goods[good][0].cost + (inStockRecord.cost * inStockRecord.quantity)
+        goods[good][0].quantity = goods[good][0].quantity + inStockRecord.quantity 
+        goods[good].append(inStockRecord)
+        logger.info("add %s's  inStockRecord" % good )
+    return goods 
     
 def _build_item_sold_dict(product1, startDate, endDate):
-    #outStockRecordSet = OutStockRecord.objects.filter(product=product)
     outStockRecordSet = OutStockRecord.objects.filter(active=True).filter(product = product1).filter(create_at__range=(startDate,endDate))
     products = {}
+    total_cost = 0
     for outStockRecord in outStockRecordSet:
         product = outStockRecord.product
         if product not in products:
@@ -2008,8 +2169,11 @@ def _build_item_sold_dict(product1, startDate, endDate):
         products[product][0].amount = products[product][0].amount + outStockRecord.amount
         products[product].append(outStockRecord)
         logger.info("add %s's  outStockRecord" % product )
-    return products 
-   
+    return products
+
+
+
+    
 #def __find_SalesIdx__(product):
 #    sales_index = 0
 #    #find last time sell record

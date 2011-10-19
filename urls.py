@@ -286,7 +286,8 @@ urlpatterns = patterns('',
     url(r'^report/inventory/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/inventory/receipt/'} }),                                    
     url(r'^report/inventory/receipt/$', login_required(ReportInventoryReceipt)),                                
     
-    
+
+
     url(r'^report/daily/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/'} }),                                    
     url(r'^report/daily_sales/filter/$', login_required(direct_to_template),  {'template': 'report_daily_sales_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily_sales/'} }), 
     url(r'^report/daily/$', login_required(ReportDaily)),
@@ -298,7 +299,18 @@ urlpatterns = patterns('',
     url(r'^stock/take/$', login_required(CountInventory)),             
     url(r'^bill/void/$', login_required(DeleteBill)),             
 
+    url(r'^report/newhp_stock/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stockavailable/newhp_stock/'} }),
+    url(r'^report/2ndhp_stock/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stockavailable/Sndhp_stock/'} }), 
+    url(r'^report/pawning_stock/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stockavailable/pawning_stock/'} }), 
+    url(r'^report/stockavailable/(?P<search>[\x20-\x7E]+)*',login_required(StockAvailable)),
 
+
+    url(r'^report/newhp_sales/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stocksales/newhp_stock/'} }),
+    url(r'^report/2ndhp_sales/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stocksales/Sndhp_stock/'} }), 
+    url(r'^report/pawning_sales/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stocksales/pawning_stock/'} }), 
+    url(r'^report/stocksales/(?P<search>[\x20-\x7E]+)*',login_required(StockSales)),
+
+    
     url(r'^report/commission/newhp/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/commission/category/newhp/'} }),                      
     url(r'^report/commission/2ndhp/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/commission/category/2ndhp/'} }), 
     url(r'^report/commission/gadai/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/commission/category/gadai/'} }),     
