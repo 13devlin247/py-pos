@@ -882,13 +882,14 @@ def SalesConfirm(request):
         payment = bills_and_payments[1]
         if payment.type == 'Invoice':
             logger.debug("Invoice bill, direct to invoice interface")
-            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
+#            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
         elif payment.type == 'Consignment':
             logger.debug("Consignment bill, direct to Consignment interface")
-            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+#            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
         else:
             logger.debug("Cash sales bill, direct to Recept interface")
-            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
+#            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
+    return HttpResponseRedirect('/sales/list/')
 
 def ConsignmentOutSalesConfirm(request):
     salesDict = {}
@@ -1308,24 +1309,24 @@ def ProductList(request):
     logger.debug("search product list by keyword: %s", keyword)
     mode = request.GET.get('mode','purchase')
     if mode == 'pawning':        
-        serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True))
+        serialNoQuerySet = __search__(SerialNo, Q(serial_no__icontains=keyword) & Q(active__exact=True))
         serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
         list = serialNoList
         return HttpResponse(list, mimetype="text/plain")
     else:
-        productQuerySet = __search__(Product, Q(active=True)&(Q(barcode__contains=keyword)|Q(name__contains=keyword))).order_by("name")
+        productQuerySet = __search__(Product, Q(active=True)&(Q(barcode__icontains=keyword)|Q(name__icontains=keyword))).order_by("name")
         productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
         
-        serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True)).exclude(inStockRecord__inStockBatch__mode__exact='pawning')
+        serialNoQuerySet = __search__(SerialNo, Q(serial_no__icontains=keyword) & Q(active__exact=True)).exclude(inStockRecord__inStockBatch__mode__exact='pawning')
         serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
         list = productList+serialNoList
         return HttpResponse(list, mimetype="text/plain")    
         
     
-    productQuerySet = __search__(Product, Q(barcode__contains=keyword)|Q(name__contains=keyword))
+    productQuerySet = __search__(Product, Q(barcode__icontains=keyword)|Q(name__icontains=keyword))
     productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
 
-    serialNoQuerySet = __search__(SerialNo, Q(serial_no__contains=keyword) & Q(active__exact=True))
+    serialNoQuerySet = __search__(SerialNo, Q(serial_no__icontains=keyword) & Q(active__exact=True))
     serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
     list = productList+serialNoList
     return HttpResponse(list, mimetype="text/plain")
@@ -1404,7 +1405,7 @@ def ProductInfo(request, query):
             return HttpResponse(newJson, mimetype="application/json")    
     except SerialNo.DoesNotExist:
         logger.info("SerialNo '%s' Not Found!! try search product barcode and name " % query)
-    productSet = __search__(Product, (Q(active = True)&(Q(barcode__exact=query)|Q(name__exact=query))))
+    productSet = __search__(Product, (Q(active = True)&(Q(barcode__iexact=query)|Q(name__iexact=query))))
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
 
