@@ -1,0 +1,59 @@
+{% extends "invoice_form.html" %}
+
+{% block css %}
+{% endblock %}
+
+{% block hiddenValue %}
+    <input type="hidden" name="mode" value="Consignment_OUT_SALE"/>
+{% endblock %}
+
+{% block title %}
+        <div id="page_title" style="margin-bottom:8px;">Consignment OutStock Sales
+        </div>  
+{% endblock %}
+
+{% block mode_form %}
+{% endblock %}
+
+{% block autocomplete_search %}  
+	$("#item").autocomplete ("/consignmentout/ajax/", {
+		width: 260,
+        selectFirst: false,
+        extraParams: {
+                    mode: function(){ return $("#mode").attr('value'); }
+                }
+    });      
+{% endblock %}
+
+{% block ajaxCheckBeforeSend %}
+        var reject = false;
+        reject_msg = "";
+        if(_checkInputData() == false){ return; }
+		var msg = '';
+		for(var pk in productTable){
+            product_name = productTable[pk].fields.name
+            if( "imei" in productTable[pk]){
+                product_name = productTable[pk].imei
+            }
+
+/*  ConsignmentOutSales no need to check stock          
+            if(parseInt($("#"+pk+"_quantity").val()) >  productTable[pk].fields.stockCount){
+                reject = true;
+                reject_msg += "Product: '" + product_name + "' only '"+productTable[pk].fields.stockCount+"' item in hand \n"; 
+            }
+  */      
+			var price = parseFloat($("#"+pk+"_price").val());
+			var cost = parseFloat(productTable[pk].fields.cost);
+			if(cost > price){
+				msg += product_name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n';
+			}
+		}
+        
+        if (reject){
+            alert(reject_msg);
+            return;
+        }
+        
+		ans = confirm(msg + " \n Are you sure?");
+		if(!ans){ return; }
+{% endblock %}

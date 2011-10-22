@@ -1,0 +1,46 @@
+{% extends "bill.html" %}
+{% block css %}
+	#bill_detail{
+		height: 700px;
+		vertical-align:top;
+		margin:0;
+		padding:0;		
+	}	
+{% endblock %}
+			{% block PageTitle %}
+			<div id="PageTitle">
+				INVOICE
+			</div>			
+			{% endblock %}
+
+			  {% block BillTitle %}
+              <tr>        
+                <td class="Receipt" colspan=3>            <b>{{bill.customer.name}}        </b> </td>        
+				<td></td>
+              </tr>    
+              <tr>        
+                <td class="Receipt" colspan=3>            <b>{{bill.customer.address}}        </b> </td>        
+				<td></td>
+              </tr>    			  
+              <tr>        
+                <td colspan=4>&nbsp;</td>    
+              </tr>   			  
+              <tr>        
+                <td class="Receipt label">            ATTN<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{bill.customer.contact_person}}        </b></td>    
+                <td class="Receipt label">            Bill No<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{bill.pk}}        </b></td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt label">            TEL<span>:</span>          </td>        
+                <td class="Receipt">            <b>{{bill.customer.phone}}        </b></td>        
+                <td class="Receipt label">            Date<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{bill.create_at}}</b>        </td>    				
+              </tr>    
+              <tr>        
+                <td class="Receipt label">            FAX<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{bill.customer.fax}}                    </b></td>        
+                <td class="Receipt label" >            <b>TERM<span>:</span></b>         </td>        
+                <td class="Receipt" >             <b>{{bill.payment_set.select_related.0.term}}</b>          </td>    				
+              </tr>    
+			  {% endblock %}			

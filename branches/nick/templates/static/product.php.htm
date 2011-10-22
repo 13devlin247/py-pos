@@ -1,0 +1,220 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+   <title> HANDPHONE CMS</title>
+  <meta name="Generator" content="EditPlus">
+  <meta name="Author" content="">
+  <meta name="Keywords" content="">
+  <meta name="Description" content="">
+
+
+  <!-- Framework CSS -->
+	<link rel="stylesheet" href="/product.php_files/screen.css" type="text/css" media="screen, projection">
+	<link rel="stylesheet" href="/product.php_files/print.css" type="text/css" media="print">
+  <!--[if lt IE 8]><link rel="stylesheet" href="../../blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+
+	
+	<!-- Import fancy-type plugin for the sample page. -->
+	<link rel="stylesheet" href="/product.php_files/screen_002.css" type="text/css" media="screen, projection">
+
+
+<link rel="stylesheet" type="text/css" href="/product.php_files/style.css">
+
+<link type="text/css" href="/product.php_files/jquery-ui-1.css" rel="Stylesheet">	
+	<script type="text/javascript" src="/product.php_files/jquery-1.js"></script>
+	<script type="text/javascript" src="/product.php_files/jquery-ui-1.js"></script>
+	
+	
+	<script>
+ 
+$(document).ready(function() {  
+ 
+    //select all the a tag with name equal to modal
+    $('a[name=modal]').click(function(e) {
+        //Cancel the link behavior
+        e.preventDefault();
+        //Get the A tag
+        var id = $(this).attr('href');
+     
+        //Get the screen height and width
+        //var maskHeight = $(document).height();
+        var maskHeight =1000;
+		var maskWidth = $(window).width();
+     
+        //Set height and width to mask to fill up the whole screen
+        $('#mask').css({'width':maskWidth,'height':maskHeight});
+         
+        //transition effect     
+        $('#mask').fadeIn(1000);    
+        $('#mask').fadeTo("slow",0.8);  
+     
+        //Get the window height and width
+        var winH = $(window).height();
+        var winW = $(window).width();
+               
+        //Set the popup window to center
+       // $(id).css('top',  winH/2-$(id).height()/2);
+       // $(id).css('left', winW/2-$(id).width()/2);
+			$(id).css('top');
+			$(id).css('left');
+        //transition effect
+        $(id).fadeIn(2000); 
+     
+    });
+     
+    //if close button is clicked
+    $('.window .close').click(function (e) {
+        //Cancel the link behavior
+        e.preventDefault();
+        $('#mask, .window').hide();
+    });     
+     
+    //if mask is clicked
+    $('#mask').click(function () {
+        $(this).hide();
+        $('.window').hide();
+    });         
+     
+});
+ 
+</script>
+</head>
+
+
+<body>
+
+ 
+ 
+ <div id="mask"></div>
+ <div class="span-30" id="lineshadow" style="width:100%;height:70px;">
+
+<div class="prepend-2 span-24" id="staffmenu" align="center"><div class="span-4" style="color:black;font-family:arial;font-size:12px;">Handphone Shop<br>Powered by Valuesys</div>
+<div class="span-2"><a href="http://localhost/hpbranch/customer.php"><img src="/product.php_files/customer.png" width="45" height="45"><br>Customers</a></div>
+<div class="span-2"><a href="http://localhost/hpbranch/product.php"><img src="/product.php_files/iphone.png" width="45" height="45"><br>Items</a></div>
+<div class="span-2"><a href="http://localhost/hpbranch/report.php"><img src="/product.php_files/financial.png" width="45" height="45"><br>Report</a></div>
+<div class="span-2"><a href="http://localhost/hpbranch/supplier.php"><img src="/product.php_files/supplier.png" width="45" height="45"><br>Supplier</a></div>
+<div class="span-2"><a href="http://localhost/hpbranch/receivings.php"><img src="/product.php_files/box.png" width="45" height="45"><br>Receivings</a></div>
+<div class="span-2"><a href="http://localhost/hpbranch/sales.php"><img src="/product.php_files/credit.png" width="45" height="45"><br>Sales</a></div>
+<div class="span-2"><a href="http://localhost/hpbranch/employees.php"><img src="/product.php_files/role.png" width="45" height="45"><br>Employees</a></div>
+<div class="span-2"><a href="http://localhost/hpbranch/store_config.php"><img src="/product.php_files/setting.png" width="45" height="45"><br>Store Config</a></div>
+
+</div>
+
+</div>
+
+
+<div class="container" style="margin-top:10px;">
+
+
+<div id="boxes">
+ 
+     
+    <!-- #customize your modal window here -->
+ 
+    <div id="dialog" class="window">
+	<div class="span-20" style="background-color:white; padding:15px;border:2px double black;">
+
+<form action="add_product.php" method="POST">
+		<div id="headtitle">New Product</div>
+		<br>
+		<div class="span-18">
+				<div class="span-9"><div class="span-3"><label for="brand">Brand</label></div>
+			<select name="brand" style="width:200px">
+			
+			<option selected="selected" value="x">-- Please Select Brand --</option>
+			<option value="2">Nokia</option><option value="3">Sony Ericsson</option><option value="4">Motorola</option>			</select></div>
+			<div class="span-9 last"><div class="span-3"><label for="product_code">Product Code</label></div>
+			
+			<input name="product_code" type="text">
+			</div>
+			</div>
+			
+		
+			
+			
+			<div class="span-18">
+			<div class="span-9"><div class="span-3"><label for="category">Category</label></div>
+			<select name="category" style="width:200px"><option selected="selected" value="x">-- Please Select Category --</option><option value="2">LED Light</option><option value="3">Handphone</option><option value="4">Batteries</option><option value="6">Case</option></select>			
+			
+			<!-- <div class='span-10 last'><input type='text' name='category' style='width:250px'> 
+			
+			</div>-->
+			
+			</div>
+			<div class="span-9 last"><div class="span-3"><label for="barcode">Bar Code</label></div>
+			
+			<input name="barcode" type="text">
+			</div>
+			</div>
+			
+			
+			
+			<div class="span-18"><div class="span-3"><label for="type">Type</label></div>
+			
+			<div class="span-10 last">
+			<select name="type" style="width:200px">
+			
+			<option selected="selected" value="x"> -- Please Select Type -- </option>
+			<option value="4">Vesper</option><option value="3">Charger</option><option value="6">Earphone</option><option value="11">Brooks</option>			</select>
+			</div>
+			
+			</div>
+			<div class="span-18"><div class="span-3"><label for="product_name">Product Name</label></div><div class="span-10 last"><input name="product_name" style="width: 200px;" type="text"></div></div>
+			<div class="span-18"><div class="span-3"><label for="unit_price">Unit Price</label></div><div class="span-10 last"><input name="unit_price" style="width: 200px;" type="text"></div></div>
+			<div class="span-18"><div class="span-3"><label for="uom">Uom</label></div><div class="span-10 last"><input name="uom" style="width: 200px;" type="text"></div></div>
+			<div class="span-18"><br></div>
+			<hr>
+			<div class="span-18" id="headtitle">Commission<br></div>
+			<div class="span-18"><br></div>
+			<div class="span-18"><div class="span-3"><label for="fixed_rate">Fixed Rate</label></div><div class="span-10 last"><input name="fixed_rate" style="width: 250px;" type="text"></div></div>
+			<div class="span-18"><div class="span-3"><label for="percentage">Percentage</label></div><div class="span-10 last"><input name="percentage" style="width: 250px;" type="text"></div></div>
+			<div class="span-18"><br></div>
+			<div class="span-18"><input value="Add" type="submit"></div>
+		
+		
+		
+		
+		</form>
+		</div>
+		
+		
+		  <div class="span-2"> <a href="#" class="close" style="margin-left: -15px;"><img src="/product.php_files/close.png"></a></div>
+	</div>
+	</div>
+
+
+
+
+
+
+
+
+<div class="span-24" style="background-color:#4D8FAC;">Welcome  Admin <a href="http://localhost/hpbranch/branch_logout.php"> Logout </a></div>
+
+
+
+<div class="span-24">
+
+<div class="span-20">Product List</div><div class="span-4 last"><a href="#dialog" name="modal">New Product</a></div>
+
+<div class="span-24" style="border-top:1px solid gray">
+<form action="delete_product.php" method="POST">
+<div class="prepend-1 span-3"><div id="button_style">Delete</div></div><div class="prepend-1 span-3"><div id="button_style">E-Mail</div></div><div class="prepend-11 span-3 last"><input type="text"></div>
+
+
+</form></div>
+
+<div class="span-24" id="updown">
+	<div class="span-4"><input type="checkbox">Product Name</div><div class="span-3">Category</div><div class="span-3">Brand</div><div class="span-3">Type</div><div class="span-3">Product Code</div><div class="span-3">Bar Code</div><div class="span-2">Action</div>
+
+
+
+</div>
+<div class="span-24" style="border-bottom:1px solid gray;"><div class="span-4"><input name="a[]" value="2" type="checkbox">Xperia</div><div class="span-3">Handphone</div><div class="span-3">Sony Ericsson</div><div class="span-3">Earphone</div><div class="span-3"></div><div class="span-3"></div><div class="span-2"><a href="#">Edit</a></div></div><div class="span-24" style="border-bottom:1px solid gray;"><div class="span-4"><input name="a[]" value="3" type="checkbox">X6</div><div class="span-3">Batteries</div><div class="span-3">Sony Ericsson</div><div class="span-3">Earphone</div><div class="span-3"></div><div class="span-3"></div><div class="span-2"><a href="#">Edit</a></div></div><div class="span-24" style="border-bottom:1px solid gray;"><div class="span-4"><input name="a[]" value="4" type="checkbox">Backflip</div><div class="span-3">LED Light</div><div class="span-3">Sony Ericsson</div><div class="span-3">Charger</div><div class="span-3"></div><div class="span-3"></div><div class="span-2"><a href="#">Edit</a></div></div><div class="span-24" style="border-bottom:1px solid gray;"><div class="span-4"><input name="a[]" value="5" type="checkbox">3210 Classic</div><div class="span-3">Handphone</div><div class="span-3">Nokia</div><div class="span-3">Earphone</div><div class="span-3"></div><div class="span-3"></div><div class="span-2"><a href="#">Edit</a></div></div><div class="span-24" style="border-bottom:1px solid gray;"><div class="span-4"><input name="a[]" value="7" type="checkbox">Flipout</div><div class="span-3">Handphone</div><div class="span-3">Motorola</div><div class="span-3">Earphone</div><div class="span-3"></div><div class="span-3"></div><div class="span-2"><a href="#">Edit</a></div></div>
+<input value="submit" type="submit">
+
+</div>
+
+
+
+</div></body></html>

@@ -1,0 +1,483 @@
+
+
+.user_list{
+
+width:760px;
+}
+
+.user_modify{
+width:300px;
+float:right;
+}
+
+
+.inner_corner{
+
+		padding:50px;
+		border:1px solid gray;
+		text-align:center;
+}
+
+
+
+.loginbox{
+	border:1px solid gray;
+	padding:15px;
+	margin-left:30%;
+	margin-right:30%;
+
+	}
+	
+	
+.menu A:link {text-decoration:none;}
+.menu A:visited {text-decoration: none}
+.menu A:active {text-decoration: none}
+.menu A:hover {text-decoration: underline; color: red;}
+	 
+
+
+.add{
+padding-left:5px;
+width:200px;
+background-color:gray;
+color:white;
+
+}
+
+
+#white A:link {text-decoration:none; color:white;}
+#white A:visited {text-decoration: none; color:white;}
+#white A:active {text-decoration: none; color:white;}
+#white Ai:hover {text-decoration: underline; color: red;}
+
+
+
+/* height of center row*/
+#bor{
+height:670px;
+background-color:#d8e698;
+
+}
+
+
+#bor A:link {text-decoration:none;}
+#bor A:visited {text-decoration: none}
+#bor A:active {text-decoration: none}
+#bor A:hover {text-decoration: none; }
+
+
+
+#group0{
+background-color:#888e7e;
+text-align:center;
+color:white;
+
+-moz-border-radius: 15px;
+border-radius: 15px;
+
+}
+
+
+#blank{
+border-bottom:1px dotted gray;
+background-color:white;
+}
+
+body {
+
+background-image: url("images/background.jpg");
+
+}
+/* height of center row*/
+
+
+#sd5{
+
+background-color:#e0ebaf;
+height:670px;
+
+
+
+
+}
+#sd9{
+
+background-color:#e0ebaf;
+height:auto;
+
+
+
+
+}
+#sd5 A:link {text-decoration:none;}
+#sd5 A:visited {text-decoration: none}
+#sd5 A:active {text-decoration: none}
+#sd5 A:hover {text-decoration: none;}
+	 
+
+#nolink A:link {text-decoration:none;}
+#nolink A:visited {text-decoration: none}
+#nolink A:active {text-decoration: none}
+#nolink A:hover {text-decoration: none; }
+
+
+
+
+#m1{
+
+background-image: url('images/background.jpg');
+}
+
+#gray{
+background-color:#819C8B;
+
+-moz-border-radius: 5px;
+border-radius: 5px;
+
+}
+
+#white{
+font-size:20px;
+color:white;
+}
+
+#white A:link {text-decoration:none;}
+#white A:visited {text-decoration: none}
+#white A:active {text-decoration: none}
+#white A:hover {text-decoration: none; }
+
+
+
+#rates{
+background-color:white;
+
+-moz-border-radius: 5px;
+border-radius: 5px;
+}
+
+#redcolor{
+width:200px;
+text-align:center;
+font:14px #ffffff verdana;
+background-color:white;
+-moz-border-radius: 5px;
+border-radius: 5px;
+}
+
+#redbox{
+width:30px;
+background-color:red;
+-moz-border-radius: 5px;
+border-radius: 5px;
+
+}
+
+#graybox{
+color:white;
+background-color:#473F2D;
+-moz-border-radius: 5px;
+border-radius: 5px;
+
+}
+
+
+#graybox2{
+color:white;
+background-color:#473F2D;
+-moz-border-radius: 5px;
+border-radius: 5px;
+font-size:20px;
+}
+
+#datebox{
+width:85px;
+color:white;
+background-color:orange;
+-moz-border-radius: 5px;
+border-radius: 5px;
+text-align:center;
+box-shadow: 5px 5px 2px red;
+
+
+}
+
+#currency_border{
+	padding:4px 6px 4px 6px;
+	border:1px solid gray;
+	width:auto;
+	background-color:white;
+	
+
+}
+
+
+#r2{
+color:red;
+}
+
+#operation{}
+
+#operation A:link {text-decoration:none;}
+#operation A:visited {text-decoration: none}
+#operation A:active {text-decoration: none}
+#operation A:hover {text-decoration: none; }
+
+
+
+#gray1{
+background-color:#857C55;
+
+-moz-border-radius: 5px;
+border-radius: 5px;
+
+}
+
+
+#colright{
+float:right;
+}
+
+
+#ls{
+height:600px;
+}
+
+#floatright{
+float:left;
+
+}
+/*border table in report*/
+#wline{
+
+border:1px solid gray;
+}
+
+#wline2{
+text-align:center;
+border:1px solid gray;
+
+}
+#wline3{
+background-color:white;
+border:1px solid gray;
+}
+
+
+#black{color:black;}
+#black A:link {text-decoration:none;}
+#black A:visited {text-decoration: none}
+#black A:active {text-decoration: none}
+#black A:hover {text-decoration: none; }
+
+#por{
+
+height:auto;
+}
+
+
+#bal_line{
+border:1px solid black;
+padding:4px;
+margin:4px;
+-moz-border-radius:4px;
+
+}
+
+#bal_line2{
+border:1px solid black;
+padding:4px;
+margin:4px;
+-moz-border-radius:4px;
+text-align:right;
+}
+
+#red_font{
+color:red;
+
+}
+
+#round_line{
+border:1px solid black;
+-moz-border-radius:4px;
+font:18px arial black;
+background-color:white;
+padding:4px;
+}
+
+
+#big_font{
+font:40px arial black;
+float:left;
+margin-right:10px;
+margin-left:10px;
+margin-top:10px;
+}
+
+
+#profit_blue{
+	color:white;
+	background-color:#4D8FAC
+}
+
+#sg_col{
+border:1px solid gray;
+background-color:#FB8136;
+width:70px;
+text-align:center;
+
+
+}
+.le_a{
+float:left;
+}
+#go1{
+width:80px;
+}
+
+#total_profit{
+font:60px verdana black;
+}
+
+
+#menubar{
+
+-moz-box-shadow: 0 0 5px #888;
+-webkit-box-shadow: 0 0 5px#888;
+box-shadow: 0 0 5px #888;
+}
+
+#menubar a{
+text-decoration:none;
+color:white;
+}
+
+#leftmenu {
+
+background-color:#857C55;
+
+height:900px;
+}
+
+
+#leftmenu a{
+	text-decoration:none;
+	color:black;
+	font-family:verdana;
+	margin-left:20px;
+	
+}
+#leftmenu a:hover{
+
+	background-color:#E2BE9F;
+-moz-border-radius: 2px;
+border-radius: 2px;
+}
+
+#right_content{
+	background-color:#8DB255;
+
+}
+#headtitle{
+	width:95%;
+	background-color:black;
+	color:white;
+-moz-border-radius: 2px;
+border-radius: 2px;
+padding-left:3px;
+}
+
+
+#headtitle3{
+
+	background-color:black;
+	color:white;
+-moz-border-radius: 2px;
+border-radius: 2px;
+padding-left:3px;
+}
+#headtitle2{
+	width:170px;
+	background-color:black;
+	color:white;
+-moz-border-radius: 2px;
+border-radius: 2px;
+padding-left:15px;
+}
+
+#darkgreen{
+
+
+
+
+}
+#button_style{
+
+border:2px double gray;
+
+background-color:#4D8FAC;
+margin:1px;
+text-align:center;
+}
+
+
+#updown{
+
+background-color:#4D8FAC;
+
+border-top:1px solid blue;
+border-bottom:1px solid blue;
+
+color:white;
+}
+
+#staffmenu{
+width:94%;
+  background: -moz-linear-gradient(top, #294c6f 20%, #5f91c4 100%);
+  background: -webkit-gradient(linear, left top, left bottom, from(#35425d), to(#fff));
+ color:white;
+}
+
+#staffmenu a{
+text-decoration:none;
+
+
+  color:white;
+}
+
+
+
+/* Z-index of #mask must lower than #boxes .window */
+#mask {
+  position:absolute;
+  z-index:9000;
+  background-color:#000;
+  display:none;
+height:100%;
+}
+   
+#boxes .window {
+  position:absolute;
+  width:440px;
+  height:200px;
+  display:none;
+  z-index:9999;
+  padding:20px;
+  
+}
+ 
+ 
+/* Customize your modal window here, you can add background image too */
+#boxes #dialog {
+  width:375px; 
+  height:203px;
+}
+
+#lineshadow{
+
+-moz-box-shadow: 0 0 5px 5px #888;
+-webkit-box-shadow: 0 0 5px 5px#888;
+box-shadow: 0 0 5px 5px #888;
+
+}
+
+

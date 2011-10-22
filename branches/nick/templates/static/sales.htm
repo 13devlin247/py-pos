@@ -1,0 +1,289 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+	<!-- base href="https://demo.phppointofsale.com/" -->
+	<title>PHP Point Of Sale, Inc -- Powered by PHP Point Of Sale</title>
+	<link rel="stylesheet" rev="stylesheet" href="sales_files/phppos.css">
+	<link rel="stylesheet" rev="stylesheet" href="sales_files/phppos_print.css" media="print">
+	<script>BASE_URL = 'https://demo.phppointofsale.com/index.php';</script>
+	<script src="sales_files/jquery-1.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_004.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_008.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_005.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_007.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_006.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_002.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_003.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/jquery_009.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/thickbox.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/common.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/manage_tables.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/swfobject.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/date.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	<script src="sales_files/datepicker.js" type="text/javascript" language="javascript" charset="UTF-8"></script>
+	
+<style type="text/css">
+html {
+    overflow: auto;
+}
+</style>
+
+</head>
+<body>
+<div id="menubar">
+	<div id="menubar_container">
+		<div id="menubar_company_info">
+		<span id="company_title">PHP Point Of Sale, Inc</span><br>
+		<span style="font-size:8pt;">Powered by PHP Point Of Sale</span>
+	</div>
+
+		<div id="menubar_navigation">
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/customers">
+				<img src="sales_files/customers.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/customers">Customers</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/items">
+				<img src="sales_files/items.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/items">Items</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/item_kits">
+				<img src="sales_files/item_kits.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/item_kits">Item Kits</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/suppliers">
+				<img src="sales_files/suppliers.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/suppliers">Suppliers</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/reports">
+				<img src="sales_files/reports.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/reports">Reports</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/receivings">
+				<img src="sales_files/receivings.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/receivings">Receivings</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/sales">
+				<img src="sales_files/sales.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/sales">Sales</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/employees">
+				<img src="sales_files/employees.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/employees">Employees</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/giftcards">
+				<img src="sales_files/giftcards.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/giftcards">Gift Cards</a>
+			</div>
+						<div class="menu_item">
+				<a href="https://demo.phppointofsale.com/index.php/config">
+				<img src="sales_files/config.png" alt="Menubar Image" border="0"></a><br>
+				<a href="https://demo.phppointofsale.com/index.php/config">Store Config</a>
+			</div>
+					</div>
+
+		<div id="menubar_footer">
+		Welcome John Doe! | 		<a href="https://demo.phppointofsale.com/index.php/home/logout">Logout</a>		</div>
+
+		<div id="menubar_date">
+		April 23, 2011 12:39 am		</div>
+
+	</div>
+</div>
+<div id="content_area_wrapper">
+<div id="content_area">
+<div id="page_title" style="margin-bottom:8px;">Sales Register</div>
+<div id="register_wrapper">
+<form action="https://demo.phppointofsale.com/index.php/sales/change_mode" method="post" id="mode_form">	<span>Register Mode</span>
+<select name="mode" onchange="$('#mode_form').submit();">
+<option value="sale" selected="selected">Sale</option>
+<option value="return">Return</option>
+</select><div id="show_suspended_sales_button">
+	<a href="https://demo.phppointofsale.com/index.php/sales/suspended/width:425" class="thickbox none" title="Suspended Sales"><div class="small_button"><span style="font-size:73%;">Suspended Sales</span></div></a></div>
+</form>
+<form action="https://demo.phppointofsale.com/index.php/sales/add" method="post" id="add_item_form"><label id="item_label" for="item">
+
+Find/Scan Item</label>
+<input class="ac_input" autocomplete="off" name="item" id="item" size="40" type="text"><div id="new_item_button_register">
+		<a href="https://demo.phppointofsale.com/index.php/items/view/-1/width:360" class="thickbox none" title="New Item"><div class="small_button"><span>New Item</span></div></a>	</div>
+
+</form>
+<table id="register">
+<thead>
+<tr>
+<th style="width: 11%;">Delete</th>
+<th style="width: 30%;">Item #</th>
+<th style="width: 30%;">Item Name</th>
+<th style="width: 11%;">Price</th>
+<th style="width: 11%;">Qty.</th>
+<th style="width: 11%;">Disc %</th>
+<th style="width: 15%;">Total</th>
+<th style="width: 11%;">Edit</th>
+</tr>
+</thead>
+<tbody id="cart_contents">
+<tr><td colspan="8">
+<div class="warning_message" style="padding:7px;">There are no items in the cart</div>
+</td></tr>
+</tbody>
+</table>
+</div>
+
+
+<div id="overall_sale">
+	<form action="https://demo.phppointofsale.com/index.php/sales/select_customer" method="post" id="select_customer_form">		<label id="customer_label" for="customer">Select Customer (Optional)</label>
+		<input class="ac_input" autocomplete="off" name="customer" value="Start Typing customer's name..." id="customer" size="30" type="text">		</form>
+		<div style="margin-top:5px;text-align:center;">
+		<h3 style="margin: 5px 0 5px 0">OR</h3>
+		<a href="https://demo.phppointofsale.com/index.php/customers/view/-1/width:350" class="thickbox none" title="New Customer"><div class="small_button" style="margin:0 auto;"><span>New Customer</span></div></a>		</div>
+		<div class="clearfix">&nbsp;</div>
+		
+	<div id="sale_details">
+		<div class="float_left" style="width:55%;">Sub Total:</div>
+		<div class="float_left" style="width:45%;font-weight:bold;">$0.00</div>
+
+		
+		<div class="float_left" style="width:55%;">Total:</div>
+		<div class="float_left" style="width:45%;font-weight:bold;">$0.00</div>
+	</div>
+
+
+
+
+	</div>
+<div class="clearfix" style="margin-bottom:30px;">&nbsp;</div>
+
+
+</div>
+</div>
+<div id="footer"> You are using PHP Point Of Sale Version 11.4.
+Please visit my <a href="http://www.phppointofsale.com/" target="_blank">website</a> to learn the lastest information about the project.</div>
+
+
+<script type="text/javascript" language="javascript">
+$(document).ready(function()
+{
+    $("#item").autocomplete('https://demo.phppointofsale.com/index.php/sales/item_search',
+    {
+    	minChars:0,
+    	max:100,
+    	selectFirst: false,
+       	delay:10,
+    	formatItem: function(row) {
+			return row[1];
+		}
+    });
+
+    $("#item").result(function(event, data, formatted)
+    {
+		$("#add_item_form").submit();
+    });
+
+	$('#item').focus();
+
+	$('#item').blur(function()
+    {
+    	$(this).attr('value',"Start Typing item's name or scan barcode...");
+    });
+
+	$('#item,#customer').click(function()
+    {
+    	$(this).attr('value','');
+    });
+
+    $("#customer").autocomplete('https://demo.phppointofsale.com/index.php/sales/customer_search',
+    {
+    	minChars:0,
+    	delay:10,
+    	max:100,
+    	formatItem: function(row) {
+			return row[1];
+		}
+    });
+
+    $("#customer").result(function(event, data, formatted)
+    {
+		$("#select_customer_form").submit();
+    });
+
+    $('#customer').blur(function()
+    {
+    	$(this).attr('value',"Start Typing customer's name...");
+    });
+
+    $("#finish_sale_button").click(function()
+    {
+    	if (confirm('Are you sure you want to submit this sale? This cannot be undone.'))
+    	{
+			    			$('#finish_sale_form').submit();
+			    	}
+    });
+
+	$("#suspend_sale_button").click(function()
+	{
+		if (confirm('Are you sure you want to suspend this sale?'))
+    	{
+			$('#finish_sale_form').attr('action', 'https://demo.phppointofsale.com/index.php/sales/suspend');
+    		$('#finish_sale_form').submit();
+    	}
+	});
+
+    $("#cancel_sale_button").click(function()
+    {
+    	if (confirm('Are you sure you want to clear this sale? All items will cleared.'))
+    	{
+    		$('#cancel_sale_form').submit();
+    	}
+    });
+
+	$("#add_payment_button").click(function()
+	{
+	   $('#add_payment_form').submit();
+    });
+
+	$("#payment_types").change(checkPaymentTypeGiftcard).ready(checkPaymentTypeGiftcard)
+});
+
+function post_item_form_submit(response)
+{
+	if(response.success)
+	{
+		$("#item").attr("value",response.item_id);
+		$("#add_item_form").submit();
+	}
+}
+
+function post_person_form_submit(response)
+{
+	if(response.success)
+	{
+		$("#customer").attr("value",response.person_id);
+		$("#select_customer_form").submit();
+	}
+}
+
+function checkPaymentTypeGiftcard()
+{
+	if ($("#payment_types").val() == "Gift Card")
+	{
+		$("#amount_tendered_label").html("Gift Card Number");
+		$("#amount_tendered").val('');
+		$("#amount_tendered").focus();
+	}
+	else
+	{
+		$("#amount_tendered_label").html("Amount Tendered");		
+	}
+}
+
+</script>
+</body></html>
