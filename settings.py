@@ -6,13 +6,15 @@ TEMPLATE_DEBUG = DEBUG
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
+import os
+p1 = os.path.dirname(__file__)
 
 MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
         'ENGINE': 'sqlite3', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'd:/pos/pos.sqlite',                      # Or path to database file if using sqlite3.
+        'NAME': p1+'/pos.sqlite',                      # Or path to database file if using sqlite3.
         #'NAME': '/home/zhijian/pos/pos.sqlite',                      # Or path to database file if using sqlite3.
         'USER': '',                      # Not used with sqlite3.
         'PASSWORD': '',                  # Not used with sqlite3.
@@ -20,6 +22,7 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
+
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -46,7 +49,7 @@ USE_L10N = True
 
 # Absolute filesystem path to the directory that will hold user-uploaded files.
 # Example: "/home/media/media.lawrence.com/media/"
-MEDIA_ROOT = 'd:/pos/'
+MEDIA_ROOT = p1 #'d:/pos/'
 
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
@@ -71,9 +74,9 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 # Additional locations of static files
 STATICFILES_DIRS = (
     '/home/zhijian/pos/templates/static', 
-    'd:/pos/templates/static', 
-    'd:/pos/templates/', 
-    'd:/pos/static', 
+    p1+'/templates/static', 
+    p1+'/templates/', 
+    p1+'/static', 
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
@@ -120,8 +123,8 @@ ROOT_URLCONF = 'pos.urls'
 TEMPLATE_DIRS = (
     '/home/zhijian/pos/templates', 
     '/home/zhijian/pos/kernal', 
-    'd:/pos/templates', 
-    'd:/pos/kernal', 
+    p1+'/templates', 
+    p1+'/kernal', 
     '',
     # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
     # Always use forward slashes, even on Windows.

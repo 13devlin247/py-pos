@@ -13,6 +13,7 @@
 {% endblock %}
 
 {% block mode_form %}
+		  <div id="error_msg">{{msg}}</div>
           <div id="mode_form">
             <span>Receiving Mode
             </span>  
@@ -22,7 +23,9 @@
 			  <option value="trade-in">Trade-in
               </option>  			  
               <option value="warranty">Warranty
-              </option>  
+              </option>
+              <option value="pawning">Pawning
+              </option>                
             </select>
           </div>   
 {% endblock %}

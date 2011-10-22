@@ -1,0 +1,63 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Daily Sales Report</h1>
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder"> <a href='/report/daily_sales/excel/?start_date={{start_date}}&end_date={{end_date}}'>Download Excel</a>
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>Inv No
+                </th>  								
+                <th>Product
+                </th>  								
+                <th>Cashier
+                </th>  								
+                <th>Total
+                </th>  								
+                <th>Type
+                </th>  								
+                <th>Date
+                </th>  												
+              </tr>  		
+            </thead>  		
+            <tbody>  						
+			{%for outstock in outstocks %}
+              <tr>  				
+                <td>
+                  <a href="/sales/bill/{{outstock.bill.pk}}" target="_blank">{{outstock.pk}}</a></td>  <td>{{outstock.product}}</td>  <td>{{outstock.user}}</td>  <td>{{outstock.tt}}</td>  <td>{{outstock.bill.mode}}</td>  <td>{{outstock.create_at}}</td>
+              </tr>  			
+			{%endfor%}
+            </tbody>  	
+            <tfoot>
+                <tr>
+                    <td colspan=3>Total:</td>
+                    <td>{{total_amount}}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+          </table>  
+        </div>  
+      </div>  
+    </div>
+
+{% endblock %}
+
+
+	

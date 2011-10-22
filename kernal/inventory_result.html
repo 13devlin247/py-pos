@@ -3,12 +3,19 @@
 {% endblock %}
 
 					{% block PageTitle %}
+						<div id="error_msg">{{error_msg}}</div>
 						<div id="PageTitle">
 							Receiving Record
 						</div>					
 					{% endblock %}
                     
                     {% block paging%}
+<style type="text/css">
+.total_qty{
+    text-align: center;
+}
+
+</style>                    
 					<div class="pagination">
 						<span class="step-links">
 							{% if inStockRecordset.has_previous %}
@@ -50,13 +57,21 @@
                 <td class="Receipt">            <b>{{inStockBatch.invoice_no}}                    </b></td>        
                 <td class="Receipt label">      DO Date<span>:</span>              </td>        
                 <td class="Receipt"><b>{{inStockBatch.do_date}}</b></td>    
-              </tr>              
+              </tr>
+              <tr>        
+                <td class="Receipt label">            </td>        
+                <td class="Receipt">            </td>        
+                <td class="Receipt label">      Ref.Bill No<span>:</span>              </td>        
+                <td class="Receipt"><b>{{inStockBatch.refBill_no}}</b></td>    
+              </tr>					              
 			  {% endblock %}                    
               
                 {% block bill_detail %}
                     <script type="text/javascript">
                     var sub_total = 0;
                     </script>
+                    <form action="/product/inventory/cost/update/">
+                    <input type=hidden name="inStockBatch_pk" value="{{inStockBatch.pk}}"/>
 					<table>   
 						  <tr>        
 							<td colspan="5" class="border-bottom"></td>    
@@ -75,9 +90,9 @@
 							{{record}}
 							<tr>
 							<td class="Receipt itemno"> {{forloop.counter}} {{inStockRecord.product.name}}</td>
-							<td class="Receipt">{{inStockRecord.product.description}} {% if  inStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMEI: {{inStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
+							<td class="Receipt">{{inStockRecord.product.description}}</td>
 							<td class="right qty">{{inStockRecord.quantity}}</td>
-							<td align="right" class="price">{{inStockRecord.cost}}</td>
+							<td align="right" class="price"><input type=text name="inStockRecord_{{inStockRecord.pk}}" value="{{inStockRecord.cost}}" size=10></input></td>
 							<td align="right" class="price">
                                 <script>
                                     function roundNumber(number, decimals) { // Arguments: number to round, number of decimal places
@@ -87,6 +102,7 @@
                                     total = roundNumber({{inStockRecord.cost}}*{{inStockRecord.quantity}}, 2)
                                     document.write(total)
                                     sub_total += total;
+                                    sub_total = roundNumber(sub_total, 2)
                                 </script>
                             </td>
 							</tr>
@@ -95,20 +111,23 @@
 							<td class="Receipt itemno" style="padding: 0 0 0 4em" colspan = "5">
                                 <u> IMEI: </u> </br>
                                 {% for serial in inStockRecord.serialno_set.select_related %}
-                                    {{serial}} </br>
+                                    {{serial.serial_no|IMEIOnly}} </br>
                                 {% endfor %}
                             </td>
                             {% endif %}
 							</tr>                            
 						{% endfor %}			  
-					</table>				
+					</table>
+					<input type="Submit" value="Update Cost"/>
+					</form>				
                 {% endblock %}        
 
             {% block bill_summary%}
             <tfoot>
               <tr id="bill_summary">        
-				<td class="summary Receipt"  colspan=3></td>        
-                <td  align="right" class="summary" >            Total         </td>        
+                <td class="summary Receipt" colspan=1></td>        
+				<td class="summary Receipt" colspan=1><div style="float: right; margin: 0 8em 0 0" >{{total_qty}}</div></td>        
+                <td  align="right" class="summary"  colspan=2>            Total         </td>        
                 <td align="right" class="summary" >            <script>document.write(sub_total) </script>      </td>    
               </tr>            
               <tr>        

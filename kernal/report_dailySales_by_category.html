@@ -1,9 +1,9 @@
 {% extends "product.php.html" %}
 
-{% block left_link %}
-    {% for name,link in main_link.items %}
-            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
-    {% endfor%}
+
+{% block extrastyle %}
+    <link rel="stylesheet" href="/static/css/screen.css" type="text/css" media="screen, projection">
+    <link rel="stylesheet" href="/static/css/print.css" type="text/css" media="print"><!--[if lt IE 8]><link rel="stylesheet" href="../../blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
 {% endblock %}
 
 {% block content %}   
@@ -11,35 +11,53 @@
 .innertable {
 	display: none;
 }
+
+.container {
+    margin: 0 1em 0 1em;
+    width: auto;
+}
+#content_area {
+    float: left;
+    width: auto;
+}
+
+#content_area_wrapper{
+    float: left;
+    width: auto;
+}
+td{
+    text-align:center;
+}
 </style> 
 	<div id="content_area_wrapper">  
       <div id="content_area">  
-        <div id="page_title" style="margin-bottom:8px;"><h1>Daily Sales Report</h1>
+        <div id="page_title" style="margin-bottom:8px;"><h1>Daily Sales Summary Report</h1>
         </div>  
-        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}} 
         </div>  
         <div id="table_holder">  	
+            <a href='/report/daily/category/excel/?start_date={{start_date}}&end_date={{end_date}}'>Download Excel</a>            
           <table class="tablesorter report" id="sortable_table">  		
             <thead>  			
               <tr>  				
                 <th>Sale ID
                 </th>  								
-                {% for title in categorysTitle%}
+                {% for title in tableHeader%}
                     <th>{{title}}</th>  								
                  {% endfor %}
               </tr>  		
             </thead>  		
-            <tbody>  						
-			{%for date, categorys in dateTable.items %}
-              <tr>  				
-                <td><a href="/sales/bill/{{bill.pk}}" target="_blank">{{date}}</a></td> 
-
-                    {% for category in categorys%}
+            <tbody>  			
+			{% for category in categorysTitle %}
+                {% with forloop.counter0 as idx%}
+                <tr>
                     <td>{{category}}</td>
+                    {%for date, categorys in dateTable %}
+                    <td>{{categorys|Get:idx}}</td>
                     {% endfor %}
-                  
-              </tr>  			
-			{%endfor%}
+                </tr>
+                {% endwith %}
+            {% endfor %}
             </tbody>  	
           </table>  
         </div>  
