@@ -67,9 +67,13 @@
 			{%for product, inStockRecordSet in products.items%}
 				{%for inStockRecord in inStockRecordSet%}
 					{% if forloop.counter == 1%}
-						<tr class="summary"><td></td><td>{{product.name}}{{inStockRecord.inStockBatch.pk}}</td><td></td><td></td><td>{{inStockRecord.quantity}}</td><td>{{inStockRecord.cost}}</td> <td></td>  </tr>
+                        {% if inStockRecord.quantity != 0 %}
+                            <tr class="summary"><td></td><td>{{product.name}}{{inStockRecord.inStockBatch.pk}}</td><td></td><td></td><td>{{inStockRecord.quantity}}</td><td>{{inStockRecord.cost}}</td> <td></td>  </tr>
+                        {% endif %}
 					{% else %}
-						<tr class="detail"><td>{{inStockRecord.inStockBatch.pk}}</td><td>{{inStockRecord.product}}</td><td>{% for serial_no in inStockRecord.serial_no%}{{serial_no.serial_no}}<br>{%endfor%}</td><td>{{inStockRecord.inStockBatch.supplier}}</td><td>{{inStockRecord.quantity}}</td><td>{{inStockRecord.cost}}</td> <td>{{inStockRecord.create_at}}</td> </tr>
+                        {% if inStockRecord.serial_no.count != 0 %}
+                            <tr class="detail"><td>{{inStockRecord.inStockBatch.pk}}</td><td>{{inStockRecord.product}}</td><td>{% for serial_no in inStockRecord.serial_no%}{{serial_no.serial_no}}({{serial_no.qty}})<br>{%endfor%}</td><td>{{inStockRecord.inStockBatch.supplier}}</td><td>{{inStockRecord.total_available}}</td><td>{{inStockRecord.cost}}</td> <td>{{inStockRecord.create_at}}</td> </tr>
+                        {% endif %}
 					{% endif %}
 				{%endfor%}
 			{%endfor%}
