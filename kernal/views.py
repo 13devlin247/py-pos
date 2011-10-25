@@ -882,14 +882,14 @@ def SalesConfirm(request):
         payment = bills_and_payments[1]
         if payment.type == 'Invoice':
             logger.debug("Invoice bill, direct to invoice interface")
-#            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
+            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
         elif payment.type == 'Consignment':
             logger.debug("Consignment bill, direct to Consignment interface")
-#            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
         else:
             logger.debug("Cash sales bill, direct to Recept interface")
-#            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
-    return HttpResponseRedirect('/sales/list/')
+            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
+#    return HttpResponseRedirect('/sales/list/')
 
 def ConsignmentOutSalesConfirm(request):
     salesDict = {}
