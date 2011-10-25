@@ -187,35 +187,35 @@ urlpatterns = patterns('',
     url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
     url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^product/delete/$', login_required(ProductDelete)),    
-    url(r'^product/save/(?P<productID>[\x20-\x7E]+)*', login_required(ProductSave)), # controller
-    url(r'^product/info/(?P<query>[\x20-\x7E]+)*', login_required(ProductInfo)), # controller
+    url(r'^product/save/(?P<productID>[\x20-\x7E]+)', login_required(ProductSave)), # controller
+    url(r'^product/info/(?P<query>[\x20-\x7E]+)', login_required(ProductInfo)), # controller
     url(r'^product/inventory/cost/update/', login_required(ProductCostUpdate)), # controller
-    url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*/(?P<serial>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
-    url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)*', login_required(ProductInventory)), # controller
-    url(r'^product/returncost/(?P<productID>[\x20-\x7E]+)*/(?P<serial>[\x20-\x7E]+)*', login_required(ProductRealCost)),
-    url(r'^product/returncost/(?P<productID>[\x20-\x7E]+)*', login_required(ProductRealCost)),
+    url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)/(?P<serial>[\x20-\x7E]+)', login_required(ProductInventory)), # controller
+    url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)', login_required(ProductInventory)), # controller
+    url(r'^product/returncost/(?P<productID>[\x20-\x7E]+)/(?P<serial>[\x20-\x7E]+)', login_required(ProductRealCost)),
+    url(r'^product/returncost/(?P<productID>[\x20-\x7E]+)', login_required(ProductRealCost)),
 
 
     url(r'^supplier/create/$', login_required(create_update.create_object), supplier_form), 
     url(r'^supplier/search/$', login_required(list_detail.object_list), product_list_view),
     url(r'^supplier/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^supplier/delete/$', login_required(ProductDelete)),    
-    url(r'^supplier/save/(?P<supplierID>[\x20-\x7E]+)*', login_required(SupplierSave)), # controller
+    url(r'^supplier/save/(?P<supplierID>[\x20-\x7E]+)', login_required(SupplierSave)), # controller
 
     url(r'^customer/create/$', login_required(create_update.create_object), customer_form), 
     url(r'^customer/search/$', login_required(list_detail.object_list), product_list_view),
     url(r'^customer/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^customer/delete/$', login_required(ProductDelete)),    
-    url(r'^customer/save/(?P<customerID>[\x20-\x7E]+)*', login_required(CustomerSave)), # controller    
-    url(r'^customer/info/(?P<query>[\x20-\x7E]+)*', login_required(CustomerInfo)),    # customer info json
-    url(r'^supplier/info/(?P<query>[\x20-\x7E]+)*', login_required(SupplierInfo)),    # supplier info json
+    url(r'^customer/save/(?P<customerID>[\x20-\x7E]+)', login_required(CustomerSave)), # controller    
+    url(r'^customer/info/(?P<query>[\x20-\x7E]+)', login_required(CustomerInfo)),    # customer info json
+    url(r'^supplier/info/(?P<query>[\x20-\x7E]+)', login_required(SupplierInfo)),    # supplier info json
     url(r'^payment/info/(?P<type>[\x20-\x7E]+)/(?P<query>[\x20-\x7E]+)', login_required(PaymentInfo)),    # payment info json
-    url(r'^payment/info/(?P<pk>[\x20-\x7E]+)*', login_required(PaymentInfoByPK)),    # payment info json    
-    url(r'^imei/info/(?P<imei>[\x20-\x7E]+)*', login_required(ImeiInfo)),    # imei info json
-    url(r'^gadai/info/(?P<query>[\x20-\x7E]+)*', login_required(GadaiInfo)),
-    url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)*', login_required(VoidBillInfo)),
-    url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)*', login_required(CloseCounterInfo)),	
-    url(r'^productname/info/(?P<query>[\x20-\x7E]+)*', login_required(ProductNameInfo)),
+    url(r'^payment/info/(?P<pk>[\x20-\x7E]+)', login_required(PaymentInfoByPK)),    # payment info json    
+    url(r'^imei/info/(?P<imei>[\x20-\x7E]+)', login_required(ImeiInfo)),    # imei info json
+    url(r'^gadai/info/(?P<query>[\x20-\x7E]+)', login_required(GadaiInfo)),
+    url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)', login_required(VoidBillInfo)),
+    url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)', login_required(CloseCounterInfo)),	
+    url(r'^productname/info/(?P<query>[\x20-\x7E]+)', login_required(ProductNameInfo)),
 
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
@@ -235,7 +235,7 @@ urlpatterns = patterns('',
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
     url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
-    url(r'^inventory/result/(?P<inStockBatchID>[\x20-\x7E]+)*', login_required(QueryInventory)),                                
+    url(r'^inventory/result/(?P<inStockBatchID>[\x20-\x7E]+)', login_required(QueryInventory)),                                
     url(r'^in_stock_record/create/$', login_required(create_update.create_object), in_stock_record_crud_view), 
     url(r'^in_stock_record/search/$', login_required(list_detail.object_list),  in_stock_record_list_view), 
 #    url(r'^in_stock_record/save/$', login_required(InStockRecordSave)), 
@@ -257,17 +257,17 @@ urlpatterns = patterns('',
 
     url(r'^deposit/add/$', login_required(direct_to_template),  {'template': 'deposit.html',  'extra_context': {'form': DepositForm(), 'action':'/deposit/add/confirm/'} }),    
     url(r'^deposit/add/confirm/$', DepositSave),
-    url(r'^deposit/info/(?P<query>[\x20-\x7E]+)*', login_required(DepositInfo)),
+    url(r'^deposit/info/(?P<query>[\x20-\x7E]+)', login_required(DepositInfo)),
     
     url(r'^service/add/$', login_required(direct_to_template),  {'template': 'service.html',  'extra_context': {'form': ServiceJobForm(), 'action':'/service/add/confirm/'} }),    
     url(r'^service/add/confirm/$', ServiceSave),
-    url(r'^service/info/(?P<query>[\x20-\x7E]+)*', login_required(ServiceInfo)),    
+    url(r'^service/info/(?P<query>[\x20-\x7E]+)', login_required(ServiceInfo)),    
     
     url(r'^repair/add/$', login_required(direct_to_template),  {'template': 'repair.html',  'extra_context': {'form': RepairForm(), 'action':'/repair/add/confirm/'} }),    
     url(r'^repair/add/confirm/$', RepairSave),
-    url(r'^repair/info/(?P<query>[\x20-\x7E]+)*', login_required(RepairInfo)),
-    url(r'^repair/binding/(?P<imei>[\x20-\x7E]+)*/(?P<billID>[\x20-\x7E]+)*', login_required(RepairBinding)),
-    url(r'^extra/list/(?P<billID>[\x20-\x7E]+)*', login_required(ExtraCostList)),    
+    url(r'^repair/info/(?P<query>[\x20-\x7E]+)', login_required(RepairInfo)),
+    url(r'^repair/binding/(?P<imei>[\x20-\x7E]+)/(?P<billID>[\x20-\x7E]+)*', login_required(RepairBinding)),
+    url(r'^extra/list/(?P<billID>[\x20-\x7E]+)', login_required(ExtraCostList)),    
 
     url(r'^consignment/out/balance/confirm/$', InventoryConfirm),
     url(r'^consignment/out/sale/confirm/$', ConsignmentOutSalesConfirm),
@@ -302,20 +302,20 @@ urlpatterns = patterns('',
     url(r'^report/newhp_stock/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stockavailable/newhp_stock/'} }),
     url(r'^report/2ndhp_stock/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stockavailable/Sndhp_stock/'} }), 
     url(r'^report/pawning_stock/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stockavailable/pawning_stock/'} }), 
-    url(r'^report/stockavailable/(?P<search>[\x20-\x7E]+)*',login_required(StockAvailable)),
+    url(r'^report/stockavailable/(?P<search>[\x20-\x7E]+)',login_required(StockAvailable)),
 
 
     url(r'^report/newhp_sales/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stocksales/newhp_stock/'} }),
     url(r'^report/2ndhp_sales/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stocksales/Sndhp_stock/'} }), 
     url(r'^report/pawning_sales/filter/$',login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/stocksales/pawning_stock/'} }), 
-    url(r'^report/stocksales/(?P<search>[\x20-\x7E]+)*',login_required(StockSales)),
+    url(r'^report/stocksales/(?P<search>[\x20-\x7E]+)',login_required(StockSales)),
 
     
     url(r'^report/commission/newhp/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/commission/category/newhp/'} }),                      
     url(r'^report/commission/2ndhp/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/commission/category/2ndhp/'} }), 
     url(r'^report/commission/gadai/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/commission/category/gadai/'} }),     
     url(r'^report/commission/acc/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/commission/category/acc/'} }), 
-    url(r'^report/commission/category/(?P<search>[\x20-\x7E]+)*',login_required(Commission)),   
+    url(r'^report/commission/category/(?P<search>[\x20-\x7E]+)',login_required(Commission)),   
    
     url(r'^report/daily/category/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/category/'} }),
     url(r'^report/daily/category/excel/$', login_required(ReportDailyCategoryExcel)),                                    
@@ -326,7 +326,7 @@ urlpatterns = patterns('',
     url(r'^report/person_sales/$',PersonSalesReport),    
     url(r'^sales/invoice/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/invoice/list'} }),                                
     url(r'^sales/invoice/list$', login_required(InvoiceReport)), 
-    url(r'^sales/invoice/completed/(?P<billID>[\x20-\x7E]+)*', login_required(InvoiceComplete)),
+    url(r'^sales/invoice/completed/(?P<billID>[\x20-\x7E]+)', login_required(InvoiceComplete)),
     url(r'^sales/cash/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/cash/list'} }),                                
     url(r'^sales/cash/list$', login_required(CashSalesReport)),     
     url(r'^sales/return/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/sales/return/list'} }),                                
@@ -348,9 +348,9 @@ urlpatterns = patterns('',
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
-    url(r'^sales/(?P<displayPage>[\x20-\x7E]+)*/(?P<billID>[\x20-\x7E]+)*', login_required(QueryBill)),
+    url(r'^sales/(?P<displayPage>[\x20-\x7E]+)*/(?P<billID>[\x20-\x7E]+)', login_required(QueryBill)),
     (r'^accounts/login/$', 'django.contrib.auth.views.login', {'template_name': 'admin/login.html'}),
     
     url(r'^category/info/$', login_required(CategoryInfo)),
-    url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)*', login_required(PrintBarcode)),
+    url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)', login_required(PrintBarcode)),
 )
