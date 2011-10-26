@@ -268,9 +268,10 @@
             url: "/product/returncost/"+queryStr,
             type: "JSON",
             success: function(data){ 
-            
-                     var pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
-
+                  var pk_cost = "#"+queryStr+"_avgcost";
+                  if (typeof queryStr != 'number') {
+                    pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
+                  }
                   $(pk_cost).html(data[0].Cost);
                   
             //$(pk_cost).html("xxxxx");
