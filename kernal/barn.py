@@ -908,13 +908,9 @@ class BarnOwl:
     
     
     def __build_bill_batch__(self, dict):
-        counter = None
-        counters = Counter.objects.filter(active=True)
-        if counters.count() != 0:
-            counter = counters.order_by('-create_at')[0]
-        else:
-            logger.warn("Can not found 'OPEN' Counter, direct to open page")
-            raise CounterNotReadyException("Counter Not Found")
+        hermes = Hermes()
+        counter = hermes.auto_counter()
+        
         # process Request parameter
         thanatos = Thanatos()
         customer = None
@@ -1122,6 +1118,31 @@ class Hermes:
         if counters.count() > 0:
             return False
         return True
+    
+    def auto_counter(self):
+        logger.debug("entry auto counter process")
+        counters = Counter.objects.filter(active=True)
+        if counters.count() != 0:
+            counter = counters.order_by('-create_at')[0]
+            today = datetime.today().date()
+            counter_date = counter.create_at.today()
+            if today != counter_date:
+                logger.debug("counter created at %s, close and create new one", counter_date)
+                self.ReCalcCounterByPK(counter.pk, recalc_bill_profit = True)
+                return self._create_counter()
+            return counter
+        else:
+            logger.debug("no active counter found, create new one")
+            return self._create_counter()
+            
+    def _create_counter(self):
+        counter = Counter()
+        counter.initail_amount = 0
+        counter.close_amount = 0
+        counter.active = True
+        counter.user = User.objects.get(username='root')
+        counter.save()
+        return counter
     
     def __init__(self):
         self.is_all_close = self._counter_check()
