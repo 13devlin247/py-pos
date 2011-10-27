@@ -293,6 +293,7 @@ class Payment(models.Model):
     status = models.CharField(max_length=100, choices=PAYMENT_STATUS)
     transaction_no = models.CharField(max_length=100, blank=True)
     create_at = models.DateTimeField(auto_now_add=True)
+    complete_at = models.DateTimeField(auto_now = True, null = True)    
     active = models.BooleanField(True)
     reason = models.CharField(max_length=100, null=True)
     
