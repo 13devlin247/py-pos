@@ -826,6 +826,17 @@ def RepairSave(request):
     logger.info("Service job '%s' create success", repair.pk)
     return HttpResponseRedirect('/search/repair/')
 
+def SalarySave(request):
+    form = RepairForm(request.GET)
+    repair = form.save(commit=False)
+    repair.mode = "salary"
+    repair.status = "Incomplete"
+    repair.active = True
+    repair.key = repair.key.strip()
+    repair.save()
+    logger.info("Service job '%s' create success", repair.pk)
+    return HttpResponseRedirect('/search/salary/')    
+    
 def ProductCostUpdate(request):
     inStockBatch_pk = request.GET.get("inStockBatch_pk")
     hermes = Hermes()
@@ -1280,6 +1291,15 @@ def RepairList(request):
     list = __autocomplete_wrapper__(querySet, lambda model: str(model.key))    
     return HttpResponse(list, mimetype="text/plain")
 
+def SalaryList(request):
+    keyword = request.GET.get('q', "")
+    logger.debug("search salary list by keyword: %s", keyword)
+    
+    querySet = __search__(ExtraCost, Q(mode="salary") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword))))
+    list = __autocomplete_wrapper__(querySet, lambda model: str(model.key))    
+    return HttpResponse(list, mimetype="text/plain")
+    
+    
 def CustomerList(request):
     keyword = request.GET.get('q', "")
     logger.debug("search Customer list by keyword: %s", keyword)
@@ -1524,6 +1544,12 @@ def RepairInfo(request, query):
     json = __json_wrapper__(repairs.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
 
+def SalaryInfo(request, query):
+    logger.info("get salary info by keyword: %s " , query)
+    repairs = __search__(ExtraCost, Q(mode="salary") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=query)|Q(refBill=query)|Q(pk=_str_2_int(query))))
+    json = __json_wrapper__(repairs.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")        
+    
 def RepairBinding(request, imei, billID):
     logger.info("Repair binding Bill: '%s' , IMEI: '%s' " , billID, imei)
     extraCosts = ExtraCost.objects.filter(key=imei)
@@ -1543,6 +1569,13 @@ def ExtraCostList(request, billID):
     json = __json_wrapper__(costs.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
 
+def SalaryComplete(request, id):
+    logger.info("complete Salary by ID: %s " , id)
+    extraCost = ExtraCost.objects.get(pk = int(id))
+    extraCost.status = "Complete"
+    extraCost.save()
+    return HttpResponseRedirect('/search/salary/')
+    
 def __find_payment_by_serial_no__(serial):
     ans = []
     outStockRecords = OutStockRecord.objects.filter(serial_no = serial).order_by("-create_at")

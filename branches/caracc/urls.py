@@ -111,6 +111,14 @@ repair_list_view = {
     'extra_context': {'autocomplete_url': '/repair/ajax/','json_url': '/repair/info/', 'display':'bill' }
 }
 
+salary_list_view = {
+    'queryset': ExtraCost.objects.filter(Q(active = True) & Q(mode = 'salary')).order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_salary.html', 
+    'extra_context': {'autocomplete_url': '/salary/ajax/','json_url': '/salary/info/', 'display':'bill' }
+}
+
+
 cashsales_list_view = {
     'queryset': Payment.objects.filter(active=True).filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'),                      
     'allow_empty': True,                      
@@ -226,6 +234,7 @@ urlpatterns = patterns('',
     url(r'^deposit/ajax/$', login_required(DepositList)),
     url(r'^service/ajax/$', login_required(ServiceList)),
     url(r'^repair/ajax/$', login_required(RepairList)),
+    url(r'^salary/ajax/$', login_required(SalaryList)),
 	url(r'^gadai/ajax/$', login_required(GadaiList)),
     url(r'^void_bill/ajax/$',login_required(VoidBillList)),
     url(r'^close_counter/ajax/$',login_required(CloseCounterList)),	
@@ -269,6 +278,11 @@ urlpatterns = patterns('',
     url(r'^repair/binding/(?P<imei>[\x20-\x7E]+)/(?P<billID>[\x20-\x7E]+)*', login_required(RepairBinding)),
     url(r'^extra/list/(?P<billID>[\x20-\x7E]+)', login_required(ExtraCostList)),    
 
+    url(r'^salary/add/$', login_required(direct_to_template),  {'template': 'salary.html',  'extra_context': {'form': RepairForm(), 'action':'/salary/add/confirm/'} }),    
+    url(r'^salary/add/confirm/$', SalarySave),
+    url(r'^salary/info/(?P<query>[\x20-\x7E]+)', login_required(SalaryInfo)),
+    url(r'^salary/complete/(?P<id>[\x20-\x7E]+)$', SalaryComplete),
+    
     url(r'^consignment/out/balance/confirm/$', InventoryConfirm),
     url(r'^consignment/out/sale/confirm/$', ConsignmentOutSalesConfirm),
     url(r'^consignment/in/balance/confirm/$', ConsignmentInBalance),
@@ -342,6 +356,7 @@ urlpatterns = patterns('',
     url(r'^search/deposit/$', login_required(list_detail.object_list), deposit_list_view),
     url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
     url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
+    url(r'^search/salary/$', login_required(list_detail.object_list), salary_list_view),
     url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),
     url(r'^search/void_bill/$',login_required(list_detail.object_list),void_bill_report_view),
     url(r'^search/close_counter/$',login_required(list_detail.object_list),close_counter_view),

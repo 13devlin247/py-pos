@@ -257,8 +257,8 @@ class Bill(models.Model):
 class ExtraCost(models.Model):
     bill = models.ForeignKey(Bill, null=True)
     mode = models.CharField(max_length=100)
-    key = models.CharField(max_length=100) 
-    price = models.DecimalField(max_digits=100, decimal_places=2)
+    key = models.CharField("Name", max_length=100) 
+    price = models.DecimalField("Amount", max_digits=100, decimal_places=2)
     description = models.TextField(blank=True) 
     create_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(True)
