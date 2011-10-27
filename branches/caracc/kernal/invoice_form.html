@@ -1,0 +1,54 @@
+{% extends "sales_base.html" %}
+
+{% block hiddenValue %}
+    <input type="hidden" name="mode" value="invoice"/>
+{% endblock %}
+
+{% block title %}
+        <div id="page_title" style="margin-bottom:8px;">Invoice Register
+        </div>  
+{% endblock %}
+
+			{% block Customer %}
+            <label id="customer_label" for="customer">Select Customer
+            </label>  		
+            <input type="text" name="customer" value="" id="customer" size="30"  />		
+            <script type="text/javascript">
+                $("#customer").autocomplete("/customer/ajax/", {
+                    width: 260,
+                    selectFirst: false
+                });
+                $("#customer").result(function(event, data, formatted)
+                {
+                    customerName = $("#customer").val();
+                    $("#supplierDetail").html(customerName);
+                        $.ajax({
+                            url: "/customer/info/"+customerName,
+                            type: "JSON",
+                            success: function(data){  
+                                var customerShow = '<div style="text-align: left">';
+                                customerShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
+                                customerShow += "<div>Term: "+data[0].fields.term+"</div>";
+                                customerShow += "<div>phone: "+data[0].fields.phone+"</div>";
+                                customerShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
+                                customerShow += "</div>";
+                                
+                                $("#supplierDetail").html(customerShow);
+                            },
+                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
+                            complete: function(data){},
+                        });            
+                });              
+            </script>
+            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		</div>
+			{% endblock %}
+
+{% block mode_form %}
+{% endblock %}
+
+
+{% block AmountTendered %}
+{% endblock %}
+
+{% block CreaditCard %}
+{% endblock %}

@@ -1,0 +1,262 @@
+{% extends "stock_base.html" %}
+
+{% block css %}
+{% endblock %}
+
+{% block hiddenValue %}
+    <input type="hidden" name="mode" value="Consignment_OUT"/>
+{% endblock %}
+
+{% block title %}
+        <div id="page_title" style="margin-bottom:8px;">Consignment OutStock
+        </div>  
+{% endblock %}
+
+{% block mode_form %}
+{% endblock %}
+
+{% block bill_infor %}
+            <label >Issue by: 
+            </label>{{request.user.username}} <br>
+            <label >Sales by: 
+            </label>  		
+			<select name="salesby">
+				<option value="{{request.user.pk}}">{{request.user.username}}</option>
+				{% for user in users %}
+					<option value="{{user.pk}}">{{user.username}}</option>
+				{% endfor %}
+			</select>
+            <br>			
+			{% block Customer %}
+            <label id="customer_label" for="customer">Select Customer
+            </label>  		
+            <input type="text" name="customer" value="Cash" id="customer" size="30"  />		
+            <script type="text/javascript">
+                $("#customer").autocomplete("/customer/ajax/", {
+                    width: 260,
+                    selectFirst: false
+                });
+                $("#customer").result(function(event, data, formatted)
+                {
+                    customerName = $("#customer").val();
+                    $("#supplierDetail").html(customerName);
+                        $.ajax({
+                            url: "/customer/info/"+customerName,
+                            type: "JSON",
+                            success: function(data){  
+                                var customerShow = '<div style="text-align: left">';
+                                customerShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
+                                customerShow += "<div>Term: "+data[0].fields.term+"</div>";
+                                customerShow += "<div>phone: "+data[0].fields.phone+"</div>";
+                                customerShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
+                                customerShow += "</div>";
+                                
+                                $("#supplierDetail").html(customerShow);
+                            },
+                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
+                            complete: function(data){},
+                        });            
+                });              
+            </script>
+            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
+			{% endblock %}
+          
+            		
+          </div>  		
+          <div class="clearfix">&nbsp;
+          </div>  		 	
+          <div id='sale_details'>  		
+            <div class="float_left" style="width:50%;">Sub Total:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="subTotal" id="subTotal" value="0.00" readonly=false size="10" style="border: none; background: transparent;"/>
+            </div>    				
+            <div class="float_left" style='width:50%;'>Discount:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
+            </div>  		 		
+            <div class="float_left" style='width:50%;'>Total:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
+            </div>  	
+			{% block AmountTendered %}
+            <div class="float_left" style='width:50%;'>Amount Tendered:
+            </div>  		
+            <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="amountTendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
+            </div>  	
+			<div id="change_block">
+				<div class="float_left" style='width:50%;'>Change:
+				</div>  		
+				<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="change" value="0.00" id="change" size="10" style="border: none; background: transparent;"/>
+				</div>  	
+			</div>		
+			<div id="creaditCard_block" style="display: none">
+					<div class="float_left" style='width:50%;'>Transaction No:
+					</div>  		
+					<div class="float_left" style="width:50%;font-weight:bold;"><input type="text" name="transactionNo" id="transactionNo" size="10" />
+					</div>  	
+			</div>			
+			{% endblock %}	
+          </div>          	     	
+          <div class="clearfix" style="margin-bottom:1px;">&nbsp;
+          </div>  		    
+          <div id="Payment_Types" >    		
+            <div style="">    			
+              <div id="add_payment_form">			
+                <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				
+                  <span>Confirm
+                  </span>  			
+                </div>  		
+            </div>  		
+			{% block CreaditCard %}
+			<div style="">    			               
+			  <div>			                 
+				<div class='small_button' id='creadit_card' style='float:right;margin-top:5px;'>  				                   
+				  <span>Creadit Card                   
+				  </span>  			                 
+				</div>  		             
+			  </div>  		             
+			  <div style="">    			               
+				<div>			                 
+				  <div class='small_button' id='cash' style='float:right;margin-top:5px;display:none'>  				                   
+					<span>Cash                   
+					</span>  			                 
+				  </div>  		             
+				</div>  		             
+			  </div>    		     	           
+			</div>    	
+            <script type="text/javascript">
+                $("#creadit_card").click(function(){
+                    calcTotalPrice();
+                    $("#amount_tendered").attr("value",$("#total").val());
+                    calcChange();
+                    $("#creadit_card").css("display","none");
+                    $("#cash").css("display","block");
+                    $("#change_block").css("display","none");
+                    $("#creaditCard_block").css("display","block");
+
+                });  
+
+                $("#cash").click(function(){
+                    $("#creadit_card").css("display","block");
+                    $("#cash").css("display","none");
+                    $("#change_block").css("display","block");
+                    $("#creaditCard_block").css("display","none");
+                });  
+            </script>            
+			{% endblock %}
+        </div>  
+        <div class="clearfix" style="margin-bottom:30px;">&nbsp;
+        </div>      
+      </div>  
+{% endblock %}
+{% block summaryCalcScript %}    
+    function calcAmount(pk){
+        var currentQuantity = parseInt($("#"+pk+"_quantity").val());
+        var price = $("#"+pk+"_price").val();
+        $("#"+pk+"_amount").html(currentQuantity* price);
+    }
+    function calcSubTotalPrice(){
+        var total = 0;
+        for (var key in productTable){
+            total += parseFloat($("#"+key+"_amount").html());
+        }
+        $("#subTotal").attr("value",total);
+    }
+    function calcTotalPrice(){
+        subTotal = $("#subTotal").val();
+        discount = $("#discount").val();
+        deposit =  $("#deposit").val();
+        if(deposit == undefined){
+            deposit = 0
+        }
+        $("#total").attr("value", (subTotal-discount-deposit));
+    }
+    function calcChange(){
+        total = $("#total").val();
+        amount_tendered = $("#amount_tendered").val();
+        $("#change").attr("value", (amount_tendered-total));
+    }
+
+    function calcItemSum(){
+        var totalPrice = 0;
+        var totalQty = 0;
+        for (var key in productTable){
+            var currentQuantity = parseInt($("#"+key+"_quantity").val());
+            var price = 0;
+            price = parseFloat($("#"+key+"_price").val());
+            
+            totalQty += currentQuantity;
+            totalPrice += price;
+        }
+        $("#quantity_total").text(totalQty);
+        $("#cost_total").text(totalPrice);
+    }    
+    
+
+    
+    function recalcAll(pk){
+        calcAmount(pk);
+        calcSubTotalPrice();
+        calcTotalPrice();
+        calcItemSum();
+    }
+
+	function lowerCostDetact(pk){
+        var price = parseFloat($("#"+pk+"_price").val());
+		var cost = parseFloat(productTable[pk].fields.cost);
+		if(cost > price){
+            product_name = productTable[pk].fields.name
+            if ('imei' in productTable[pk]){
+                product_name = productTable[pk].imei
+            }
+			alert( product_name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n');
+			
+		}
+	}
+	
+	function resetQuantityField(pk){
+		$("#"+pk+"_serial").html();
+		var quantity = $("#"+pk+"_quantity").val();
+		var inputField = _build_serial_input_textfield_by_pk_and_quantity(pk, quantity);
+		$("#"+pk+"_serial").html(inputField);		
+	}
+	
+    function removeItem(pk){
+        delete productTable[pk];
+		$("#"+pk+"_serial_tr").remove();
+        $("#"+pk+"_tr").remove();
+        calcSubTotalPrice();
+        calcTotalPrice();
+    }
+{% endblock %}		
+
+{% block ajaxCheckBeforeSend %}
+        var reject = false;
+        reject_msg = "";
+        if(_checkInputData() == false){ return; }
+		var msg = '';
+		for(var pk in productTable){
+            product_name = productTable[pk].fields.name
+            if( "imei" in productTable[pk]){
+                product_name = productTable[pk].imei
+            }
+            if(parseInt($("#"+pk+"_quantity").val()) >  productTable[pk].fields.stockCount){
+                reject = true;
+                reject_msg += "Product: '" + product_name + "' only '"+productTable[pk].fields.stockCount+"' item in hand \n"; 
+            }
+        
+			var price = parseFloat($("#"+pk+"_price").val());
+			var cost = parseFloat(productTable[pk].fields.cost);
+			if(cost > price){
+				msg += product_name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n';
+			}
+		}
+        
+        if (reject){
+            alert(reject_msg);
+            return;
+        }
+        
+		ans = confirm(msg + " \n Are you sure?");
+		if(!ans){ return; }
+{% endblock %}

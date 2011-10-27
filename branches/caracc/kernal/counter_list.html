@@ -1,0 +1,67 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}
+        <div class="span-24">
+            <div class="span-19">
+                Product List
+            </div>
+
+            <div class="span-5 last">
+                <a href="/admin/kernal/counter/add/">Open Counter</a>
+                <a href="/admin/kernal/counter/">Counter History</a>
+            </div>
+        <form id="deleteForm" action="{{submit_form}}" method="get">
+            
+            <div class="span-24" id="updown">
+                <div class="span-1">
+                    &nbsp;
+                </div>							
+                <div class="span-5">
+                    Date
+                </div>
+
+                <div class="span-3">
+                    Initial Amount
+                </div>
+
+                <div class="span-3">
+                    Creater
+                </div>
+                <div class="span-3">
+                    Action
+                </div>				
+            </div>
+
+    {% for product in object_list %}
+            <div class="span-24" style="border-bottom:1px solid gray;">
+                <div class="span-1">
+                    &nbsp;<input type=hidden name="counterID" value="{{product.pk}}"/>
+                </div>			
+                <div class="span-5">
+                    {{product.create_at}}
+                </div>
+
+                <div class="span-3">
+                    {{product.initail_amount}}
+                </div>
+
+                <div class="span-3">
+                    {{product.user.username}}
+                </div>
+                <div class="span-3">
+                    <input type="submit" value="close" id="close"/>
+                </div>				
+            </div>
+    {% endfor %}
+	            </form>
+            </div>				
+{% endblock %}
+
+
+

@@ -1,0 +1,16 @@
+DELETE FROM kernal_bill;
+DELETE FROM kernal_consignmentindetail;
+DELETE FROM kernal_consignmentoutdetail;
+DELETE FROM kernal_stockcost;
+DELETE FROM kernal_disablestock;
+DELETE FROM kernal_instockbatch;
+DELETE FROM kernal_instockrecord;
+DELETE FROM kernal_outstockrecord;
+DELETE FROM kernal_payment;
+DELETE FROM kernal_serialno;
+DELETE FROM kernal_counter;
+DELETE FROM kernal_deposit;
+DELETE FROM kernal_extracost;
+DELETE FROM kernal_servicejob;
+DELETE FROM kernal_stockcost;
+DELETE FROM kernal_serialnomapping;
