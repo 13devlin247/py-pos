@@ -75,6 +75,8 @@
         </div>      
         {% endblock %}	
 {% block bill_infor %}
+            <label >Bill ID: 
+            </label><span id="available_bill_id"></span><br>        
             <label >Issue by: 
             </label>{{request.user.username}} <br>
             <label >Sales by: 
@@ -94,6 +96,15 @@
             </label>  		
             <input type="text" name="depositField" value="" id="depositField" size="30"  />						
             <script type="text/javascript">
+                        $.ajax({
+                            url: "/sales/available_bill_id/",
+                            type: "GET",
+                            success: function(data){  
+                                $('#available_bill_id').html(data)
+                            },
+                            error: function(data){},
+                            complete: function(data){},
+                        });              
                 $("#depositField").autocomplete("/deposit/ajax/", {
                     width: 260,
                     selectFirst: false,
