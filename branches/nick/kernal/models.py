@@ -64,6 +64,10 @@ class Algo(models.Model):
 class ProductManager(models.Manager):
     def get_by_natural_key(self, category, brand):
         return self.get(category=category_name, brand=brand_name)        
+
+class PaymentManager(models.Manager):
+    def get_by_natural_key(self, bill):
+        return self.get(bill=bill.total_price)
         
 class Product(models.Model):
     barcode = models.CharField(max_length=100, blank=True)
@@ -253,6 +257,10 @@ class Bill(models.Model):
     def __unicode__(self):
         # return self.customer.name 
         return str(self.pk).zfill(6)
+
+    def natural_key(self):
+        return self.customer.name, self.total_price
+
 
 class ExtraCost(models.Model):
     bill = models.ForeignKey(Bill, null=True)
