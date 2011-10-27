@@ -100,7 +100,7 @@ def InvoiceReport(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(type='Invoice').order_by('-create_at')
+    payments = Payment.objects.filter(active=True).filter(complete_at__range=(startDate,endDate)).filter(type='Invoice').order_by('-create_at')
     return render_to_response('do_list.html',{'payments': payments, 'dateRange': str(startDate)+" to "+str(endDate)}, )
 
 def ReportInventoryReceipt(request):    
@@ -170,19 +170,31 @@ def ReportDailySales(request):
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
     
-    total_amount = 0
     total_profit = 0    
-    
-    outstocks = OutStockRecord.objects.all().filter(create_at__range=(startDate,endDate)).filter(active=True)
-    for outstock in outstocks:
-       
-        outstock.tt = outstock.unit_sell_price * outstock.quantity
-        outstock.user = outstock.bill.sales_by.username
-        total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
-            
+    bills = _filter_bills(startDate, endDate)
+    total_amount, outstocks_summary = _filter_outStockRecords(bills)
     profitTable = {}
+    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks_summary, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
 
-    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
+def _filter_bills(startDate, endDate):
+    payments = Payment.objects.filter(complete_at__range=(startDate,endDate)).filter(active=True).filter(status='Complete')
+    bills = []
+    for payment in payments:
+        bill = payment.bill
+        bills.append(bill)
+    return bills
+
+def _filter_outStockRecords(bills):
+    outstocks_summary = []
+    total_amount = 0
+    for bill in bills:
+        outstocks = OutStockRecord.objects.all().filter(bill=bill).filter(active=True)
+        for outstock in outstocks:
+            outstock.tt = outstock.unit_sell_price * outstock.quantity
+            outstock.user = outstock.bill.sales_by.username
+            total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
+        outstocks_summary.extend(outstocks)
+    return total_amount, outstocks_summary
 
 def _wrapper_download_file(text, filename):
     response = HttpResponse(text, mimetype="application/vnd.ms-excel; charset=utf-8")
@@ -196,15 +208,12 @@ def ReportDailySalesExcel(request):
         startDate = str(date.min)
         endDate = str(date.max)
     
-    total_amount = 0
+    bills = _filter_bills(startDate, endDate)
+    total_amount, outstocks = _filter_outStockRecords(bills)
     
-    outstocks = OutStockRecord.objects.filter(create_at__range=(startDate,endDate)).filter(active=True)
     headers = ['Inv No', 'Product', 'Cashier', 'Total', 'Type', 'Date']
     contents = []
     for outstock in outstocks:
-        outstock.tt = outstock.unit_sell_price * outstock.quantity
-        outstock.user = outstock.bill.sales_by.username
-        total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
         contents.append(';'.join([str(outstock.pk),outstock.product.name,outstock.user,str(outstock.tt),outstock.bill.mode,str(outstock.create_at)]))
     
     contents.append(';;Total:;'+str(total_amount)+';;;')
@@ -254,7 +263,7 @@ def ReportDailyCategoryExcel(request):
         startDate = str(date.min)
         endDate = str(date.max)
 
-    bills = Bill.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
+    bills = _filter_bills(startDate, endDate)
     categorysTitle = __categorys_arrays__()
     dateTable = {}
     for bill in bills:
@@ -304,7 +313,8 @@ def ReportDailyCategory(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    bills = Bill.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(Q(mode='cash')|Q(mode='invoice')|Q(mode='trade-in')|Q(mode='warranty'))
+    
+    bills = _filter_bills(startDate, endDate)
     categorysTitle = __categorys_arrays__()
     dateTable = {}
     for bill in bills:
@@ -1997,7 +2007,9 @@ def _build_users_sold_dict(product, startDate, endDate):
  
 def _build_person_sold_dict(user, startDate, endDate):
     #outStockRecordSet = OutStockRecord.objects.filter(product=product)
-    outStockRecordSet = OutStockRecord.objects.filter(active=True).filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
+    bills = _filter_bills(startDate, endDate)
+    total, outStockRecordSet = _filter_outStockRecords(bills)
+    outStockRecordSet = filter(lambda x: x.bill.sales_by == user, outStockRecordSet)
     users = {}
     for outStockRecord in outStockRecordSet:
         user = outStockRecord.bill.sales_by
