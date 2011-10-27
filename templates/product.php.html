@@ -11,14 +11,15 @@
     <meta name="Author" content="">
     <meta name="Keywords" content="">
     <meta name="Description" content=""><!-- Framework CSS -->
+    {% block extrastyle %}
     <link rel="stylesheet" href="/static/css/screen.css" type="text/css" media="screen, projection">
     <link rel="stylesheet" href="/static/css/print.css" type="text/css" media="print"><!--[if lt IE 8]><link rel="stylesheet" href="../../blueprint/ie.css" type="text/css" media="screen, projection"><![endif]-->
+    {% endblock %}
     <!-- Import fancy-type plugin for the sample page. -->
     <link rel="stylesheet" href="/static/css/screen_002.css" type="text/css" media="screen, projection">
     <link rel="stylesheet" type="text/css" href="/static/css/style.css">
     <link rel="stylesheet" type="text/css" href="/static/css/jquery.autocomplete.css">
     <link type="text/css" href="/static/css/jquery-ui-1.css" rel="Stylesheet">
-{% block extrastyle %}{% endblock %}
     <script type="text/javascript" src="/static/js/jquery.js"></script>
     <script type="text/javascript" src="/static/js/jquery-ui-1.js"></script>
     <script type="text/javascript" src="/static/js/jquery.autocomplete.js"></script>
@@ -110,6 +111,10 @@
     </script>
     <style type="text/css">
         td {border: solid #cccccc 1px}
+	#error_msg{
+	background: red;
+	color: white;
+	text-align: center;
     </style>
 </head>
 

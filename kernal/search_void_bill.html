@@ -10,13 +10,11 @@
 {% block table_head %}		  
             <thead>  
               <tr>  
-                <th style="width:auto">Sale ID
+                <th style="width:auto">Bill ID
                 </th>  
                 <th style="width:auto">Date
                 </th>  
-                <th style="width:15%;">Type
-                </th>  
-                <th style="width:15%;">Status
+                <th style="width:15%;">Reason
                 </th>  
               </tr>  
             </thead>  
@@ -27,8 +25,7 @@
                 <tr>
                 <td><a href="/sales/{{display}}/{{result.pk}}">{{result.pk}}</a></td>
                 <td>{{result.create_at}}</td>
-                <td>{{result.type}}</td>
-                <td><a href='/sales/invoice/completed/{{result.pk}}'>{{result.status}}</a></td>
+                <td>{{result.reason}}</td>
                 </tr>					
 				{% endfor %}
 			{% endif %}
@@ -79,8 +76,7 @@
                 "<tr>"+
                 "<td><a href=\"/sales/{{display}}/"+data.pk+"\">"+data.pk+"</a></td>"+
                 "<td>"+data.fields.create_at+"</td>"+
-                "<td>"+data.fields.type+"</td>"+
-                "<td><a href='/sales/invoice/completed/"+data.pk+"'>"+data.fields.status+"</a></td>"+
+                "<td>"+data.fields.reason+"</td>"+
                 "</tr>"
         ;    
         return row;
