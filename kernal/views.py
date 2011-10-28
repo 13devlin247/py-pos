@@ -20,7 +20,7 @@ from datetime import datetime
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.contrib.sessions.models import Session
-from django.contrib.auth import REDIRECT_FIELD_NAME
+from django.contrib.auth import REDIRECT_FIELD_NAME, authenticate
 from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template import RequestContext
@@ -1442,6 +1442,17 @@ def ProductInfo(request, query):
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
 
+def UserIdentify(request, username, password):
+    user = authenticate(username=username, password=password)
+    if user is not None:
+        if user.is_active:
+            return HttpResponse("True",mimetype="text/plain")
+        else:
+            return HttpResponse("False",mimetype="text/plain")
+    else:
+        # Return an 'invalid login' error message.
+        return HttpResponse("False",mimetype="text/plain")
+    
 def ProductInventory(request, productID, serial=None):
     logger.info("check product: '%s'  inventory" % productID)
     product = Product.objects.get(pk=productID)

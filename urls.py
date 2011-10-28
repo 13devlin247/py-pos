@@ -14,7 +14,7 @@ from pos.kernal.views import GadaiList,CloseCounterList
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
-from kernal.views import available_bill_id
+from kernal.views import available_bill_id, UserIdentify
 admin.autodiscover()
 
 main_link = {
@@ -241,7 +241,7 @@ urlpatterns = patterns('',
     url(r'^close_counter/ajax/$',login_required(CloseCounterList)),	
     url(r'^productname/ajax/$',login_required(ProductNameSearch)),
 
-            
+    url(r'^user/identify/(?P<username>[\x20-\x7E]+)/(?P<password>[\x20-\x7E]+)$', login_required(UserIdentify)),        
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
     url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
