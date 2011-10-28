@@ -3,7 +3,8 @@ from django.template.defaultfilters import register
 @register.filter
 def IMEIOnly(obj):
     if '-' in obj:
-        return obj.split("-")[1]
+        tokens = obj.split("-") 
+        return tokens[len(tokens)-1]
     else:
         return obj
 
