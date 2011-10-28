@@ -52,9 +52,7 @@ class BarnMouse:
         if outStockRecords.count() == 0:
             logger.debug("Product: '%s' not any out stock record, initial it", self.product.name)
             self.sell_index = 0;
-            inStockRecords = InStockRecord.objects.filter(product = self.product).filter(active = True).order_by("create_at")
-            if inStockRecords.count() != 0:
-                self.last_inStockRecord = inStockRecords[0]
+            self.last_inStockRecord = inStockRecords[0]
         else:
             self.sell_index = outStockRecords[0].sell_index + outStockRecords[0].quantity 
             pre_inStockRecord = outStockRecords[0].inStockRecord
