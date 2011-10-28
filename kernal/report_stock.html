@@ -62,13 +62,11 @@
         {% for products in group %}
 			<div class="productName">
             </div>
-    
-			
 			{%for product, inStockRecordSet in products.items%}
 				{%for inStockRecord in inStockRecordSet%}
 					{% if forloop.counter == 1%}
                         {% if inStockRecord.quantity != 0 %}
-                            <tr class="summary"><td></td><td>{{product.name}}{{inStockRecord.inStockBatch.pk}}</td><td></td><td></td><td>{{inStockRecord.quantity}}</td><td>{{inStockRecord.cost}}</td> <td></td>  </tr>
+                            <tr class="summary"><td></td><td>{{product.name}}{{inStockRecord.inStockBatch.pk}}</td><td></td><td></td><td class="sum_qty">{{inStockRecord.quantity}}</td><td class="sum_cost">{{inStockRecord.cost}}</td> <td></td>  </tr>
                         {% endif %}
 					{% else %}
                         {% if inStockRecord.serial_no.count != 0 %}
@@ -80,13 +78,27 @@
             </tbody>  	
           
 		  {% endfor %}
-          
+           <tfoot>
+           <tr><td></td><td></td><td></td><td></td><td id="sum_qty_total"></td><td id="sum_cost_total"></td> <td></td>  </tr>          
+           </tfoot>
           </table> 
         </div>  
       </div>  
     </div>
 
 <script type="text/javascript">
+    var sum_qty = 0
+    $(".sum_qty").each(function(){
+        sum_qty += parseInt($(this).text())
+    });
+    $("#sum_qty_total").html(sum_qty)
+    
+    var sum_cost = 0
+    $(".sum_cost").each(function(){
+        sum_cost += parseInt($(this).text())
+    });
+    $("#sum_cost_total").html(sum_cost)
+    
 	$("#toggle").click(function(){
 		if ($(".detail").css('display') == 'none'){
 			$(".detail").css('display', 'table-row')

@@ -1957,12 +1957,12 @@ def StockAvailable(request,search):
     title = StockTitle(search)
     group = []
     for product in products:
-        #outstocks = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product__exact = product).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        #products = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product__exact = product).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
 
-        outstocks = _build_stock_sold_dict(product, startDate, endDate, search)
-        if len(outstocks)==0:
+        products = _build_stock_sold_dict(product, startDate, endDate, search)
+        if len(products)==0:
             continue
-        group.append(outstocks)
+        group.append(products)
         
     return render_to_response('report_stock.html',{'session': request.session, 'title' : title , 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
   
@@ -2129,7 +2129,7 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
         inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
     else:
         pass
-    goods = {}
+    products = {}
     
     for inStockRecord in inStockRecordSet:
         inStockRecord.serial_no =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
@@ -2151,25 +2151,25 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
             serial_qty[shownow] =  shownow.quantity - shownow.balance
             logger.debug("sale stock %s",sellstock)  
         """
-        good = inStockRecord.product
-        if good not in goods:
-            logger.info("create %s in goods" % good )
+        product = inStockRecord.product
+        if product not in products:
+            logger.info("create %s in products" % product )
             summaryInStockRecord = InStockRecord()
             summaryInStockRecord.cost = 0
             summaryInStockRecord.quantity = 0
             summaryInStockRecord.status = 0
             summaryInStockRecord.amount = 0
-            goods[good] = [summaryInStockRecord]
+            products[product] = [summaryInStockRecord]
 
         productno = StockCost.objects.get(product =inStockRecord.product)
         qty = productno.qty
           
-        goods[good][0].cost = goods[good][0].cost + (inStockRecord.cost * inStockRecord.quantity)
-        #goods[good][0].quantity = qty
-        goods[good][0].quantity = goods[good][0].quantity + inStockRecord.total_available
-        goods[good].append(inStockRecord)
-        logger.info("add %s's  inStockRecord" % good )
-    return goods
+        products[product][0].cost = products[product][0].cost + (inStockRecord.cost * inStockRecord.quantity)
+        #products[product][0].quantity = qty
+        products[product][0].quantity = products[product][0].quantity + inStockRecord.total_available
+        products[product].append(inStockRecord)
+        logger.info("add %s's  inStockRecord" % product )
+    return products
 
 
 
