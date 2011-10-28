@@ -319,6 +319,23 @@
 			var cost = parseFloat(productTable[pk].fields.cost);
 			if(cost > price){
 				msg += product_name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n';
+                var pass=prompt("Please enter your password","");
+                        $.ajax({
+                            url: "/user/identify/{{request.user.username}}/"+pass,
+                            type: "GET",
+                            async: false,
+                            success: function(data){  
+                                if(data == 'False'){
+                                    reject_msg = "Your password are not valid, you cannot sales below cost."
+                                    reject = true
+                                }
+                            },
+                            error: function(data){
+                                    reject_msg = "Your password are not valid, you cannot sales below cost."
+                                    reject = true
+                            },
+                            complete: function(data){},
+                        });                 
 			}
 		}
         
