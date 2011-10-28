@@ -1345,7 +1345,6 @@ def ProductNameSearch(request):
 def ProductNameInfo(request,query):
     logger.debug(" search product name by keyword: %s",query)    
     productSet = __search__(Product, Q(name__contains= query))
-
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
    
@@ -1456,8 +1455,8 @@ def SupplierInfo(request, query):
 
 def PaymentInfo(request, type, query):
     logger.info("get '%s' payment info by keyword: %s " , type, query)
-    payments = __search__(Payment, (Q(bill__customer__name__exact=query) & Q(type__exact=type)))
-    json = __json_wrapper__(payments.order_by("-create_at"))
+    payments = __search__(Payment, (Q(bill__customer__name__exact=query) & Q(type__exact=type))).order_by("-create_at")
+    json = __json_wrapper__(payments)
     return HttpResponse(json, mimetype="application/json")
 
 def GadaiList(request):
