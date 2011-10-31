@@ -14,6 +14,7 @@ from pos.kernal.views import GadaiList,CloseCounterList
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+from kernal.views import __json_wrapper__
 admin.autodiscover()
 
 main_link = {
@@ -87,35 +88,43 @@ imei_list_view = {
     'queryset': Payment.objects.filter(active=True).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_imei.html', 
-    'extra_context': {'autocomplete_url': '/imei/ajax/','json_url': '/imei/info/', 'display':'bill' }
+    'extra_context': {'autocomplete_url': '/imei/ajax/','json_url': '/imei/info/', 'display':'bill', 'default_result': __json_wrapper__(Payment.objects.filter(active=True).order_by('-create_at'))}
 }
 
 deposit_list_view = {
     'queryset': Deposit.objects.filter(active = True).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_deposit.html', 
-    'extra_context': {'autocomplete_url': '/deposit/ajax/','json_url': '/deposit/info/', 'display':'bill' }
+    'extra_context': {'autocomplete_url': '/deposit/ajax/','json_url': '/deposit/info/', 'display':'bill', 'default_result': __json_wrapper__(Deposit.objects.filter(active = True).order_by('-create_at'))}
 }
 
 service_list_view = {
     'queryset': Bill.objects.filter(Q(active = True)&Q(mode='service')).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_service.html', 
-    'extra_context': {'autocomplete_url': '/service/ajax/','json_url': '/service/info/', 'display':'bill' }
+    'extra_context': {'autocomplete_url': '/service/ajax/','json_url': '/service/info/', 'display':'bill', 'default_result': __json_wrapper__(Bill.objects.filter(Q(active = True)&Q(mode='service')).order_by('-create_at'))}
 }
 
 repair_list_view = {
-    'queryset': ExtraCost.objects.filter(Q(active = True) & Q(status = 'Incomplete')).order_by('-create_at'),                      
+    'queryset': ExtraCost.objects.filter(Q(active = True) & Q(mode = 'repair') & Q(status = 'Incomplete')).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_repair.html', 
-    'extra_context': {'autocomplete_url': '/repair/ajax/','json_url': '/repair/info/', 'display':'bill' }
+    'extra_context': {'autocomplete_url': '/repair/ajax/','json_url': '/repair/info/', 'display':'bill', 'default_result': __json_wrapper__(ExtraCost.objects.filter(Q(active = True) & Q(status = 'Incomplete')).order_by('-create_at'))}
 }
+
+salary_list_view = {
+    'queryset': ExtraCost.objects.filter(Q(active = True) & Q(mode = 'salary')).order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_salary.html', 
+    'extra_context': {'autocomplete_url': '/salary/ajax/','json_url': '/salary/info/', 'display':'bill', 'default_result': __json_wrapper__(ExtraCost.objects.filter(Q(active = True) & Q(mode = 'salary')).order_by('-create_at'))}
+}
+
 
 cashsales_list_view = {
     'queryset': Payment.objects.filter(active=True).filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_payment.html', 
-    'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Cash Sales/', 'display':'bill' }
+    'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Cash Sales/', 'display':'bill', 'default_result': __json_wrapper__(Payment.objects.filter(active=True).filter(create_at__gt = date.today()).filter(type='Cash Sales').order_by('-create_at'))}
 }
 
 consignment_list_view = {
@@ -130,7 +139,7 @@ invoice_list_view = {
     'queryset': Payment.objects.filter(active=True).filter(create_at__gt = date.today()).filter(type='Invoice').order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_payment.html', 
-    'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Invoice/' , 'display':'invoice' }
+    'extra_context': {'autocomplete_url': '/payment/ajax/','json_url': '/payment/info/Invoice/' , 'display':'invoice', 'default_result': __json_wrapper__(Payment.objects.filter(active=True).filter(create_at__gt = date.today()).filter(type='Invoice').order_by('-create_at'))}
 }
 
 
@@ -138,21 +147,21 @@ gadai_status_view = {
     'queryset': InStockBatch.objects.filter(active=True).filter(mode = 'pawning').filter(status='Incomplete').order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_gadai.html', 
-    'extra_context': {'autocomplete_url': '/gadai/ajax/','json_url': '/gadai/info/' , 'display':'invoice' }
+    'extra_context': {'autocomplete_url': '/gadai/ajax/','json_url': '/gadai/info/' , 'display':'invoice' , 'default_result': __json_wrapper__(InStockBatch.objects.filter(active=True).filter(mode = 'pawning').filter(status='Incomplete').order_by('-create_at'))}
 }
 
 void_bill_report_view = {
     'queryset': Bill.objects.filter(active = False).order_by('-create_at'),
     'allow_empty': True,
     'template_name': 'search_void_bill.html',
-    'extra_context':{'autocomplete_url':'/void_bill/ajax/','json_url':'/void_bill/info/','display':'bill' }
+    'extra_context':{'autocomplete_url':'/void_bill/ajax/','json_url':'/void_bill/info/','display':'bill' , 'default_result': __json_wrapper__(Bill.objects.filter(active = False).order_by('-create_at'))}
 }
 
 close_counter_view = {
     'queryset': Counter.objects.all(),
     'allow_empty': True,
     'template_name': 'search_close_counter.html',
-    'extra_context':{'autocomplete_url':'/close_counter/ajax/','json_url':'/close_counter/info/','display':'close_counter'}
+    'extra_context':{'autocomplete_url':'/close_counter/ajax/','json_url':'/close_counter/info/','display':'close_counter', 'default_result': __json_wrapper__(Counter.objects.all())}
 }
 
 sales_do_list_view = {
