@@ -23,6 +23,7 @@
 }
 
 </style>
+
 <div id="content_area_wrapper">  
       <div id="content_area">  
         <div id="page_title" style="margin-bottom:8px;">{{title}}
@@ -75,8 +76,10 @@
           </table>  
         </div>      
 <script type="text/javascript">
+    
 	var dataTable = new Array();
-	
+	dataTable = $.parseJSON("{{default_result}}".replace(/&quot;/g, '\"'));  
+  
 	
   $("#item").autocomplete ("{{autocomplete_url}}", {
 		width: 260,
