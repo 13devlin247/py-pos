@@ -196,7 +196,7 @@ urlpatterns = patterns('',
     url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
     url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^product/delete/$', login_required(ProductDelete)),    
-    url(r'^product/save/(?P<productID>[\x20-\x7E]+)', login_required(ProductSave)), # controller
+    url(r'^product/save/$', login_required(ProductSave)), # controller
     url(r'^product/info/(?P<query>[\x20-\x7E]+)', login_required(ProductInfo)), # controller
     url(r'^product/inventory/cost/update/', login_required(ProductCostUpdate)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)/(?P<serial>[\x20-\x7E]+)', login_required(ProductInventory)), # controller
