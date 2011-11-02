@@ -107,11 +107,11 @@
                             </td>
 							</tr>
 							<tr>
-                            {% if inStockRecord.serialno_set.select_related %}
+                            {% if inStockRecord.serialnomapping_set.select_related %}
 							<td class="Receipt itemno" style="padding: 0 0 0 4em" colspan = "5">
                                 <u> IMEI: </u> </br>
-                                {% for serial in inStockRecord.serialno_set.select_related %}
-                                    {{serial.serial_no|IMEIOnly}} </br>
+                                {% for serial in inStockRecord.serialnomapping_set.select_related %}
+                                    {{serial.serial_no.serial_no|IMEIOnly}} </br>
                                 {% endfor %}
                             </td>
                             {% endif %}
