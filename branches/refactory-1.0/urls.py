@@ -10,7 +10,7 @@ from datetime import date
 from pos.kernal import filters
 #from pos.kernal.views import ajaxProductDetailView
 from pos.kernal.models import InStockBatch
-from pos.kernal.views import GadaiList,CloseCounterList
+from pos.kernal.views import GadaiList,CloseCounterList,Simpack
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -296,8 +296,9 @@ urlpatterns = patterns('',
     url(r'^report/inventory/receipt/$', login_required(ReportInventoryReceipt)),                                
     
 
-
-    url(r'^report/daily/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/'} }),                                    
+    url(r'report/simpack/filter/$', login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/simpack/'} }), 
+    url(r'^report/simpack/$',login_required(Simpack)),
+    url(r'^report/daily/filter/$', login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/'} }),                                    
     url(r'^report/daily_sales/filter/$', login_required(direct_to_template),  {'template': 'report_daily_sales_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily_sales/'} }), 
     url(r'^report/daily/$', login_required(ReportDaily)),
     url(r'^report/daily_sales/$', login_required(ReportDailySales)),  
