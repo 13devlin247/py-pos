@@ -1368,6 +1368,29 @@ def IMEIList(request):
     auto-complete view end
 """
 
+def Simpack(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    products = Product.objects.all()
+    
+    title = "SimPack"
+    group = []
+    for product in products:
+        #products = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product__exact = product).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+
+        products = _build_simpack_sold_dict(product, startDate, endDate)
+        if len(products)==0:
+            continue
+        group.append(products)
+        
+    return render_to_response('report_simpack.html',{'session': request.session, 'title' : title , 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+  
+
 def CategoryInfo(request):
     categorys = Category.objects.all()
     brands = Brand.objects.all()
@@ -2112,7 +2135,51 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
     return products
 
 
+def _build_simpack_sold_dict(productg, startDate, endDate):
 
+    inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(Q(product__category__category_name__exact = 'SIMPACK')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+	
+    products = {}
+    
+    for inStockRecord in inStockRecordSet:
+        inStockRecord.serial_no =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        #serial_nos =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        total_available = 0 
+        for serial in inStockRecord.serial_no:
+            serial.qty = serial.quantity - serial.balance
+            total_available += serial.qty
+        inStockRecord.total_available = total_available
+        #logger.debug("serialno: %s ->instockRecord: %s",inStockRecord.serial_no,inStockRecord.pk)
+        #serial_nos =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        """
+        serial_qty = {}
+        for serial in serial_nos:
+            theno = serial.serial_no
+            logger.debug("the serial no:%s",theno)
+            sellstock = OutStockRecord.objects.filter(serial_no__exact=theno)
+            shownow = sellstock.serial_no
+            serial_qty[shownow] =  shownow.quantity - shownow.balance
+            logger.debug("sale stock %s",sellstock)  
+        """
+        product = inStockRecord.product
+        if product not in products:
+            logger.info("create %s in products" % product )
+            summaryInStockRecord = InStockRecord()
+            summaryInStockRecord.cost = 0
+            summaryInStockRecord.quantity = 0
+            summaryInStockRecord.status = 0
+            summaryInStockRecord.amount = 0
+            products[product] = [summaryInStockRecord]
+
+        productno = StockCost.objects.get(product =inStockRecord.product)
+        qty = productno.qty
+          
+        products[product][0].cost = products[product][0].cost + (inStockRecord.cost * inStockRecord.quantity)
+        #products[product][0].quantity = qty
+        products[product][0].quantity = products[product][0].quantity + inStockRecord.total_available
+        products[product].append(inStockRecord)
+        logger.info("add %s's  inStockRecord" % product )
+    return products
 
 def _build_sales_sold_dict(productg, startDate, endDate,search):
     if search == 'newhp_stock/':
