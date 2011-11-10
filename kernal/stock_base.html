@@ -273,17 +273,6 @@
                     pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
                   }
                   $(pk_cost).html(data[0].Cost);
-                  
-            //$(pk_cost).html("xxxxx");
-                
-                //$("#"+product.pk+"_stockCount").html(data[0].inventory);
-                if ("imei" in product){
-                    productTable[product.imei].fields["stockCount"] = data[0].inventory;
-                }else{
-                    productTable[product.pk].fields["stockCount"] = data[0].inventory;
-                }
-            
-                //alert(productTable[data.pk].fields["stockCount"]);
             },
             error: function(data){ 
                 alert("Product Not found! please check your query: " + $("#item").val()) 
