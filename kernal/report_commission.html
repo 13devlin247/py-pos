@@ -68,7 +68,7 @@
 					{% if forloop.counter == 1%}
 						<tr class="summary"><td>{{outStockRecord.bill.sales_by.username}}</td><td>{{outStockRecord.quantity}}</td> <td> {{outStockRecord.unit_sell_price}}</td> <td>{{outStockRecord.cost}}</td> <td>{{outStockRecord.amount}}</td>  <td>{{outStockRecord.profit}}</td> </tr>
 					{% else %}
-						<tr class="detail"><td>{{outStockRecord.product}}</td><td>{{outStockRecord.quantity}}</td><td>{{outStockRecord.unit_sell_price}}</td> <td>{{outStockRecord.cost}}</td><td>{{outStockRecord.amount}}</td>   <td>{{outStockRecord.profit}}</td> <td></td> </tr>
+						<tr class="detail"><td>{{outStockRecord.product}} ({{outStockRecord.serial_no.serial_no}})</td><td>{{outStockRecord.quantity}}</td><td>{{outStockRecord.unit_sell_price}}</td> <td>{{outStockRecord.cost}}</td><td>{{outStockRecord.amount}}</td>   <td>{{outStockRecord.profit}}</td> <td></td> </tr>
 					{% endif %}
 				{%endfor%}
 			{%endfor%}
