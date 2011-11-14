@@ -697,6 +697,7 @@ class BarnOwl:
             product_dict[pk]['product'] = self._query_product(pk)
             product_dict[pk]['qty'] = int(dict[barcode]['quantity'])
             product_dict[pk]['unit_sell_price'] = float(dict[barcode]['price'])
+            product_dict[pk]['extracost'] = float(dict[barcode]['extracost'])
             try:
                 product_dict[pk]['cost'] = float(dict[barcode]['cost'])
             except Exception:
@@ -719,6 +720,11 @@ class BarnOwl:
                 serial = product_dict["serial"]
                 mouse = ServiceMouse(product)
                 outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial, cost)
+                extracost = int(product_dict["extracost"])                
+                outStockRecord.cost = outStockRecord.cost + extracost
+                outStockRecord.profit -= extracost
+                outStockRecord.save()
+                logger.debug('OutStockRecord: %s update extra cost: %s, new cost: %s', outStockRecord.pk, extracost, outStockRecord.cost)
                 outStockRecords.append(outStockRecord)
             return outStockRecords
         # build OutStockRecord to save data
@@ -738,6 +744,11 @@ class BarnOwl:
                 logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)            
                 mouse = BarnMouse(product)
             outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial)
+            extracost = int(product_dict["extracost"])                
+            outStockRecord.cost = outStockRecord.cost + extracost
+            outStockRecord.profit -= extracost
+            outStockRecord.save()
+            logger.debug('OutStockRecord: %s update extra cost: %s, new cost: %s', outStockRecord.pk, extracost, outStockRecord.cost)
             outStockRecords.append(outStockRecord)
         return outStockRecords
 
