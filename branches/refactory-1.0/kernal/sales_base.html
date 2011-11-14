@@ -311,6 +311,11 @@
 			}
 		}
         
+        if ($("#change").val() < 0){
+                reject = true;
+                reject_msg += "Amount Tendered Invalid \n";             
+        }
+        
         if (reject){
             alert(reject_msg);
             return;
