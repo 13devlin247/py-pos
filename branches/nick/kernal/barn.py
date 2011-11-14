@@ -1075,8 +1075,18 @@ class BarnOwl:
                 else:
                     mouse = BarnMouse(product)
                 mouse.Delete(reason, OutStockRecord, outStockRecord.pk)
+                self.unlock_serial_num(outStockRecord.serial_no, outStockRecord.quantity)
         except Bill.DoesNotExist:
             logger.error("Delete Error")
+
+    def unlock_serial_num(self, serial, qty):
+        if not serial:
+            return 
+        logger.debug("unlock serial no: %s, qty: %s", serial.serial_no, qty)
+        serial.active = True
+        serial.balance -= qty
+        serial.save()
+    
             
     def DeleteInStockBatch(self, inStockBatch_pk, reason):
         if not reason:
@@ -1406,6 +1416,7 @@ class Hermes:
             else:
                 mouse = BarnMouse(outStockRecord.product)
             mouse.Delete(reason, OutStockRecord, outStockRecord.pk)
+            self.unlock_serial_num(outStockRecord.serial_no, outStockRecord.quantity)
             ConsignmentInDetailBalanceHistorys = ConsignmentInDetailBalanceHistory.objects.filter(outStockRecord = outStockRecord)
             total_consignment_qty = 0
             for ConsignmentInDetailBalanceHistory in ConsignmentInDetailBalanceHistorys:
@@ -1414,6 +1425,13 @@ class Hermes:
                 ConsignmentInDetailBalanceHistory.reason = reason
                 ConsignmentInDetailBalanceHistory.save()
             
+    def unlock_serial_num(self, serial, qty):
+        if not serial:
+            return 
+        logger.debug("unlock serial no: %s, qty: %s", serial.serial_no, qty)
+        serial.active = True
+        serial.balance -= qty
+        serial.save()
                 
 class Thanatos:
     def Customer(self, name):
