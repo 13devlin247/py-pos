@@ -76,7 +76,7 @@ def CashSalesReport(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(type='Cash Sales').order_by('-create_at')
+    payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(Q(type='Cash Sales')|Q(type='Consignment_OUT')).order_by('-create_at')
     total = 0
     for payment in payments:
         total += payment.bill.total_price
