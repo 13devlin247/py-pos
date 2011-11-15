@@ -350,6 +350,7 @@ class BarnMouse:
                 serial = SerialNo.objects.get(serial_no = serialNo)
                 serial.quantity = int(serial.quantity) + qty
                 serial.serial_no = serialNo
+                serial.active = True
                 serial.save()
                 mapping = SerialNoMapping()
                 mapping.inStockRecord = inStockRecord
