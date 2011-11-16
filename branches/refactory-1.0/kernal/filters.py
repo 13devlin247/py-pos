@@ -1,11 +1,12 @@
 from django.template.defaultfilters import register
+from kernal.models import SerialNo
 
 @register.filter
 def IMEIOnly(obj):
-    if '-' in obj:
-        tokens = obj.split("-") 
-        return tokens[len(tokens)-1]
-    else:
+    try:
+        serial = SerialNo.objects.get(serial_no = obj)
+        return obj.replace(serial.inStockRecord.product.name+'-', '')
+    except SerialNo.DoesNotExist:
         return obj
 
 @register.filter
