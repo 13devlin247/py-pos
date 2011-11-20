@@ -31,6 +31,7 @@ import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
 from pos.kernal.excel import ExcelWriter
+from django.utils.datastructures import MultiValueDictKeyError
 
 
 logging.basicConfig(
@@ -837,7 +838,10 @@ def ProductCostUpdate(request):
     inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
 
     for inStockRecord in inStockRecords:
-        cost = float(request.GET.get("inStockRecord_" + str(inStockRecord.pk), "0"))
+        try:
+            cost = float(request.GET["inStockRecord_" + str(inStockRecord.pk)])
+        except MultiValueDictKeyError:
+            continue
         mouse = None
         if inStockRecord.product.algo.name == Algo.PERCENTAGE:
             mouse = MickyMouse(inStockRecord.product)
