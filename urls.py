@@ -9,8 +9,6 @@ from django.db.models import Q
 from datetime import date
 from pos.kernal import filters
 #from pos.kernal.views import ajaxProductDetailView
-from pos.kernal.models import InStockBatch
-from pos.kernal.views import GadaiList,CloseCounterList,Simpack
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -199,6 +197,7 @@ urlpatterns = patterns('',
     url(r'^product/save/$', login_required(ProductSave)), # controller
     url(r'^product/save/(?P<productID>[\x20-\x7E]*)$', login_required(ProductSave)), # controller    
     url(r'^product/info/(?P<query>[\x20-\x7E]+)', login_required(ProductInfo)), # controller
+    url(r'^product/inventory/delete/', login_required(InStockBatchDelete)), # controller
     url(r'^product/inventory/cost/update/', login_required(ProductCostUpdate)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)/(?P<serial>[\x20-\x7E]+)', login_required(ProductInventory)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)', login_required(ProductInventory)), # controller
