@@ -696,16 +696,16 @@ class BarnOwl:
             if not pk:
                 pk = dict[barcode]["pk"]
             if barcode not in product_dict:
-                product_dict[pk] = {}
-            product_dict[pk]['product'] = self._query_product(pk)
-            product_dict[pk]['qty'] = int(dict[barcode]['quantity'])
-            product_dict[pk]['unit_sell_price'] = float(dict[barcode]['price'])
+                product_dict[barcode] = {}
+            product_dict[barcode]['product'] = self._query_product(pk)
+            product_dict[barcode]['qty'] = int(dict[barcode]['quantity'])
+            product_dict[barcode]['unit_sell_price'] = float(dict[barcode]['price'])
             try:
-                product_dict[pk]['cost'] = float(dict[barcode]['cost'])
+                product_dict[barcode]['cost'] = float(dict[barcode]['cost'])
             except Exception:
                 logger.error("COST not found")
                 pass
-            product_dict[pk]['serial'] = self._is_serial_no(dict[barcode].get('imei', 'None'))
+            product_dict[barcode]['serial'] = self._is_serial_no(dict[barcode].get('imei', 'None'))
         logger.debug("product dict build: '%s'", product_dict)
         return product_dict  
 
@@ -753,7 +753,7 @@ class BarnOwl:
         for pk in inventoryDict:
             product = None
             try:
-                product = Product.objects.get(pk=pk)
+                product = Product.objects.get(pk=pk.split('RANDOM')[0])
             except Product.DoesNotExist:
                 logger.error("Product primary key: '%s' not found, this round fail, continue. ", pk)
                 continue

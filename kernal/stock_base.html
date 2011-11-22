@@ -216,7 +216,7 @@
                 },
             });            
     });                	
-
+ 
 {% block product_append_algo %}        
     function _localProductStore(pk, data){
         if ( productTable[pk] == undefined){
@@ -227,9 +227,14 @@
             if(data.model == "kernal.foc"){ // foc product no stock
                 return;
             }
-            _queryInventory(data);
+            _queryInventory(pk, data);
         }else{
-            quantityPlugOne(pk);
+            pk = pk+"RANDOM"+Math.floor(Math.random()*999999)
+            productTable[pk] = data
+            row = _genRowByPK(pk, data);
+            $('#sell_detail').append(row);            
+            // quantityPlugOne(pk);
+            _queryInventory(pk, data);
             calcAmount(pk);
             calcSubTotalPrice();
             calcTotalPrice();
@@ -238,7 +243,7 @@
     }
 {% endblock %}	
     
-    function _queryInventory(product){
+    function _queryInventory(pk, product){
         /**
             query product inventory by ajax
         **/
@@ -254,7 +259,7 @@
                 if ("imei" in product){
                     productTable[product.imei].fields["stockCount"] = data[0].inventory;
                 }else{
-                    productTable[product.pk].fields["stockCount"] = data[0].inventory;
+                    productTable[pk].fields["stockCount"] = data[0].inventory;
                 }
                 
                 //alert(productTable[data.pk].fields["stockCount"]);
@@ -268,9 +273,10 @@
             url: "/product/returncost/"+queryStr,
             type: "JSON",
             success: function(data){ 
-                  var pk_cost = "#"+queryStr+"_avgcost";
+                  var pk_cost = "#"+pk+"_avgcost";
                   if (typeof queryStr != 'number') {
-                    pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
+                    // pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
+                    pk_cost = "#"+pk+"_avgcost";
                   }
                   $(pk_cost).html(data[0].Cost);
             },
@@ -328,6 +334,7 @@
     }
 {% block summaryCalcScript %}    
     function calcAmount(pk){
+        value = $("#"+pk+"_quantity").val()
         var currentQuantity = parseInt($("#"+pk+"_quantity").val());
         var price = $("#"+pk+"_price").val();
         $("#"+pk+"_amount").html(currentQuantity* price);
@@ -416,9 +423,11 @@ function send_command(){
 		{% block ajaxCheckBeforeSend %}
         
 		var msg = '';
+        
 		for(var pk in productTable){
 			var price = parseFloat($("#"+pk+"_price").val());
 			var cost = parseFloat(productTable[pk].fields.cost);
+            
 			if(cost > price){
 				msg += productTable[pk].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n'
 			}
