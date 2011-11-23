@@ -2204,7 +2204,7 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
         productno = StockCost.objects.get(product =inStockRecord.product)
         qty = productno.qty
           
-        products[product][0].cost = products[product][0].cost + (inStockRecord.cost * inStockRecord.quantity)
+        products[product][0].cost = products[product][0].cost + (inStockRecord.cost * inStockRecord.total_available)
         #products[product][0].quantity = qty
         products[product][0].quantity = products[product][0].quantity + inStockRecord.total_available
         products[product].append(inStockRecord)
