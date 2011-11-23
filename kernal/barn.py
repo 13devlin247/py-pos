@@ -202,7 +202,7 @@ class BarnMouse:
         startDate = str(date.min)+" 00:00:00"
         endDate = str(date.max)+" 23:59:59"
         starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
-        endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')    
+        endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
         inventory_summary = self.__count_inventory_stock__(starttime, endtime, self.product)
         qty = inventory_summary[5]
         cost = inventory_summary[6]
@@ -404,7 +404,13 @@ class BarnMouse:
             instance = InStockRecord.objects.get(pk = pk)
             instance.cost = cost
             instance.save()
-            logger.debug("instance '%s' , Cost: '%s' update SUCCESS", pk, cost)
+            
+            outStockRecords = OutStockRecord.objects.filter(inStockRecord = instance)
+            for outStockRecord in outStockRecords:
+                outStockRecord.cost = cost * int(outStockRecord.quantity)
+                outStockRecord.save()
+                logger.debug('update outStockRecord %s, cost: %s', outStockRecord.pk, outStockRecord.cost)
+            logger.debug("instance '%s' , Cost: '%s' update SUCCESS", pk, instance.cost)
             self._recalc_cost()
         except InStockRecord.DoesNotExist:
             logger.warn("instance '%s' , Cost: '%s' does NOT update correctly", pk, cost)
