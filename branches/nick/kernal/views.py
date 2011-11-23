@@ -32,6 +32,7 @@ from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
 from pos.kernal.excel import ExcelWriter
 from django.utils.datastructures import MultiValueDictKeyError
+from kernal.models import InStockBatch
 
 
 logging.basicConfig(
@@ -837,6 +838,18 @@ def RepairSave(request):
     logger.info("Service job '%s' create success", repair.pk)
     return HttpResponseRedirect('/search/repair/')
 
+def InStockBatchDelete(request):
+    inStockBatch_pk = request.GET.get("inStockBatch_pk")
+    user_id = request.session.get('_auth_user_id')
+    user = User.objects.get(pk = user_id)
+    owl = BarnOwl()
+    inStockBatch = owl.DeleteInStockBatch(inStockBatch_pk, user.username)
+    if inStockBatch:
+        hermes = Hermes()
+        hermes.DeleteConsignmentIn(inStockBatch, user.username)
+        hermes.DeleteConsignmentOutReturn(inStockBatch)
+    return HttpResponseRedirect('/report/stocktake/filter/')
+    
 def SalarySave(request):
     form = RepairForm(request.GET)
     repair = form.save(commit=False)
@@ -1523,12 +1536,24 @@ def GadaiInfo(request,query):
         gadai = gadai.order_by("-create_at")
     json =__json_wrapper__(gadai)
     return HttpResponse(json, mimetype="application/json")
+
+def AdjustStockList(request):
+    keyword = request.GET.get('q',"")
+    voidBillQuerySet = __search__(Bill,(Q(sales_by__username__contains = keyword)))
+    list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.sales_by))
+    return HttpResponse(list,mimetype="text/plain")
     
 def VoidBillList(request):
     keyword = request.GET.get('q',"")
     voidBillQuerySet = __search__(Bill,(Q(reason__contains = keyword)))
     list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.reason))
     return HttpResponse(list,mimetype="text/plain")
+
+def AdjustStockInfo(request,query):
+    logger.debug("adjust stock: %s",query)
+    adjust_stock = __search__(Bill, (Q(active = True)&Q(sales_by__username__contains = query)&Q(mode='adjust')))
+    json = __json_wrapper__(adjust_stock.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
 
 def VoidBillInfo(request,query):
     logger.debug("voidbill : %s",query)
@@ -1861,6 +1886,17 @@ def DeleteBill(request):
     hermes.ReCalcCounterByPK(relc_counter.pk, recalc_bill_profit = True)
     return HttpResponseRedirect('/counter/close/') 
     
+def DeleteInStockBatch(request):
+    logger.info("Void InStockRecord")
+    pk = request.GET.get('inStockBatch_id','')
+    owl = BarnOwl()    
+    owl.DeleteInStockBatch(pk, request.GET.get("reason",""))
+    delete_bill = owl.RecalcBill(pk)
+    relc_counter = delete_bill.counter
+    hermes = Hermes()
+    hermes.DeleteConsignmentIn(InStockBatch.objects.get(pk=pk))
+    return HttpResponseRedirect('/counter/close/') 
+
     
 def PersonReport(request):
     startDate = request.GET.get('start_date','')
