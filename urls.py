@@ -155,6 +155,13 @@ void_bill_report_view = {
     'extra_context':{'autocomplete_url':'/void_bill/ajax/','json_url':'/void_bill/info/','display':'bill' , 'default_result': __json_wrapper__(Bill.objects.filter(active = False).order_by('-create_at'))}
 }
 
+adjust_stock_report_view = {
+    'queryset': Bill.objects.filter(mode = 'adjust').filter(active = True).order_by('-create_at'),
+    'allow_empty': True,
+    'template_name': 'search_adjust_stock.html',
+    'extra_context':{'autocomplete_url':'/adjust_stock/ajax/','json_url':'/adjust_stock/info/','display':'bill' , 'default_result': __json_wrapper__(Bill.objects.filter(mode = 'adjust').filter(active = True).order_by('-create_at'))}
+}
+
 close_counter_view = {
     'queryset': Counter.objects.all(),
     'allow_empty': True,
@@ -223,6 +230,7 @@ urlpatterns = patterns('',
     url(r'^imei/info/(?P<imei>[\x20-\x7E]+)', login_required(ImeiInfo)),    # imei info json
     url(r'^gadai/info/(?P<query>[\x20-\x7E]+)', login_required(GadaiInfo)),
     url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)', login_required(VoidBillInfo)),
+    url(r'^adjust_stock/info/(?P<query>[\x20-\x7E]+)', login_required(AdjustStockInfo)),
     url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)', login_required(CloseCounterInfo)),	
     url(r'^productname/info/(?P<query>[\x20-\x7E]+)', login_required(ProductNameInfo)),
 
@@ -237,6 +245,7 @@ urlpatterns = patterns('',
     url(r'^repair/ajax/$', login_required(RepairList)),
 	url(r'^gadai/ajax/$', login_required(GadaiList)),
     url(r'^void_bill/ajax/$',login_required(VoidBillList)),
+    url(r'^adjust_stock/ajax/$',login_required(AdjustStockList)),
     url(r'^close_counter/ajax/$',login_required(CloseCounterList)),	
     url(r'^productname/ajax/$',login_required(ProductNameSearch)),
 
@@ -354,6 +363,7 @@ urlpatterns = patterns('',
     url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
     url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),
     url(r'^search/void_bill/$',login_required(list_detail.object_list),void_bill_report_view),
+    url(r'^search/adjust_stock/$',login_required(list_detail.object_list),adjust_stock_report_view),
     url(r'^search/close_counter/$',login_required(list_detail.object_list),close_counter_view),
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
