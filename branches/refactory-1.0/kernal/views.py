@@ -1518,12 +1518,24 @@ def GadaiInfo(request,query):
         gadai = gadai.order_by("-create_at")
     json =__json_wrapper__(gadai)
     return HttpResponse(json, mimetype="application/json")
+
+def AdjustStockList(request):
+    keyword = request.GET.get('q',"")
+    voidBillQuerySet = __search__(Bill,(Q(sales_by__username__contains = keyword)))
+    list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.sales_by))
+    return HttpResponse(list,mimetype="text/plain")
     
 def VoidBillList(request):
     keyword = request.GET.get('q',"")
     voidBillQuerySet = __search__(Bill,(Q(reason__contains = keyword)))
     list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.reason))
     return HttpResponse(list,mimetype="text/plain")
+
+def AdjustStockInfo(request,query):
+    logger.debug("adjust stock: %s",query)
+    adjust_stock = __search__(Bill, (Q(active = True)&Q(sales_by__username__contains = query)&Q(mode='adjust')))
+    json = __json_wrapper__(adjust_stock.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
 
 def VoidBillInfo(request,query):
     logger.debug("voidbill : %s",query)
