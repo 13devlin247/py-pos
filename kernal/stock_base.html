@@ -279,6 +279,7 @@
                     pk_cost = "#"+pk+"_avgcost";
                   }
                   $(pk_cost).html(data[0].Cost);
+                  productTable[pk].fields.cost = data[0].Cost
             },
             error: function(data){ 
                 alert("Product Not found! please check your query: " + $("#item").val()) 
