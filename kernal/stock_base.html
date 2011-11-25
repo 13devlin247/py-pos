@@ -279,6 +279,7 @@
                     pk_cost = "#"+pk+"_avgcost";
                   }
                   $(pk_cost).html(data[0].Cost);
+                  productTable[pk].fields.cost = data[0].Cost
             },
             error: function(data){ 
                 alert("Product Not found! please check your query: " + $("#item").val()) 
@@ -380,7 +381,9 @@
         $("#cost_total").text(totalPrice);
     }    
     
-
+    function isNumber (o) {
+      return ! isNaN (o-0);
+    }
     
     function recalcAll(pk){
         calcAmount(pk);
@@ -390,6 +393,7 @@
     }
 
 	function lowerCostDetact(pk){
+        checkInput(pk)
         var price = parseFloat($("#"+pk+"_price").val());
 		var cost = parseFloat(productTable[pk].fields.cost);
 		if(cost > price){
@@ -401,8 +405,45 @@
 			
 		}
 	}
-	
+    function endsWith(str, suffix) {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    }	
+    
+    function checkInput(pk){
+        qty_str = $("#"+ pk +"_quantity").val()
+        price_str = $("#"+ pk +"_price").val()
+        cost_str = $("#"+ pk +"_cost").val()
+        if(isNumber(qty_str) == false){
+            alert("Your quantity input invalid number, please check it.")
+        }    
+        
+        if(qty_str.indexOf('.', qty_str.length - '.'.length) !== -1){
+            alert("Your quantity input invalid number, please check it.")
+        }            
+
+        if (price_str != undefined){
+            if(isNumber(price_str) == false){
+                alert("Your price input invalid number, please check it.")
+            }    
+        
+            if(price_str.indexOf('.', price_str.length - '.'.length) !== -1){
+                alert("Your price input invalid number, please check it.")
+            }            
+        }
+
+        if (cost_str != undefined){
+            if(isNumber(cost_str) == false){
+                alert("Your cost input invalid number, please check it.")
+            }    
+        
+            if(cost_str.indexOf('.', cost_str.length - '.'.length) !== -1){
+                alert("Your cost input invalid number, please check it.")
+            }                    
+        }
+            
+    }
 	function resetQuantityField(pk){
+        checkInput(pk)
 		$("#"+pk+"_serial").html();
 		var quantity = $("#"+pk+"_quantity").val();
 		var inputField = _build_serial_input_textfield_by_pk_and_quantity(pk, quantity);
