@@ -1687,7 +1687,8 @@ def ProductSave(request, productID=None):
                 return HttpResponseRedirect('/product/search/')    
 #            except Type.DoesNotExist:
 #                logger.error("ProductSave fail: Type.DoesNotExist")
-                #return HttpResponseRedirect('/product/search/')                    
+                #return HttpResponseRedirect('/product/search/')
+            product.name = product.name.replace(' ', '-')
             product.category = category
             product.brand = brand
             product.type = type
