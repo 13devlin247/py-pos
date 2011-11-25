@@ -301,7 +301,7 @@ class BarnMouse:
         inStockRecords = InStockRecord.objects.filter(product = self.product)
         if inStockRecords.count() > 0:
             instockrecord = inStockRecords.order_by("-startIDX")[0] 
-            index = instockrecord.startIDX + instockrecord.quantity 
+            index = int(instockrecord.startIDX) + int(instockrecord.quantity) 
         
         inStockRecord = InStockRecord()
         inStockRecord.inStockBatch = inStockBatch
