@@ -931,7 +931,7 @@ def SalesConfirm(request):
 
 def ConsignmentOutSalesConfirm(request):
     salesDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
         owl = BarnOwl()
@@ -953,7 +953,7 @@ def ConsignmentOutSalesConfirm(request):
 
 def __consignment_out_handler__(request, is_sales):
     inventoryDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         customer = __query_customer__(request, 'supplier')
         inventoryDict = __convert_inventory_URL_2_dict__(request)
         error_msg = __check_consignment_out_balance_input__(request, inventoryDict, customer)
@@ -1108,16 +1108,16 @@ def __build_Consignment_Out_index__(supplier, outStockRecords):
                     
 def ConsignmentInBalance(request):
     inventoryDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
         thanatos = Thanatos()
-        supplier = thanatos.Supplier(request.GET.get('supplier', 'Cash'))
+        supplier = thanatos.Supplier(request.POST.get('supplier', 'Cash'))
         
         owl = BarnOwl()
         bill = None
         try:
-            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
             hermes = Hermes()
             bill = bills_and_payments[0]
             payment = bills_and_payments[1]
