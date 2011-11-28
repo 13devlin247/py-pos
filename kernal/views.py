@@ -412,7 +412,7 @@ def printData(request):
 """
 def __convert_inventory_URL_2_inStockBatch_dict__(request):
     dict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     for key,  value in sales_item:
         if key.find("_") != -1:
             continue
@@ -421,16 +421,16 @@ def __convert_inventory_URL_2_inStockBatch_dict__(request):
         dict[key] = value[0]
         
     dict [u'_auth_user_id'] = request.session.get('_auth_user_id')
-    dict [u'do_no'] = request.GET.get('do_no')
-    dict [u'inv_no'] = request.GET.get('inv_no')
-    dict [u'refBill_no'] = request.GET.get('refBill_no')
-    dict [u'do_date'] = request.GET.get('do_date')
+    dict [u'do_no'] = request.POST.get('do_no')
+    dict [u'inv_no'] = request.POST.get('inv_no')
+    dict [u'refBill_no'] = request.POST.get('refBill_no')
+    dict [u'do_date'] = request.POST.get('do_date')
     logger.debug("InStockBatch parameters: %s", dict)        
     return dict
 
 def __convert_inventory_URL_2_dict__(request):
     dict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     logger.debug("instock items url parameters: %s", sales_item)
     for key,  value in sales_item:
         if key == "do_no":
@@ -549,7 +549,7 @@ def __build_serial_no__(request, inStockRecords, dict):
     
 def InventoryConfirm(request):
     inventoryDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         # process Request parameter
         inStockBatchDict = __convert_inventory_URL_2_inStockBatch_dict__(request)
         inventoryDict = __convert_inventory_URL_2_dict__(request)
@@ -557,13 +557,13 @@ def InventoryConfirm(request):
         owl = BarnOwl()
         result = None
         try:
-            result = owl.InStock(request.GET.get("mode"), inStockBatchDict, inventoryDict)
+            result = owl.InStock(request.POST.get("mode"), inStockBatchDict, inventoryDict)
         except SerialRequiredException as srException:
             error_msg = srException.value + " Required Serial Number"
-            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
+            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm/', 'error_msg': error_msg})
         except SerialRejectException as srException:
             error_msg = srException.value + " Serial Number NOT required"
-            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
+            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm/', 'error_msg': error_msg})
         logger.info("InventoryConfirm finish")
 
         hermes = Hermes()
@@ -608,7 +608,7 @@ def InventoryConfirm(request):
 """
 def __convert_sales_URL_2_dict__(request):
     salesDict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     logger.debug("instock items url parameters: %s", sales_item)    
     for key,  value in sales_item:
         if '_' not in key:
@@ -887,7 +887,7 @@ def ProductCostUpdate(request):
 
 def __convert_sales_URL_2_bill_dict__(request):
     dict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     logger.debug("instock items url parameters: %s", sales_item)    
     for key,  value in sales_item:
         if '_' in key:
@@ -901,12 +901,12 @@ def __convert_sales_URL_2_bill_dict__(request):
 
 def SalesConfirm(request):
     salesDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
         owl = BarnOwl()
         try:
-            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
             hermes = Hermes()
             payment = bills_and_payments[1]
             outStockRecords = bills_and_payments[2]

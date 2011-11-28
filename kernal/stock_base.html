@@ -7,7 +7,8 @@
 {% block css %}
 {% endblock %}
 </style>
-<form action="{{action}}" method="get" id="sales">
+<form action="{{action}}" method="POST" id="sales">
+{% csrf_token %}
 {% block hiddenValue %}
 {% endblock %}
 <div id="content_area_wrapper">  
