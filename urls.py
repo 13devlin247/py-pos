@@ -48,19 +48,19 @@ response AJAX method for create product
 """
 product_form = {
     'model': Product, 
-    'extra_context': {'form': ProductForm, 'submit_form':'/product/save', 'form_title': 'New Product'},    
+    'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'form_title': 'New Product'},    
     'template_name': 'product_form.html', 
 }
 
 supplier_form = {
     'model': Supplier, 
-    'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save', 'form_title': 'New Supplier'},    
+    'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save/', 'form_title': 'New Supplier'},    
     'template_name': 'product_form.html', 
 }
 
 customer_form = {
     'model': Customer, 
-    'extra_context': {'form': CustomerForm, 'submit_form':'/customer/save', 'form_title': 'New Customer'},    
+    'extra_context': {'form': CustomerForm, 'submit_form':'/customer/save/', 'form_title': 'New Customer'},    
     'template_name': 'product_form.html', 
 }
 
@@ -73,7 +73,7 @@ in_stock_record_list_view = {
 
 in_stock_record_crud_view  = {
     'model': InStockRecord, 
-    'extra_context': {'form': InStockRecordForm, 'submit_form':'/in_stock_record/save', 'main_link': main_link},
+    'extra_context': {'form': InStockRecordForm, 'submit_form':'/in_stock_record/save/', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
 
@@ -179,7 +179,7 @@ sales_do_list_view = {
 
 out_stock_record_crud_view  = {
     'model': OutStockRecord, 
-    'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save', 'main_link': main_link},
+    'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save/', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
 
