@@ -7,7 +7,8 @@
 {% block css %}
 {% endblock %}
 </style>
-<form action="{{action}}" method="get" id="sales">
+<form action="{{action}}" method="POST" id="sales">
+{% csrf_token %}
 {% block hiddenValue %}
 {% endblock %}
 <div id="content_area_wrapper">  
@@ -216,7 +217,7 @@
                 },
             });            
     });                	
-
+ 
 {% block product_append_algo %}        
     function _localProductStore(pk, data){
         if ( productTable[pk] == undefined){
@@ -227,9 +228,14 @@
             if(data.model == "kernal.foc"){ // foc product no stock
                 return;
             }
-            _queryInventory(data);
+            _queryInventory(pk, data);
         }else{
-            quantityPlugOne(pk);
+            pk = pk+"RANDOM"+Math.floor(Math.random()*999999)
+            productTable[pk] = data
+            row = _genRowByPK(pk, data);
+            $('#sell_detail').append(row);            
+            // quantityPlugOne(pk);
+            _queryInventory(pk, data);
             calcAmount(pk);
             calcSubTotalPrice();
             calcTotalPrice();
@@ -238,7 +244,7 @@
     }
 {% endblock %}	
     
-    function _queryInventory(product){
+    function _queryInventory(pk, product){
         /**
             query product inventory by ajax
         **/
@@ -254,7 +260,7 @@
                 if ("imei" in product){
                     productTable[product.imei].fields["stockCount"] = data[0].inventory;
                 }else{
-                    productTable[product.pk].fields["stockCount"] = data[0].inventory;
+                    productTable[pk].fields["stockCount"] = data[0].inventory;
                 }
                 
                 //alert(productTable[data.pk].fields["stockCount"]);
@@ -268,22 +274,13 @@
             url: "/product/returncost/"+queryStr,
             type: "JSON",
             success: function(data){ 
-                  var pk_cost = "#"+queryStr+"_avgcost";
+                  var pk_cost = "#"+pk+"_avgcost";
                   if (typeof queryStr != 'number') {
-                    pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
+                    // pk_cost = "#"+queryStr.split('/')[1]+"_avgcost";
+                    pk_cost = "#"+pk+"_avgcost";
                   }
                   $(pk_cost).html(data[0].Cost);
-                  
-            //$(pk_cost).html("xxxxx");
-                
-                //$("#"+product.pk+"_stockCount").html(data[0].inventory);
-                if ("imei" in product){
-                    productTable[product.imei].fields["stockCount"] = data[0].inventory;
-                }else{
-                    productTable[product.pk].fields["stockCount"] = data[0].inventory;
-                }
-            
-                //alert(productTable[data.pk].fields["stockCount"]);
+                  productTable[pk].fields.cost = data[0].Cost
             },
             error: function(data){ 
                 alert("Product Not found! please check your query: " + $("#item").val()) 
@@ -339,6 +336,7 @@
     }
 {% block summaryCalcScript %}    
     function calcAmount(pk){
+        value = $("#"+pk+"_quantity").val()
         var currentQuantity = parseInt($("#"+pk+"_quantity").val());
         var price = $("#"+pk+"_price").val();
         $("#"+pk+"_amount").html(currentQuantity* price);
@@ -384,7 +382,9 @@
         $("#cost_total").text(totalPrice);
     }    
     
-
+    function isNumber (o) {
+      return ! isNaN (o-0);
+    }
     
     function recalcAll(pk){
         calcAmount(pk);
@@ -394,6 +394,7 @@
     }
 
 	function lowerCostDetact(pk){
+        checkInput(pk)
         var price = parseFloat($("#"+pk+"_price").val());
 		var cost = parseFloat(productTable[pk].fields.cost);
 		if(cost > price){
@@ -405,8 +406,45 @@
 			
 		}
 	}
-	
+    function endsWith(str, suffix) {
+        return str.indexOf(suffix, str.length - suffix.length) !== -1;
+    }	
+    
+    function checkInput(pk){
+        qty_str = $("#"+ pk +"_quantity").val()
+        price_str = $("#"+ pk +"_price").val()
+        cost_str = $("#"+ pk +"_cost").val()
+        if(isNumber(qty_str) == false){
+            alert("Your quantity input invalid number, please check it.")
+        }    
+        
+        if(qty_str.indexOf('.', qty_str.length - '.'.length) !== -1){
+            alert("Your quantity input invalid number, please check it.")
+        }            
+
+        if (price_str != undefined){
+            if(isNumber(price_str) == false){
+                alert("Your price input invalid number, please check it.")
+            }    
+        
+            if(price_str.indexOf('.', price_str.length - '.'.length) !== -1){
+                alert("Your price input invalid number, please check it.")
+            }            
+        }
+
+        if (cost_str != undefined){
+            if(isNumber(cost_str) == false){
+                alert("Your cost input invalid number, please check it.")
+            }    
+        
+            if(cost_str.indexOf('.', cost_str.length - '.'.length) !== -1){
+                alert("Your cost input invalid number, please check it.")
+            }                    
+        }
+            
+    }
 	function resetQuantityField(pk){
+        checkInput(pk)
 		$("#"+pk+"_serial").html();
 		var quantity = $("#"+pk+"_quantity").val();
 		var inputField = _build_serial_input_textfield_by_pk_and_quantity(pk, quantity);
@@ -427,9 +465,11 @@ function send_command(){
 		{% block ajaxCheckBeforeSend %}
         
 		var msg = '';
+        
 		for(var pk in productTable){
 			var price = parseFloat($("#"+pk+"_price").val());
 			var cost = parseFloat(productTable[pk].fields.cost);
+            
 			if(cost > price){
 				msg += productTable[pk].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n'
 			}

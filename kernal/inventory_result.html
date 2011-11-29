@@ -70,6 +70,12 @@
                     <script type="text/javascript">
                     var sub_total = 0;
                     </script>
+                    <div style="text-align: left">
+                    <form action="/product/inventory/delete/">
+                        <input type=hidden name="inStockBatch_pk" value="{{inStockBatch.pk}}"/>
+                        <input type="Submit" value="Delete"/>
+                    </form>
+                    </div>
                     <form action="/product/inventory/cost/update/">
                     <input type=hidden name="inStockBatch_pk" value="{{inStockBatch.pk}}"/>
 					<table>   

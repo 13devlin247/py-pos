@@ -9,8 +9,6 @@ from django.db.models import Q
 from datetime import date
 from pos.kernal import filters
 #from pos.kernal.views import ajaxProductDetailView
-from pos.kernal.models import InStockBatch
-from pos.kernal.views import GadaiList,CloseCounterList
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
@@ -48,19 +46,19 @@ response AJAX method for create product
 """
 product_form = {
     'model': Product, 
-    'extra_context': {'form': ProductForm, 'submit_form':'/product/save', 'form_title': 'New Product'},    
+    'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'form_title': 'New Product'},    
     'template_name': 'product_form.html', 
 }
 
 supplier_form = {
     'model': Supplier, 
-    'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save', 'form_title': 'New Supplier'},    
+    'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save/', 'form_title': 'New Supplier'},    
     'template_name': 'product_form.html', 
 }
 
 customer_form = {
     'model': Customer, 
-    'extra_context': {'form': CustomerForm, 'submit_form':'/customer/save', 'form_title': 'New Customer'},    
+    'extra_context': {'form': CustomerForm, 'submit_form':'/customer/save/', 'form_title': 'New Customer'},    
     'template_name': 'product_form.html', 
 }
 
@@ -73,7 +71,7 @@ in_stock_record_list_view = {
 
 in_stock_record_crud_view  = {
     'model': InStockRecord, 
-    'extra_context': {'form': InStockRecordForm, 'submit_form':'/in_stock_record/save', 'main_link': main_link},
+    'extra_context': {'form': InStockRecordForm, 'submit_form':'/in_stock_record/save/', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
 
@@ -157,6 +155,13 @@ void_bill_report_view = {
     'extra_context':{'autocomplete_url':'/void_bill/ajax/','json_url':'/void_bill/info/','display':'bill' , 'default_result': __json_wrapper__(Bill.objects.filter(active = False).order_by('-create_at'))}
 }
 
+adjust_stock_report_view = {
+    'queryset': Bill.objects.filter(mode = 'adjust').filter(active = True).order_by('-create_at'),
+    'allow_empty': True,
+    'template_name': 'search_adjust_stock.html',
+    'extra_context':{'autocomplete_url':'/adjust_stock/ajax/','json_url':'/adjust_stock/info/','display':'bill' , 'default_result': __json_wrapper__(Bill.objects.filter(mode = 'adjust').filter(active = True).order_by('-create_at'))}
+}
+
 close_counter_view = {
     'queryset': Counter.objects.all(),
     'allow_empty': True,
@@ -172,7 +177,7 @@ sales_do_list_view = {
 
 out_stock_record_crud_view  = {
     'model': OutStockRecord, 
-    'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save', 'main_link': main_link},
+    'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save/', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
 
@@ -195,9 +200,11 @@ urlpatterns = patterns('',
     url(r'^product/create/$', login_required(create_update.create_object), product_form), 
     url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
     url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
-    url(r'^product/delete/$', login_required(ProductDelete)),    
+    url(r'^product/delete/$', login_required(ProductDelete)),
     url(r'^product/save/$', login_required(ProductSave)), # controller
+    url(r'^product/save/(?P<productID>[\x20-\x7E]*)$', login_required(ProductSave)), # controller    
     url(r'^product/info/(?P<query>[\x20-\x7E]+)', login_required(ProductInfo)), # controller
+    url(r'^product/inventory/delete/', login_required(InStockBatchDelete)), # controller
     url(r'^product/inventory/cost/update/', login_required(ProductCostUpdate)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)/(?P<serial>[\x20-\x7E]+)', login_required(ProductInventory)), # controller
     url(r'^product/inventory/(?P<productID>[\x20-\x7E]+)', login_required(ProductInventory)), # controller
@@ -223,6 +230,7 @@ urlpatterns = patterns('',
     url(r'^imei/info/(?P<imei>[\x20-\x7E]+)', login_required(ImeiInfo)),    # imei info json
     url(r'^gadai/info/(?P<query>[\x20-\x7E]+)', login_required(GadaiInfo)),
     url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)', login_required(VoidBillInfo)),
+    url(r'^adjust_stock/info/(?P<query>[\x20-\x7E]+)', login_required(AdjustStockInfo)),
     url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)', login_required(CloseCounterInfo)),	
     url(r'^productname/info/(?P<query>[\x20-\x7E]+)', login_required(ProductNameInfo)),
 
@@ -238,12 +246,13 @@ urlpatterns = patterns('',
     url(r'^salary/ajax/$', login_required(SalaryList)),
 	url(r'^gadai/ajax/$', login_required(GadaiList)),
     url(r'^void_bill/ajax/$',login_required(VoidBillList)),
+    url(r'^adjust_stock/ajax/$',login_required(AdjustStockList)),
     url(r'^close_counter/ajax/$',login_required(CloseCounterList)),	
     url(r'^productname/ajax/$',login_required(ProductNameSearch)),
 
             
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
-    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
+    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm/'} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
     url(r'^inventory/result/(?P<inStockBatchID>[\x20-\x7E]+)', login_required(QueryInventory)),                                
     url(r'^in_stock_record/create/$', login_required(create_update.create_object), in_stock_record_crud_view), 
@@ -256,14 +265,14 @@ urlpatterns = patterns('',
     url(r'^sales/items/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/sales_item/'} }),
     url(r'^sales/order/$', direct_to_template,  {'template': 'pos.html'}),
     url(r'^sales/$', login_required(direct_to_template),  {'template': 'sales.html'}),
-    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
-    url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
-    url(r'^consignment/in/$', login_required(direct_to_template),  {'template': 'consignment_in_form.html',  'extra_context': {'form': InStockBatchForm, 'action':'/inventory/confirm'} }),
-    url(r'^consignment/in/balance/$', login_required(direct_to_template),  {'template': 'consignment_in_balance_form.html',  'extra_context': {'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm'} }),
-    url(r'^consignment/out/$', login_required(direct_to_template),  {'template': 'consignment_out_form.html',  'extra_context': {'title':'Consignment OutStock Register', 'action':'/sales/confirm'} }),
+    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/'} }),
+    url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/'} }),
+    url(r'^consignment/in/$', login_required(direct_to_template),  {'template': 'consignment_in_form.html',  'extra_context': {'form': InStockBatchForm, 'action':'/inventory/confirm/'} }),
+    url(r'^consignment/in/balance/$', login_required(direct_to_template),  {'template': 'consignment_in_balance_form.html',  'extra_context': {'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm/'} }),
+    url(r'^consignment/out/$', login_required(direct_to_template),  {'template': 'consignment_out_form.html',  'extra_context': {'title':'Consignment OutStock Register', 'action':'/sales/confirm/'} }),
     url(r'^consignment/out/balance/$', login_required(direct_to_template),  {'template': 'consignment_out_balance_form.html',  'extra_context': {'title':'Consignment OutStock Balance', 'form': InStockBatchForm, 'action':'/consignment/out/balance/confirm/' } }),
     url(r'^consignment/out/sales/$', login_required(direct_to_template),  {'template': 'consignment_out_sale_form.html',  'extra_context': {'title':'Consignment OutStock Balance', 'form': InStockBatchForm, 'action':'/consignment/out/sale/confirm/' } }),
-    url(r'^stock/adjust/$', login_required(direct_to_template),  {'template': 'stock_adjust.html',  'extra_context': {'title':'Stock Adjust', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
+    url(r'^stock/adjust/$', login_required(direct_to_template),  {'template': 'stock_adjust.html',  'extra_context': {'title':'Stock Adjust', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/'} }),
 
     url(r'^deposit/add/$', login_required(direct_to_template),  {'template': 'deposit.html',  'extra_context': {'form': DepositForm(), 'action':'/deposit/add/confirm/'} }),    
     url(r'^deposit/add/confirm/$', DepositSave),
@@ -302,8 +311,9 @@ urlpatterns = patterns('',
     url(r'^report/inventory/receipt/$', login_required(ReportInventoryReceipt)),                                
     
 
-
-    url(r'^report/daily/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/'} }),                                    
+    url(r'report/simpack/filter/$', login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/simpack/'} }), 
+    url(r'^report/simpack/$',login_required(Simpack)),
+    url(r'^report/daily/filter/$', login_required(direct_to_template), {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily/'} }),                                    
     url(r'^report/daily_sales/filter/$', login_required(direct_to_template),  {'template': 'report_daily_sales_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/daily_sales/'} }), 
     url(r'^report/daily/$', login_required(ReportDaily)),
     url(r'^report/daily_sales/$', login_required(ReportDailySales)),  
@@ -360,6 +370,7 @@ urlpatterns = patterns('',
     url(r'^search/salary/$', login_required(list_detail.object_list), salary_list_view),
     url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),
     url(r'^search/void_bill/$',login_required(list_detail.object_list),void_bill_report_view),
+    url(r'^search/adjust_stock/$',login_required(list_detail.object_list),adjust_stock_report_view),
     url(r'^search/close_counter/$',login_required(list_detail.object_list),close_counter_view),
 
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),

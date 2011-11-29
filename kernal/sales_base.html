@@ -294,6 +294,25 @@
         reject_msg = "";
         if(_checkInputData() == false){ return; }
 		var msg = '';
+        var code = new Array();
+        for(var pk in productTable){
+            product_name = productTable[pk].fields.name
+            if( "imei" in productTable[pk]){
+                product_name = productTable[pk].imei
+            }        
+            qty = parseInt($("#"+pk+"_quantity").val())
+            pk = pk.split('RANDOM')[0]
+            if (code[pk] == undefined){
+                code[pk] = 0
+            }
+            code[pk] += qty
+                    
+            if(code[pk] >  productTable[pk].fields.stockCount){
+                reject = true;
+                reject_msg += "Product: '" + product_name + "' only '"+productTable[pk].fields.stockCount+"' item in hand \n"; 
+            }
+            
+        }
 		for(var pk in productTable){
             product_name = productTable[pk].fields.name
             if( "imei" in productTable[pk]){
@@ -310,6 +329,11 @@
 				msg += product_name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n';
 			}
 		}
+        
+        if ($("#change").val() < 0){
+                reject = true;
+                reject_msg += "Amount Tendered Invalid \n";             
+        }
         
         if (reject){
             alert(reject_msg);

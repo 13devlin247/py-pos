@@ -31,6 +31,8 @@ import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
 from pos.kernal.excel import ExcelWriter
+from django.utils.datastructures import MultiValueDictKeyError
+from kernal.models import InStockBatch
 
 
 logging.basicConfig(
@@ -76,7 +78,7 @@ def CashSalesReport(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(type='Cash Sales').order_by('-create_at')
+    payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(Q(type='Cash Sales')|Q(type='Consignment_OUT')).order_by('-create_at')
     total = 0
     for payment in payments:
         total += payment.bill.total_price
@@ -400,7 +402,7 @@ def printData(request):
 """
 def __convert_inventory_URL_2_inStockBatch_dict__(request):
     dict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     for key,  value in sales_item:
         if key.find("_") != -1:
             continue
@@ -409,16 +411,16 @@ def __convert_inventory_URL_2_inStockBatch_dict__(request):
         dict[key] = value[0]
         
     dict [u'_auth_user_id'] = request.session.get('_auth_user_id')
-    dict [u'do_no'] = request.GET.get('do_no')
-    dict [u'inv_no'] = request.GET.get('inv_no')
-    dict [u'refBill_no'] = request.GET.get('refBill_no')
-    dict [u'do_date'] = request.GET.get('do_date')
+    dict [u'do_no'] = request.POST.get('do_no')
+    dict [u'inv_no'] = request.POST.get('inv_no')
+    dict [u'refBill_no'] = request.POST.get('refBill_no')
+    dict [u'do_date'] = request.POST.get('do_date')
     logger.debug("InStockBatch parameters: %s", dict)        
     return dict
 
 def __convert_inventory_URL_2_dict__(request):
     dict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     logger.debug("instock items url parameters: %s", sales_item)
     for key,  value in sales_item:
         if key == "do_no":
@@ -537,7 +539,7 @@ def __build_serial_no__(request, inStockRecords, dict):
     
 def InventoryConfirm(request):
     inventoryDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         # process Request parameter
         inStockBatchDict = __convert_inventory_URL_2_inStockBatch_dict__(request)
         inventoryDict = __convert_inventory_URL_2_dict__(request)
@@ -545,13 +547,13 @@ def InventoryConfirm(request):
         owl = BarnOwl()
         result = None
         try:
-            result = owl.InStock(request.GET.get("mode"), inStockBatchDict, inventoryDict)
+            result = owl.InStock(request.POST.get("mode"), inStockBatchDict, inventoryDict)
         except SerialRequiredException as srException:
             error_msg = srException.value + " Required Serial Number"
-            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
+            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm/', 'error_msg': error_msg})
         except SerialRejectException as srException:
             error_msg = srException.value + " Serial Number NOT required"
-            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm', 'error_msg': error_msg})
+            return render_to_response('inventory_base.html', {'form': InStockBatchForm, 'action': '/inventory/confirm/', 'error_msg': error_msg})
         logger.info("InventoryConfirm finish")
 
         hermes = Hermes()
@@ -596,7 +598,7 @@ def InventoryConfirm(request):
 """
 def __convert_sales_URL_2_dict__(request):
     salesDict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     logger.debug("instock items url parameters: %s", sales_item)    
     for key,  value in sales_item:
         if '_' not in key:
@@ -826,6 +828,18 @@ def RepairSave(request):
     logger.info("Service job '%s' create success", repair.pk)
     return HttpResponseRedirect('/search/repair/')
 
+def InStockBatchDelete(request):
+    inStockBatch_pk = request.GET.get("inStockBatch_pk")
+    user_id = request.session.get('_auth_user_id')
+    user = User.objects.get(pk = user_id)
+    owl = BarnOwl()
+    inStockBatch = owl.DeleteInStockBatch(inStockBatch_pk, user.username)
+    if inStockBatch:
+        hermes = Hermes()
+        hermes.DeleteConsignmentIn(inStockBatch, user.username)
+        hermes.DeleteConsignmentOutReturn(inStockBatch)
+    return HttpResponseRedirect('/report/stocktake/filter/')
+    
 def SalarySave(request):
     form = RepairForm(request.GET)
     repair = form.save(commit=False)
@@ -848,7 +862,10 @@ def ProductCostUpdate(request):
     inStockRecords = InStockRecord.objects.filter(inStockBatch = inStockBatch)
 
     for inStockRecord in inStockRecords:
-        cost = float(request.GET.get("inStockRecord_" + str(inStockRecord.pk), "0"))
+        try:
+            cost = float(request.GET["inStockRecord_" + str(inStockRecord.pk)])
+        except MultiValueDictKeyError:
+            continue
         mouse = None
         if inStockRecord.product.algo.name == Algo.PERCENTAGE:
             mouse = MickyMouse(inStockRecord.product)
@@ -860,7 +877,7 @@ def ProductCostUpdate(request):
 
 def __convert_sales_URL_2_bill_dict__(request):
     dict = {}
-    sales_item = request.GET.lists()
+    sales_item = request.POST.lists()
     logger.debug("instock items url parameters: %s", sales_item)    
     for key,  value in sales_item:
         if '_' in key:
@@ -874,12 +891,12 @@ def __convert_sales_URL_2_bill_dict__(request):
 
 def SalesConfirm(request):
     salesDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
         owl = BarnOwl()
         try:
-            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
             hermes = Hermes()
             payment = bills_and_payments[1]
             outStockRecords = bills_and_payments[2]
@@ -904,7 +921,7 @@ def SalesConfirm(request):
 
 def ConsignmentOutSalesConfirm(request):
     salesDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
         owl = BarnOwl()
@@ -926,7 +943,7 @@ def ConsignmentOutSalesConfirm(request):
 
 def __consignment_out_handler__(request, is_sales):
     inventoryDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         customer = __query_customer__(request, 'supplier')
         inventoryDict = __convert_inventory_URL_2_dict__(request)
         error_msg = __check_consignment_out_balance_input__(request, inventoryDict, customer)
@@ -1081,16 +1098,16 @@ def __build_Consignment_Out_index__(supplier, outStockRecords):
                     
 def ConsignmentInBalance(request):
     inventoryDict = {}
-    if request.method == 'GET':
+    if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
         thanatos = Thanatos()
-        supplier = thanatos.Supplier(request.GET.get('supplier', 'Cash'))
+        supplier = thanatos.Supplier(request.POST.get('supplier', 'Cash'))
         
         owl = BarnOwl()
         bill = None
         try:
-            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+            bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
             hermes = Hermes()
             bill = bills_and_payments[0]
             payment = bills_and_payments[1]
@@ -1388,6 +1405,29 @@ def IMEIList(request):
     auto-complete view end
 """
 
+def Simpack(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    products = Product.objects.all()
+    
+    title = "SimPack"
+    group = []
+    for product in products:
+        #products = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product__exact = product).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+
+        products = _build_simpack_sold_dict(product, startDate, endDate)
+        if len(products)==0:
+            continue
+        group.append(products)
+        
+    return render_to_response('report_simpack.html',{'session': request.session, 'title' : title , 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+  
+
 def CategoryInfo(request):
     categorys = Category.objects.all()
     brands = Brand.objects.all()
@@ -1498,12 +1538,24 @@ def GadaiInfo(request,query):
         gadai = gadai.order_by("-create_at")
     json =__json_wrapper__(gadai)
     return HttpResponse(json, mimetype="application/json")
+
+def AdjustStockList(request):
+    keyword = request.GET.get('q',"")
+    voidBillQuerySet = __search__(Bill,(Q(sales_by__username__contains = keyword)))
+    list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.sales_by))
+    return HttpResponse(list,mimetype="text/plain")
     
 def VoidBillList(request):
     keyword = request.GET.get('q',"")
     voidBillQuerySet = __search__(Bill,(Q(reason__contains = keyword)))
     list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.reason))
     return HttpResponse(list,mimetype="text/plain")
+
+def AdjustStockInfo(request,query):
+    logger.debug("adjust stock: %s",query)
+    adjust_stock = __search__(Bill, (Q(active = True)&Q(sales_by__username__contains = query)&Q(mode='adjust')))
+    json = __json_wrapper__(adjust_stock.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
 
 def VoidBillInfo(request,query):
     logger.debug("voidbill : %s",query)
@@ -1668,7 +1720,8 @@ def ProductSave(request, productID=None):
                 return HttpResponseRedirect('/product/search/')    
 #            except Type.DoesNotExist:
 #                logger.error("ProductSave fail: Type.DoesNotExist")
-                #return HttpResponseRedirect('/product/search/')                    
+                #return HttpResponseRedirect('/product/search/')
+            product.name = product.name.replace(' ', '-')
             product.category = category
             product.brand = brand
             product.type = type
@@ -1832,6 +1885,17 @@ def DeleteBill(request):
     hermes.ReCalcCounterByPK(relc_counter.pk, recalc_bill_profit = True)
     return HttpResponseRedirect('/counter/close/') 
     
+def DeleteInStockBatch(request):
+    logger.info("Void InStockRecord")
+    pk = request.GET.get('inStockBatch_id','')
+    owl = BarnOwl()    
+    owl.DeleteInStockBatch(pk, request.GET.get("reason",""))
+    delete_bill = owl.RecalcBill(pk)
+    relc_counter = delete_bill.counter
+    hermes = Hermes()
+    hermes.DeleteConsignmentIn(InStockBatch.objects.get(pk=pk))
+    return HttpResponseRedirect('/counter/close/') 
+
     
 def PersonReport(request):
     startDate = request.GET.get('start_date','')
@@ -2145,7 +2209,51 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
     return products
 
 
+def _build_simpack_sold_dict(productg, startDate, endDate):
 
+    inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(Q(product__category__category_name__exact = 'SIMPACK')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+	
+    products = {}
+    
+    for inStockRecord in inStockRecordSet:
+        inStockRecord.serial_no =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        #serial_nos =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        total_available = 0 
+        for serial in inStockRecord.serial_no:
+            serial.qty = serial.quantity - serial.balance
+            total_available += serial.qty
+        inStockRecord.total_available = total_available
+        #logger.debug("serialno: %s ->instockRecord: %s",inStockRecord.serial_no,inStockRecord.pk)
+        #serial_nos =  SerialNo.objects.filter(inStockRecord = inStockRecord.pk).filter(active=True)
+        """
+        serial_qty = {}
+        for serial in serial_nos:
+            theno = serial.serial_no
+            logger.debug("the serial no:%s",theno)
+            sellstock = OutStockRecord.objects.filter(serial_no__exact=theno)
+            shownow = sellstock.serial_no
+            serial_qty[shownow] =  shownow.quantity - shownow.balance
+            logger.debug("sale stock %s",sellstock)  
+        """
+        product = inStockRecord.product
+        if product not in products:
+            logger.info("create %s in products" % product )
+            summaryInStockRecord = InStockRecord()
+            summaryInStockRecord.cost = 0
+            summaryInStockRecord.quantity = 0
+            summaryInStockRecord.status = 0
+            summaryInStockRecord.amount = 0
+            products[product] = [summaryInStockRecord]
+
+        productno = StockCost.objects.get(product =inStockRecord.product)
+        qty = productno.qty
+          
+        products[product][0].cost = qty * productno.avg_cost
+        #products[product][0].quantity = qty
+        products[product][0].quantity = products[product][0].quantity + inStockRecord.total_available
+        products[product].append(inStockRecord)
+        logger.info("add %s's  inStockRecord" % product )
+    return products
 
 def _build_sales_sold_dict(productg, startDate, endDate,search):
     if search == 'newhp_stock/':
