@@ -46,19 +46,19 @@ response AJAX method for create product
 """
 product_form = {
     'model': Product, 
-    'extra_context': {'form': ProductForm, 'submit_form':'/product/save', 'form_title': 'New Product'},    
+    'extra_context': {'form': ProductForm, 'submit_form':'/product/save/', 'form_title': 'New Product'},    
     'template_name': 'product_form.html', 
 }
 
 supplier_form = {
     'model': Supplier, 
-    'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save', 'form_title': 'New Supplier'},    
+    'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save/', 'form_title': 'New Supplier'},    
     'template_name': 'product_form.html', 
 }
 
 customer_form = {
     'model': Customer, 
-    'extra_context': {'form': CustomerForm, 'submit_form':'/customer/save', 'form_title': 'New Customer'},    
+    'extra_context': {'form': CustomerForm, 'submit_form':'/customer/save/', 'form_title': 'New Customer'},    
     'template_name': 'product_form.html', 
 }
 
@@ -71,7 +71,7 @@ in_stock_record_list_view = {
 
 in_stock_record_crud_view  = {
     'model': InStockRecord, 
-    'extra_context': {'form': InStockRecordForm, 'submit_form':'/in_stock_record/save', 'main_link': main_link},
+    'extra_context': {'form': InStockRecordForm, 'submit_form':'/in_stock_record/save/', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
 
@@ -177,7 +177,7 @@ sales_do_list_view = {
 
 out_stock_record_crud_view  = {
     'model': OutStockRecord, 
-    'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save', 'main_link': main_link},
+    'extra_context': {'form': OutStockRecordForm, 'submit_form':'/out_stock_record/save/', 'main_link': main_link},
     'template_name': 'CRUDForm.html', 
 }
 
@@ -251,7 +251,7 @@ urlpatterns = patterns('',
 
             
     url(r'^inventory/$', login_required(direct_to_template),  {'template': 'stock.html'}),
-    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm'} }),
+    url(r'^inventory/list/$', login_required(direct_to_template),  {'template': 'inventory_base.html',  'extra_context': {'form': InStockBatchForm, 'action': '/inventory/confirm/'} }),
     url(r'^inventory/confirm/$', login_required(InventoryConfirm)),    
     url(r'^inventory/result/(?P<inStockBatchID>[\x20-\x7E]+)', login_required(QueryInventory)),                                
     url(r'^in_stock_record/create/$', login_required(create_update.create_object), in_stock_record_crud_view), 
@@ -264,14 +264,14 @@ urlpatterns = patterns('',
     url(r'^sales/items/filter/$', login_required(direct_to_template),  {'template': 'report_filter.html',  'extra_context': {'form': ReportFilterForm(), 'action': '/report/sales_item/'} }),
     url(r'^sales/order/$', direct_to_template,  {'template': 'pos.html'}),
     url(r'^sales/$', login_required(direct_to_template),  {'template': 'sales.html'}),
-    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
-    url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
-    url(r'^consignment/in/$', login_required(direct_to_template),  {'template': 'consignment_in_form.html',  'extra_context': {'form': InStockBatchForm, 'action':'/inventory/confirm'} }),
-    url(r'^consignment/in/balance/$', login_required(direct_to_template),  {'template': 'consignment_in_balance_form.html',  'extra_context': {'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm'} }),
-    url(r'^consignment/out/$', login_required(direct_to_template),  {'template': 'consignment_out_form.html',  'extra_context': {'title':'Consignment OutStock Register', 'action':'/sales/confirm'} }),
+    url(r'^sales/list/$', login_required(direct_to_template),  {'template': 'sales_base.html',  'extra_context': {'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/'} }),
+    url(r'^invoice/list/$', login_required(direct_to_template),  {'template': 'invoice_form.html',  'extra_context': {'title':'Invoice Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/'} }),
+    url(r'^consignment/in/$', login_required(direct_to_template),  {'template': 'consignment_in_form.html',  'extra_context': {'form': InStockBatchForm, 'action':'/inventory/confirm/'} }),
+    url(r'^consignment/in/balance/$', login_required(direct_to_template),  {'template': 'consignment_in_balance_form.html',  'extra_context': {'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm/'} }),
+    url(r'^consignment/out/$', login_required(direct_to_template),  {'template': 'consignment_out_form.html',  'extra_context': {'title':'Consignment OutStock Register', 'action':'/sales/confirm/'} }),
     url(r'^consignment/out/balance/$', login_required(direct_to_template),  {'template': 'consignment_out_balance_form.html',  'extra_context': {'title':'Consignment OutStock Balance', 'form': InStockBatchForm, 'action':'/consignment/out/balance/confirm/' } }),
     url(r'^consignment/out/sales/$', login_required(direct_to_template),  {'template': 'consignment_out_sale_form.html',  'extra_context': {'title':'Consignment OutStock Balance', 'form': InStockBatchForm, 'action':'/consignment/out/sale/confirm/' } }),
-    url(r'^stock/adjust/$', login_required(direct_to_template),  {'template': 'stock_adjust.html',  'extra_context': {'title':'Stock Adjust', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm'} }),
+    url(r'^stock/adjust/$', login_required(direct_to_template),  {'template': 'stock_adjust.html',  'extra_context': {'title':'Stock Adjust', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/'} }),
 
     url(r'^deposit/add/$', login_required(direct_to_template),  {'template': 'deposit.html',  'extra_context': {'form': DepositForm(), 'action':'/deposit/add/confirm/'} }),    
     url(r'^deposit/add/confirm/$', DepositSave),

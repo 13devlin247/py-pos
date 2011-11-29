@@ -47,7 +47,7 @@ def __retriever_original_cost_by_FIFO__(consignmentOutDetails, quantity):
     return total_cost / counter
 
 def __query_customer__(request, textFieldID):
-    customerName = request.GET.get(textFieldID, 'Cash')
+    customerName = request.POST.get(textFieldID, 'Cash')
     customerList = Customer.objects.filter(name=customerName)
     customer = None
     if customerList.count() == 0:
@@ -62,7 +62,7 @@ def __query_customer__(request, textFieldID):
     return customer
     
 def __query_supplier__(request, textFieldID):
-    supplierName = request.GET.get(textFieldID, 'Cash')
+    supplierName = request.POST.get(textFieldID, 'Cash')
     supplierList = Supplier.objects.filter(name=supplierName)
     supplier = None
     if supplierList.count() == 0:
