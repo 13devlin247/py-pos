@@ -1382,13 +1382,18 @@ def ProductList(request):
     serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
     list = productList+serialNoList
     return HttpResponse(list, mimetype="text/plain")
-	
+
 def ProductNameSearch(request):
     keyword = request.GET.get('q',"")
     logger.debug("search product name by keyword:%s",keyword)
     product = __search__(Product,Q(name__contains = keyword))
     list = __autocomplete_wrapper__(product,lambda model: model.name)
     return HttpResponse(list,mimetype="text/plain")
+
+def CounterAmount(request, counter_pk):
+    logger.debug(" query CounterAmount: %s", counter_pk)
+    hermes = Hermes()
+    return HttpResponse(hermes.CounterAmount(counter_pk), mimetype="text/plain")
 
 def ProductNameInfo(request,query):
     logger.debug(" search product name by keyword: %s",query)    
@@ -2127,12 +2132,12 @@ def _build_person_sold_dict(user, startDate, endDate):
 def _build_commission_sold_dict(user, startDate, endDate,search):
     #outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
     if search=='newhp/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.purchase).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         logger.debug("*********outStock********%s", outStockRecordSet)
     elif search == '2ndhp/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.tradein).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'gadai/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.pawning).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'acc/':
         outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(product__category__category_name__exact = 'ACCESSORIES').filter(create_at__range=(startDate,endDate)).filter(active=True)
     else:
@@ -2163,11 +2168,11 @@ def _build_commission_sold_dict(user, startDate, endDate,search):
 def _build_stock_sold_dict(productg, startDate, endDate,search):
     if search == 'newhp_stock/':
         #inStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
-        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = BarnOwl.purchase).filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'Sndhp_stock/':
-        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = BarnOwl.tradein).filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'pawning_stock/':
-        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = BarnOwl.pawning).filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
     else:
         pass
     products = {}
@@ -2217,17 +2222,17 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
 
 def _build_sales_sold_dict(productg, startDate, endDate,search):
     if search == 'newhp_stock/':
-        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.purchase).filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         
         logger.debug("*********outStock********%s", inStockRecordSet)
     elif search == 'Sndhp_stock/':
         
-        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.tradein).filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         logger.debug("*********outStock********%s", inStockRecordSet)
     elif search == 'pawning_stock/':
-        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.pawning).filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         logger.debug("*********outStock********%s", inStockRecordSet)
     else:
