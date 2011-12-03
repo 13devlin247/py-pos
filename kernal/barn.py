@@ -1167,8 +1167,8 @@ class Hermes:
         counters = Counter.objects.filter(active=True)
         if counters.count() != 0:
             counter = counters.order_by('-create_at')[0]
-            today = datetime.today().date()
-            counter_date = counter.create_at.today()
+            today = datetime.today().strftime("%d/%m/%y")
+            counter_date = counter.create_at.today().strftime("%d/%m/%y")
             if today != counter_date:
                 logger.debug("counter created at %s, close and create new one", counter_date)
                 self.ReCalcCounterByPK(counter.pk, recalc_bill_profit = True)
