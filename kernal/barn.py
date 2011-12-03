@@ -591,18 +591,20 @@ class ServiceMouse(MickyMouse):
 
 
 class BarnOwl:
-    def __init__(self):
         # instock
-        self.purchase = "purchase"
-        self.pawning= "pawning"
-        # outstock
-        self.cash = "Cash Sales"
-        self.invoice =  "Invoice"
-        self.adjust = "adjust"
-        self.consignment = "Consignment"
-        self.Consignment_in_balance = "Consignment_in_balance"
-        self.Consignment_out_sales = "Consignment_out_sales"
-
+    purchase = "purchase"
+    pawning= "pawning"
+    tradein= "trade-in"
+    # outstock
+    cash = "Cash Sales"
+    invoice =  "Invoice"
+    adjust = "adjust"
+    consignment = "Consignment"
+    Consignment_in_balance = "Consignment_in_balance"
+    Consignment_out_sales = "Consignment_out_sales"
+    
+    def __init__(self):
+        pass
     """
     output 
     {
@@ -1206,7 +1208,10 @@ class Hermes:
         logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
         bill.save()
 
-    def ReCalcCounterByPK(self, counterID, recalc_bill_profit = False):
+    def CounterAmount(self, counterID):
+        return self._calcCounterTotalAmountByPK(counterID, recalc_bill_profit = False)
+
+    def _calcCounterTotalAmountByPK(self, counterID, recalc_bill_profit = False):
         counter = Counter.objects.get(pk=counterID)
         bills = Bill.objects.filter(counter=counter).filter(active=True)
         totalAmount = counter.initail_amount
@@ -1215,7 +1220,21 @@ class Hermes:
             if recalc_bill_profit:
                 logger.debug("ReCalc Bill '%s' outStockRecord profit", bill.pk)
                 self._recalc_bill_profit(bill)
-            totalAmount = totalAmount + bill.total_price            
+            totalAmount = totalAmount + bill.total_price
+        
+        date = counter.create_at.strftime("%Y-%m-%d") + " 00:00:00"
+        new_date = counter.create_at.strftime("%Y-%m-%d") + " 23:59:59"
+        logger.debug("create_at__range=(%s,%s)", date, new_date)
+        inStockRecords = InStockRecord.objects.filter(create_at__range=(date, new_date)).filter(active=1).filter(Q(type=BarnOwl.pawning)|Q(type=BarnOwl.tradein))
+        total_cost = 0
+        for inStockRecord in inStockRecords:
+            total_cost += inStockRecord.cost 
+        
+        return totalAmount - total_cost             
+
+    def ReCalcCounterByPK(self, counterID, recalc_bill_profit = False):
+        counter = Counter.objects.get(pk=counterID)
+        totalAmount = self._calcCounterTotalAmountByPK(counter.pk, recalc_bill_profit)
         counter.close_amount = totalAmount
         counter.active = False
         counter.save()
