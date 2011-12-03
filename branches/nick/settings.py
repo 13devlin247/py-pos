@@ -76,7 +76,7 @@ STATICFILES_DIRS = (
     '/home/zhijian/pos/templates/static', 
     p1+'/templates/static', 
     p1+'/templates/', 
-    p1+'/static', 
+    p1+'/static/images/upload', 
     # Put strings here, like "/home/html/static" or "C:/www/django/static".
     # Always use forward slashes, even on Windows.
     # Don't forget to use absolute paths, not relative paths.
