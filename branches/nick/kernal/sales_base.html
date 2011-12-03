@@ -294,7 +294,7 @@
 			row = ""+
 					"<tr id=\""+pk+"_tr\">"+
 					"<td><a href='#' id='removeItem' onclick=\"removeItem('"+pk+"')\"><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
-					"<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +"</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch \ only-->
+					"<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +" <br/>[<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch \ only-->
 					"<td id=\""+pk+"_avgcost\">"+data.fields.cost+"</td>"+
                     "<td><input type=\"text\" name=\""+pk+"_extracost\" id=\""+pk+"_extracost\" value=\"0\" size=\"6\" onChange=checkInput('"+pk+"') /></td>"+
                     "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
