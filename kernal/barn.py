@@ -717,7 +717,7 @@ class BarnOwl:
             product_dict[barcode]['product'] = self._query_product(pk)
             product_dict[barcode]['qty'] = int(dict[barcode]['quantity'])
             product_dict[barcode]['unit_sell_price'] = float(dict[barcode]['price'])
-            product_dict[pk]['extracost'] = float(dict[barcode].get('extracost', '0.0'))
+            product_dict[barcode]['extracost'] = float(dict[barcode].get('extracost', '0.0'))
             try:
                 product_dict[barcode]['cost'] = float(dict[barcode]['cost'])
             except Exception:
