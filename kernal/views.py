@@ -32,7 +32,7 @@ from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
 from pos.kernal.excel import ExcelWriter
 from django.utils.datastructures import MultiValueDictKeyError
-from kernal.models import InStockBatch
+from kernal.models import InStockBatch, Company
 
 
 logging.basicConfig(
@@ -1275,7 +1275,8 @@ def CountInventory(request):
         total_qty += stockCost.qty
         total_on_hand_value += stockCost.on_hand_value         
 #        list.append(__count_inventory_stock__(starttime, endtime, product)) 
-    return render_to_response('stock_take.html',{'total_qty': total_qty,'total_on_hand_value':total_on_hand_value,'stockList': list, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+    company = Company.objects.latest("create_at")
+    return render_to_response('stock_take.html',{'company': company, 'total_qty': total_qty,'total_on_hand_value':total_on_hand_value,'stockList': list, 'dateRange': datetime.today()}, )
     
 """
     auto-complete view start
