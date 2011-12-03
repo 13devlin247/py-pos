@@ -193,11 +193,13 @@
                 type: "JSON",
                 success: function(data){  
                     if(data.length == 0){   // if product not found in server, entry foc process
+                        {% block foc_algo %}
                         var foc = $("#item").val().split("<")[0];
                         var foc_pk = foc.replace(/\s/g,"-")+"-foc-product";
                         var focJSON = "[{\"pk\": \""+foc_pk+"\", \"model\": \"kernal.foc\", \"fields\": {\"name\": \""+foc+"\", \"barcode\": \""+foc+"\", \"tag\": \""+foc+"\", \"cost\": \"0\", \"active\": true, \"retail_price\": \"0\", \"uom\": 1, \"description\": \""+foc+"\"}}]";
                         var focObject = jQuery.parseJSON(focJSON);
                         _localProductStore(foc_pk, focObject[0]);                        
+                        {% endblock %}  
                         return;
                     } // foc process leave
                     for (var i = 0; i < data.length; i++){
