@@ -258,7 +258,7 @@
             url: "/product/inventory/"+queryStr,
             type: "JSON",
             success: function(data){  
-                //$("#"+product.pk+"_stockCount").html(data[0].inventory);
+                $("#"+pk+"_stockCount").html(data[0].inventory);
                 if ("imei" in product){
                     productTable[product.imei].fields["stockCount"] = data[0].inventory;
                 }else{
