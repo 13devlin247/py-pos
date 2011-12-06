@@ -126,7 +126,7 @@ class BarnMouse:
         logger.debug("Product '%s' '%s' quantity count by %s ~ %s, result: B4_QTY:%s, NOW_QTY:%s, QTY:%s, COST:%s", product.name, stockRecords, starttime, endtime, summary[0], summary[1], summary[2], summary[3] )
         return summary 
          
-    def __count_inventory_stock__(self, starttime, endtime, product):
+    def Count_inventory_stock(self, starttime, endtime, product):
         result = []
 
         inStockRecords = InStockRecord.objects.filter(product = product).filter(active = True)
@@ -161,6 +161,11 @@ class BarnMouse:
         result.append(current_outStock)
         result.append(total_Stock)
         result.append(cost_Stock)
+        if total_Stock == 0:
+            result.append(0)
+        else:
+            avg_cost = float(cost_Stock)/float(total_Stock)
+            result.append(avg_cost)
         logger.debug("Product: '%s' count: '%s' ", product.name, result)
         return result
 
@@ -201,7 +206,7 @@ class BarnMouse:
         endDate = str(date.max)+" 23:59:59"
         starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
         endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
-        inventory_summary = self.__count_inventory_stock__(starttime, endtime, self.product)
+        inventory_summary = self.Count_inventory_stock(starttime, endtime, self.product)
         qty = inventory_summary[5]
         cost = inventory_summary[6]
         avg_cost = 0
