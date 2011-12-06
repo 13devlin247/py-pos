@@ -200,12 +200,24 @@ def _filter_inStockRecords(inStockBatchs):
     return total_amount, instocks_summary
 
 def _filter_bills(startDate, endDate):
-    payments = Payment.objects.filter(complete_at__range=(startDate,endDate)).filter(active=True).filter(status='Complete')
+    payments = Payment.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(status='Complete')
     bills = []
     for payment in payments:
         bill = payment.bill
         bills.append(bill)
     return bills
+
+def _filter_outStockRecords(bills):
+    outstocks_summary = []
+    total_amount = 0
+    for bill in bills:
+        outstocks = OutStockRecord.objects.all().filter(bill=bill).filter(active=True)
+        for outstock in outstocks:
+            outstock.tt = outstock.unit_sell_price * outstock.quantity
+            outstock.user = outstock.bill.sales_by.username
+            total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
+        outstocks_summary.extend(outstocks)
+    return total_amount, outstocks_summary
 
 def _wrapper_download_file(text, filename):
     response = HttpResponse(text, mimetype="application/vnd.ms-excel; charset=utf-8")
