@@ -174,9 +174,29 @@ def ReportDailySales(request):
     
     total_profit = 0    
     bills = _filter_bills(startDate, endDate)
-    total_amount, outstocks_summary = _filter_outStockRecords(bills)
+    total_out_amount, outstocks_summary = _filter_outStockRecords(bills)
+    
+    inStockBatchs = _filter_inStockBatch(startDate, endDate)
+    total_in_amount, instocks_summary = _filter_inStockRecords(inStockBatchs)
+        
     profitTable = {}
-    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks_summary, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
+    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks_summary,'instocks':instocks_summary, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount': (total_out_amount-total_in_amount),'total_out_amount':total_out_amount, 'total_in_amount':total_in_amount, 'total_profit': total_profit})
+
+def _filter_inStockBatch(startDate, endDate):
+    inStockBatchs = InStockBatch.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(Q(mode = BarnOwl.pawning)|Q(mode = BarnOwl.tradein))
+    return inStockBatchs
+
+def _filter_inStockRecords(inStockBatchs):
+    instocks_summary = []
+    total_amount = 0
+    for inStockBatch in inStockBatchs:
+        instocks = InStockRecord.objects.filter(inStockBatch=inStockBatch).filter(active=True)
+        for instock in instocks:
+            instock.tt = instock.cost * instock.quantity
+            instock.user = instock.inStockBatch.user.username
+            total_amount = total_amount + instock.tt
+        instocks_summary.extend(instocks)
+    return total_amount, instocks_summary
 
 def _filter_bills(startDate, endDate):
     payments = Payment.objects.filter(complete_at__range=(startDate,endDate)).filter(active=True).filter(status='Complete')
@@ -1240,15 +1260,8 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
 #    logger.debug("Product: '%s' count: '%s' ", product.name, result)
 #    return result
 
-def CountInventory(request):
-    startDate = request.GET.get('start_date','')
-    endDate = request.GET.get('end_date','')
-    if startDate == '' or endDate == '':
-        startDate = str(date.min)
-        endDate = str(date.max)
-    startDate = startDate+" 00:00:00"
-    endDate = endDate+" 23:59:59"
-    logger.debug("%s", startDate)
+
+def _show_stock_cost_table(startDate, endDate):
     products = Product.objects.filter(Q(active=True)).order_by("name")
     list = []
     total_qty = 0
@@ -1270,11 +1283,54 @@ def CountInventory(request):
         result.append(0) # current_outStock
         result.append(stockCost.qty)
         result.append(stockCost.on_hand_value)
-        result.append(stockCost.avg_cost)        
+        result.append(stockCost.avg_cost)
         list.append(result)
         total_qty += stockCost.qty
         total_on_hand_value += stockCost.on_hand_value         
-#        list.append(__count_inventory_stock__(starttime, endtime, product)) 
+    return (list, total_qty, total_on_hand_value)
+
+
+def _count_all_inventory_stock(startDate, endDate):
+    products = Product.objects.filter(Q(active=True)).order_by("name")
+    list = []
+    total_qty = 0
+    total_on_hand_value = 0
+    for product in products:
+        stockCost = None
+        try:
+            stockCost = StockCost.objects.get(product=product)
+        except StockCost.DoesNotExist:
+            BarnMouse(product)
+            stockCost = StockCost.objects.get(product=product)
+        if stockCost.qty == 0:
+            continue
+        starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
+        endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')        
+        result = BarnMouse(product).Count_inventory_stock(starttime, endtime, product)
+        list.append(result)
+        total_qty += result[5]
+        total_on_hand_value += result[6]         
+    return (list, total_qty, total_on_hand_value)
+
+def CountInventory(request):
+    show_all = False
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+        show_all = True
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    list = []
+    total_qty = 0 
+    total_on_hand_value = 0
+    if show_all:
+        logger.debug("filter StockCost Table, entry high performance algo")
+        list, total_qty, total_on_hand_value = _show_stock_cost_table(startDate, endDate)
+    else:
+        logger.debug("filter All relatived Table, entry low performance algo")
+        list, total_qty, total_on_hand_value =  _count_all_inventory_stock(startDate, endDate) 
     company = Company.objects.latest("create_at")
     return render_to_response('stock_take.html',{'company': company, 'total_qty': total_qty,'total_on_hand_value':total_on_hand_value,'stockList': list, 'dateRange': datetime.today()}, )
     
@@ -1739,6 +1795,14 @@ def ProductSave(request, productID=None):
         else:
             logger.error("ProductSave fail: Form Validate faile")
             return HttpResponseRedirect('/product/search/')
+
+def ProductTraceView(request, productID):
+    product = Product.objects.get(pk = productID)
+    serials = SerialNo.objects.filter(Q(inStockRecord__product = product)).order_by('active')
+    inStockRecords = InStockRecord.objects.filter(product = product).order_by("create_at")
+    outStockRecords = OutStockRecord.objects.filter(product = product).order_by("create_at")
+    stock = StockCost.objects.get(product = product)
+    return render_to_response('product_trace.html',{'product': product, 'serials': serials, 'inStockRecords': inStockRecords, 'outStockRecords': outStockRecords, 'stock': stock})
 
 def ProductUpdateView(request, productID):
     product = Product.objects.get(pk=productID)
