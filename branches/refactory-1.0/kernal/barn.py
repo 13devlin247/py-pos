@@ -128,7 +128,7 @@ class BarnMouse:
         logger.debug("Product '%s' '%s' quantity count by %s ~ %s, result: B4_QTY:%s, NOW_QTY:%s, QTY:%s, COST:%s", product.name, stockRecords, starttime, endtime, summary[0], summary[1], summary[2], summary[3] )
         return summary 
          
-    def __count_inventory_stock__(self, starttime, endtime, product):
+    def Count_inventory_stock(self, starttime, endtime, product):
         result = []
 
         inStockRecords = InStockRecord.objects.filter(product = product).filter(active = True)
@@ -163,6 +163,11 @@ class BarnMouse:
         result.append(current_outStock)
         result.append(total_Stock)
         result.append(cost_Stock)
+        if total_Stock == 0:
+            result.append(0)
+        else:
+            avg_cost = float(cost_Stock)/float(total_Stock)
+            result.append(avg_cost)
         logger.debug("Product: '%s' count: '%s' ", product.name, result)
         return result
 
@@ -203,7 +208,7 @@ class BarnMouse:
         endDate = str(date.max)+" 23:59:59"
         starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
         endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
-        inventory_summary = self.__count_inventory_stock__(starttime, endtime, self.product)
+        inventory_summary = self.Count_inventory_stock(starttime, endtime, self.product)
         qty = inventory_summary[5]
         cost = inventory_summary[6]
         avg_cost = 0
@@ -593,18 +598,20 @@ class ServiceMouse(MickyMouse):
 
 
 class BarnOwl:
-    def __init__(self):
         # instock
-        self.purchase = "purchase"
-        self.pawning= "pawning"
-        # outstock
-        self.cash = "Cash Sales"
-        self.invoice =  "Invoice"
-        self.adjust = "adjust"
-        self.consignment = "Consignment"
-        self.Consignment_in_balance = "Consignment_in_balance"
-        self.Consignment_out_sales = "Consignment_out_sales"
-
+    purchase = "purchase"
+    pawning= "pawning"
+    tradein= "trade-in"
+    # outstock
+    cash = "Cash Sales"
+    invoice =  "Invoice"
+    adjust = "adjust"
+    consignment = "Consignment"
+    Consignment_in_balance = "Consignment_in_balance"
+    Consignment_out_sales = "Consignment_out_sales"
+    
+    def __init__(self):
+        pass
     """
     output 
     {
@@ -719,6 +726,7 @@ class BarnOwl:
             product_dict[barcode]['product'] = self._query_product(pk)
             product_dict[barcode]['qty'] = int(dict[barcode]['quantity'])
             product_dict[barcode]['unit_sell_price'] = float(dict[barcode]['price'])
+            product_dict[barcode]['extracost'] = float(dict[barcode].get('extracost', '0.0'))
             try:
                 product_dict[barcode]['cost'] = float(dict[barcode]['cost'])
             except Exception:
@@ -1176,7 +1184,10 @@ class Hermes:
         logger.info("Bill: %s total profit: %s" , bill.pk , bill.profit)
         bill.save()
 
-    def ReCalcCounterByPK(self, counterID, recalc_bill_profit = False):
+    def CounterAmount(self, counterID):
+        return self._calcCounterTotalAmountByPK(counterID, recalc_bill_profit = False)
+
+    def _calcCounterTotalAmountByPK(self, counterID, recalc_bill_profit = False):
         counter = Counter.objects.get(pk=counterID)
         bills = Bill.objects.filter(counter=counter).filter(active=True)
         totalAmount = counter.initail_amount
@@ -1185,7 +1196,21 @@ class Hermes:
             if recalc_bill_profit:
                 logger.debug("ReCalc Bill '%s' outStockRecord profit", bill.pk)
                 self._recalc_bill_profit(bill)
-            totalAmount = totalAmount + bill.total_price            
+            totalAmount = totalAmount + bill.total_price
+        
+        date = counter.create_at.strftime("%Y-%m-%d") + " 00:00:00"
+        new_date = counter.create_at.strftime("%Y-%m-%d") + " 23:59:59"
+        logger.debug("create_at__range=(%s,%s)", date, new_date)
+        inStockRecords = InStockRecord.objects.filter(create_at__range=(date, new_date)).filter(active=1).filter(Q(type=BarnOwl.pawning)|Q(type=BarnOwl.tradein))
+        total_cost = 0
+        for inStockRecord in inStockRecords:
+            total_cost += inStockRecord.cost 
+        
+        return totalAmount - total_cost             
+
+    def ReCalcCounterByPK(self, counterID, recalc_bill_profit = False):
+        counter = Counter.objects.get(pk=counterID)
+        totalAmount = self._calcCounterTotalAmountByPK(counter.pk, recalc_bill_profit)
         counter.close_amount = totalAmount
         counter.active = False
         counter.save()

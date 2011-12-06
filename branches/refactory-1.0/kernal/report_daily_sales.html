@@ -43,7 +43,31 @@
                   <a href="/sales/bill/{{outstock.bill.pk}}" target="_blank">{{outstock.pk}}</a></td>  <td>{{outstock.product}}</td>  <td>{{outstock.user}}</td>  <td>{{outstock.tt}}</td>  <td>{{outstock.bill.mode}}</td>  <td>{{outstock.create_at}}</td>
               </tr>  			
 			{%endfor%}
+                <tr>
+                    <td colspan=3>Sub Total:</td>
+                    <td>{{total_out_amount}}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
             </tbody>  	
+
+            
+            <tbody>  	
+            <tr><td colspan=6><h3>Trade-in or Pawning</h3></td></tr>
+			{%for instock in instocks %}
+              <tr>  				
+                <td>
+                  <a href="/inventory/result/{{instock.inStockBatch.pk}}" target="_blank">{{instock.pk}}</a></td>  <td>{{instock.product}}</td>  <td>{{instock.user}}</td>  <td>-{{instock.tt}}</td>  <td>{{instock.inStockBatch.mode}}</td>  <td>{{instock.create_at}}</td>
+              </tr>  			
+			{%endfor%}
+                <tr>
+                    <td colspan=3>Sub Total:</td>
+                    <td>-{{total_in_amount}}</td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            
+            </tbody>  	            
             <tfoot>
                 <tr>
                     <td colspan=3>Total:</td>

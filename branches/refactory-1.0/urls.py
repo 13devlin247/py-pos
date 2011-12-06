@@ -199,7 +199,8 @@ urlpatterns = patterns('',
     
     url(r'^product/create/$', login_required(create_update.create_object), product_form), 
     url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
-    url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
+    url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)),
+    url(r'^product/trace/(?P<productID>[\x20-\x7E]+)', login_required(ProductTraceView)), 
     url(r'^product/delete/$', login_required(ProductDelete)),
     url(r'^product/save/$', login_required(ProductSave)), # controller
     url(r'^product/save/(?P<productID>[\x20-\x7E]*)$', login_required(ProductSave)), # controller    
@@ -231,7 +232,8 @@ urlpatterns = patterns('',
     url(r'^gadai/info/(?P<query>[\x20-\x7E]+)', login_required(GadaiInfo)),
     url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)', login_required(VoidBillInfo)),
     url(r'^adjust_stock/info/(?P<query>[\x20-\x7E]+)', login_required(AdjustStockInfo)),
-    url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)', login_required(CloseCounterInfo)),	
+    url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)', login_required(CloseCounterInfo)),
+    url(r'^counter/amount/(?P<counter_pk>[\x20-\x7E]+)', login_required(CounterAmount)),
     url(r'^productname/info/(?P<query>[\x20-\x7E]+)', login_required(ProductNameInfo)),
 
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
