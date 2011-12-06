@@ -1736,6 +1736,8 @@ def SupplierSave(request, supplierID=None):
         else:
             return HttpResponseRedirect('/supplier/create/')
 
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')
 def ProductSave(request, productID=None):
     product = None
     if productID is not None:
@@ -1791,7 +1793,8 @@ def ProductUpdateView(request, productID):
 
 def PrintBarcode(request, barcode):    
     return render_to_response('printBarcode.html',{'barcode': barcode})
-    
+
+@permission_required('kernal.delete_product', login_url='/accounts/login/')    
 def ProductDelete(request):
     if request.method == 'GET':
         delete_products = request.GET.getlist('delete_product[]')
