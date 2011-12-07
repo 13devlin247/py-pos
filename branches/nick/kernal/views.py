@@ -811,29 +811,29 @@ def DepositSave(request):
 
 def ServiceSave(request):
     salesDict = {}
-    if request.method == 'GET':
-        bill_dict = __convert_sales_URL_2_bill_dict__(request)
-        salesDict = __convert_sales_URL_2_dict__(request)
-        owl = BarnOwl()
-        try:
-            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
-            payment = bills_and_payments[1]
-            outStockRecords = bills_and_payments[2]
-        except CounterNotReadyException as e:
-            logger.warn("Can not found 'OPEN' Counter, direct to open page")
-            return HttpResponseRedirect('/admin/kernal/counter/add/')    
-        # process Request parameter
-        bill = bills_and_payments[0]
+    
+    bill_dict = __convert_sales_URL_2_bill_dict__(request)
+    salesDict = __convert_sales_URL_2_dict__(request)
+    owl = BarnOwl()
+    try:
+        bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
         payment = bills_and_payments[1]
-        if payment.type == 'Invoice':
-            logger.debug("Invoice bill, direct to invoice interface")
-            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
-        elif payment.type == 'Consignment':
-            logger.debug("Consignment bill, direct to Consignment interface")
-            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
-        else:
-            logger.debug("Cash sales bill, direct to Recept interface")
-            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
+        outStockRecords = bills_and_payments[2]
+    except CounterNotReadyException as e:
+        logger.warn("Can not found 'OPEN' Counter, direct to open page")
+        return HttpResponseRedirect('/admin/kernal/counter/add/')    
+    # process Request parameter
+    bill = bills_and_payments[0]
+    payment = bills_and_payments[1]
+    if payment.type == 'Invoice':
+        logger.debug("Invoice bill, direct to invoice interface")
+        return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
+    elif payment.type == 'Consignment':
+        logger.debug("Consignment bill, direct to Consignment interface")
+        return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+    else:
+        logger.debug("Cash sales bill, direct to Recept interface")
+        return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
     
 #    cname = request.GET.get("customer")
 #    thanatos = Thanatos()
