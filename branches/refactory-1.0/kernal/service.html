@@ -11,6 +11,14 @@
         </div>  
 {% endblock %}
 
+{% block foc_algo %}
+    var foc = $("#item").val().split("<")[0];
+    var foc_pk = foc.replace(/\s/g,"-")+"-foc-product";
+    var focJSON = "[{\"pk\": \""+foc_pk+"\", \"model\": \"kernal.foc\", \"fields\": {\"name\": \""+foc+"\", \"barcode\": \""+foc+"\", \"tag\": \""+foc+"\", \"cost\": \"0\", \"active\": true, \"retail_price\": \"0\", \"uom\": 1, \"description\": \""+foc+"\"}}]";
+    var focObject = jQuery.parseJSON(focJSON);
+    _localProductStore(foc_pk, focObject[0]);                        
+{% endblock %}  
+
 {% block mode_form %}
           <div id="mode_form">
             <span>Register Mode
