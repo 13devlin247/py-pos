@@ -199,7 +199,7 @@ def _filter_inStockRecords(inStockBatchs):
     return total_amount, instocks_summary
 
 def _filter_bills(startDate, endDate):
-    payments = Payment.objects.filter(complete_at__range=(startDate,endDate)).filter(active=True).filter(status='Complete')
+    payments = Payment.objects.filter(complete_at__range=(startDate,endDate)).filter(active=True).filter(status='Complete').exclude(bill__mode = "transfer")
     bills = []
     for payment in payments:
         bill = payment.bill
@@ -1587,7 +1587,7 @@ def GadaiList(request):
     gadaiStatusQuerySet = __search__(SerialNo, Q(serial_no__contains = keyword)&Q(inStockRecord__inStockBatch__mode__exact='pawning'))
     list +=__autocomplete_wrapper__(gadaiStatusQuerySet,lambda model:str(model.pk))
     return HttpResponse(list,mimetype="text/plain")
-	
+
 def GadaiInfo(request,query):	
     logger.info("gaidai query %s:",query)
     gadai = __search__(InStockBatch,(Q(supplier__name__contains = query)))
@@ -1599,10 +1599,22 @@ def GadaiInfo(request,query):
     json =__json_wrapper__(gadai)
     return HttpResponse(json, mimetype="application/json")
 
+def TransferInList(request):
+    keyword = request.GET.get('q',"")
+    transferInQuerySet = __search__(InStockBatch,(Q(supplier__supplier_code__contains = keyword)))
+    list = __autocomplete_wrapper__(transferInQuerySet, lambda model:str(model.supplier.supplier_code))
+    return HttpResponse(list,mimetype="text/plain")
+
+def TransferOutList(request):
+    keyword = request.GET.get('q',"")
+    transferOutQuerySet = __search__(Bill,(Q(customer__customer_code__contains = keyword)))
+    list = __autocomplete_wrapper__(transferOutQuerySet, lambda model:str(model.customer.customer_code))
+    return HttpResponse(list,mimetype="text/plain")
+
 def AdjustStockList(request):
     keyword = request.GET.get('q',"")
-    voidBillQuerySet = __search__(Bill,(Q(sales_by__username__contains = keyword)))
-    list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.sales_by))
+    adjustStockQuerySet = __search__(Bill,(Q(sales_by__username__contains = keyword)))
+    list = __autocomplete_wrapper__(adjustStockQuerySet, lambda model:str(model.sales_by))
     return HttpResponse(list,mimetype="text/plain")
     
 def VoidBillList(request):
@@ -1610,6 +1622,18 @@ def VoidBillList(request):
     voidBillQuerySet = __search__(Bill,(Q(reason__contains = keyword)))
     list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.reason))
     return HttpResponse(list,mimetype="text/plain")
+
+def TransferInstockInfo(request,query):
+    logger.debug("transfer instock: %s",query)
+    transfer_instock = __search__(InStockBatch, (Q(active = True)&Q(supplier__supplier_code__contains = query)&Q(mode='transfer')))
+    json = __json_wrapper__(transfer_instock.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
+
+def TransferOutstockInfo(request,query):
+    logger.debug("transfer outstock: %s",query)
+    transfer_outstock = __search__(Bill, (Q(active = True)&Q(customer__customer_code__contains = query)&Q(mode='transfer')))
+    json = __json_wrapper__(transfer_outstock.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
 
 def AdjustStockInfo(request,query):
     logger.debug("adjust stock: %s",query)
