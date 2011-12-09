@@ -602,6 +602,7 @@ class BarnOwl:
     purchase = "purchase"
     pawning= "pawning"
     tradein= "trade-in"
+    transfer= "transfer"
     # outstock
     cash = "Cash Sales"
     invoice =  "Invoice"
@@ -846,6 +847,10 @@ class BarnOwl:
         payment_dict['invoice_term'] = customer.term
         payment_dict['invoice_type'] = 'Invoice'
         payment_dict['invoice_status'] = 'Incomplete'
+        
+        payment_dict['transfer_term'] = 'Transfer'
+        payment_dict['transfer_type'] = 'Transfer'
+        payment_dict['transfer_status'] = 'Complete'
         
         payment_dict['adjust_term'] = 'adjust'
         payment_dict['adjust_type'] = 'Adjust'
