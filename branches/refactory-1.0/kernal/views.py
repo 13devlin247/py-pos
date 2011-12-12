@@ -569,7 +569,9 @@ def __build_serial_no__(request, inStockRecords, dict):
                     serials.append(serial)
                     logger.debug("build serial no: '%s' for product: '%s'", serialNO, product.name)
     return serials                
-    
+
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')
 def InventoryConfirm(request):
     inventoryDict = {}
     if request.method == 'POST':
