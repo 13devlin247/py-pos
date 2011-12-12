@@ -875,6 +875,8 @@ def InStockBatchDelete(request):
         hermes.DeleteConsignmentOutReturn(inStockBatch)
     return HttpResponseRedirect('/report/stocktake/filter/')
     
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')    
 def ProductCostUpdate(request):
     inStockBatch_pk = request.GET.get("inStockBatch_pk")
     hermes = Hermes()
