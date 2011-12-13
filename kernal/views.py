@@ -162,7 +162,7 @@ def ReportDaily(request):
         profitTable[bill.pk] = total_proift
     return render_to_response('report_dailySales.html',{'bills': bills, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
 
-    
+
 def ReportDailySales(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -171,22 +171,42 @@ def ReportDailySales(request):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    
-    total_amount = 0
-    total_profit = 0    
-    bills = _filter_bills(startDate, endDate)
-    total_out_amount, outstocks_summary = _filter_outStockRecords(bills)
-    
-    inStockBatchs = _filter_inStockBatch(startDate, endDate)
-    total_in_amount, instocks_summary = _filter_inStockRecords(inStockBatchs)
-        
-    profitTable = {}
-    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks_summary,'instocks':instocks_summary, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount': (total_out_amount-total_in_amount),'total_out_amount':total_out_amount, 'total_in_amount':total_in_amount, 'total_profit': total_profit})
 
+    bills = _filter_bills(startDate, endDate)
+    group = []
+    
+    bills = Bill.objects.all()    
+    for bill in bills:
+        outStocks = _build_bill_sold_dict(bill, startDate, endDate)
+
+        if len(outStocks)==0:
+            continue
+        group.append(outStocks)
+    
+    return render_to_response('report_daily_sales_bill.html',{'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+
+
+
+    
+    
 def _filter_inStockBatch(startDate, endDate):
-    inStockBatchs = InStockBatch.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(Q(mode = BarnOwl.pawning)|Q(mode = BarnOwl.tradein))
+    #inStockBatchs = InStockBatch.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(Q(mode = BarnOwl.pawning)|Q(mode = BarnOwl.tradein))
+    inStockBatchs = InStockBatch.objects.all()    
+    logger.debug('........%s........',inStockBatchs)
+
     return inStockBatchs
 
+    
+def _filter_OutStockRecord(startDate, endDate):
+    #inStockBatchs = InStockBatch.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(Q(mode = BarnOwl.pawning)|Q(mode = BarnOwl.tradein))
+    OutStockRecords = OutStockRecord.objects.all()    
+    logger.debug('........%s........',OutStockRecords)
+
+    return OutStockRecords
+
+
+
+   
 def _filter_inStockRecords(inStockBatchs):
     instocks_summary = []
     total_amount = 0
@@ -2290,6 +2310,43 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
     return products
 
 
+    
+def _build_bill_sold_dict(bill, startDate, endDate):
+
+    outStockRecordSet = OutStockRecord.objects.filter(bill= bill).filter(create_at__range=(startDate,endDate)).filter(active=True)        
+    outStocks = {}
+
+    for outStockRecord in outStockRecordSet:
+        bill = outStockRecord.bill
+
+        if bill not in outStocks:
+            logger.info("create %s in bills" % bill )
+            summaryOutStockRecord = OutStockRecord()
+            summaryOutStockRecord.bill = outStockRecord.bill
+            summaryOutStockRecord.unit_sell_price = 0
+            summaryOutStockRecord.cost = 0
+            summaryOutStockRecord.quantity = 0
+            summaryOutStockRecord.profit = 0
+            summaryOutStockRecord.amount = 0
+            summaryOutStockRecord.bill = outStockRecord.bill
+            outStocks[bill] = [summaryOutStockRecord]
+	    
+        outStocks[bill][0].unit_sell_price = outStocks[bill][0].unit_sell_price + outStockRecord.unit_sell_price
+        outStocks[bill][0].cost = outStocks[bill][0].cost + outStockRecord.cost
+        outStocks[bill][0].quantity = outStocks[bill][0].quantity + outStockRecord.quantity
+        outStocks[bill][0].profit = outStocks[bill][0].profit + outStockRecord.profit
+        outStocks[bill][0].bill.discount = outStocks[bill][0].bill.discount + outStockRecord.bill.discount
+        logger.debug("bill: '%s' outstockrecord: '%s' profit: '%s', total: profit: '%s'", outStockRecord.bill.pk, outStockRecord.pk, outStockRecord.profit, outStocks[bill][0].profit)
+        outStocks[bill][0].amount = outStocks[bill][0].amount + outStockRecord.amount
+        outStocks[bill].append(outStockRecord)
+	outStocks[bill][0].mode = outStockRecord.bill.mode
+        logger.info("add %s's  outStockRecord" % bill )
+
+    return outStocks    
+    
+    
+    
+    
 def _build_simpack_sold_dict(productg, startDate, endDate):
 
     inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(Q(product__category__category_name__exact = 'SIMPACK')).filter(create_at__range=(startDate,endDate)).filter(active=True)
