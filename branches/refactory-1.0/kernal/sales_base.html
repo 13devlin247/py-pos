@@ -278,10 +278,8 @@
 {% block ajaxGenTableBody %}
 			var IMEI_str = "";
 			if (data.imei != undefined){
-				IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
+				IMEI_str =  " <br/> IMEI: "+data.imei.replace(data.fields.name+'-', '')+" <input type=hidden name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
 			}
-            
-            
              
 			row = ""+
 					"<tr id=\""+pk+"_tr\">"+
