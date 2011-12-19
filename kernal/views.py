@@ -821,7 +821,7 @@ def ServiceSave(request):
     salesDict = __convert_sales_URL_2_dict__(request)
     owl = BarnOwl()
     try:
-        bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
+        bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
         payment = bills_and_payments[1]
         outStockRecords = bills_and_payments[2]
     except CounterNotReadyException as e:

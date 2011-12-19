@@ -122,7 +122,10 @@ class BarnMouse:
                 summary[1] = summary[1] + stockRecord.quantity
             summary[2] = summary[2] + stockRecord.quantity    
             if hasattr(stockRecord, 'unit_sell_price'): # that mean this is OutStockRecord
-                summary[3] = summary[3] +  (stockRecord.inStockRecord.cost * stockRecord.quantity)
+                cost = stockRecord.cost
+                if stockRecord.inStockRecord:
+                    cost = stockRecord.inStockRecord.cost *  stockRecord.quantity
+                summary[3] = cost
             else: # that mean this is InStockRecord
                 summary[3] = summary[3] + ( stockRecord.cost * stockRecord.quantity) 
         logger.debug("Product '%s' '%s' quantity count by %s ~ %s, result: B4_QTY:%s, NOW_QTY:%s, QTY:%s, COST:%s", product.name, stockRecords, starttime, endtime, summary[0], summary[1], summary[2], summary[3] )
