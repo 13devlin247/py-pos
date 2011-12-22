@@ -13,6 +13,8 @@ from pos.kernal import filters
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 from kernal.views import __json_wrapper__
+from scheduling.views import *
+from scheduling.models import Job, JobForm, ClothesTemplateForm, ClothesTemplate
 admin.autodiscover()
 
 main_link = {
@@ -33,6 +35,19 @@ product_list_view = {
     'extra_context': {'autocomplete_url':'/productname/ajax/','json_url': '/productname/info/', 'display':'bill','form': ProductForm, 'submit_form':'/product/save/', 'main_link': main_link},    
 }
 
+clothes_template_report_view = {
+    'queryset': ClothesTemplate.objects.filter(active=True),                      
+    'allow_empty': True,                      
+    'template_name': 'search_clothes_template.html', 
+    'extra_context': {'form': ProductForm, 'submit_form':'/counter/save/', 'main_link': main_link},    
+}
+
+jobs_report_view = {
+    'queryset': Job.objects.filter(active=True),                      
+    'allow_empty': True,                      
+    'template_name': 'search_jobs.html', 
+    'extra_context': {'form': ProductForm, 'submit_form':'/counter/save/', 'main_link': main_link},    
+}
 
 counter_list_view = {
     'queryset': Counter.objects.filter(active=True),                      
@@ -396,4 +411,26 @@ urlpatterns = patterns('',
     
     url(r'^category/info/$', login_required(CategoryInfo)),
     url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)', login_required(PrintBarcode)),
+    
+    url(r'^workflow/worker/list/$', login_required(WorkerList)),
+    url(r'^workflow/task/list/$', login_required(TaskList)),
+    url(r'^workflow/job/list/$', login_required(JobList)),
+    url(r'^workflow/task/worker/list/(?P<task_pk>[\x20-\x7E]+)$', login_required(TaskWorkerList)),
+    
+    
+    url(r'^workflow/clothes/information/add/done/$', login_required(CreateClothesInformationDone)),
+    url(r'^workflow/clothes/information/add/(?P<jobid>[\x20-\x7E]+)$', login_required(CreateClothesInformation)),
+    url(r'^done/workflow/step/add/(?P<jobid>[\x20-\x7E]+)/(?P<taskid>[\x20-\x7E]+)/(?P<workerid>[\x20-\x7E]+)/$', login_required(CreateStepDone)),
+    url(r'^workflow/step/add/(?P<jobid>[\x20-\x7E]+)$', login_required(CreateStep)),
+    
+    
+    
+    url(r'^workflow/clothes/template/add/$', login_required(direct_to_template),  {'template': 'create_clothestemplate.html',  'extra_context': {'form': ClothesTemplateForm(), 'action':'/workflow/clothes/template/add/confirm/'} }),
+    url(r'^workflow/clothes/template/add/confirm/$', login_required(CreateClothesTemplate)),
+    url(r'^workflow/clothes/template/report/$', login_required(list_detail.object_list),clothes_template_report_view),
+    
+    
+    url(r'^workflow/job/report/$', login_required(list_detail.object_list),jobs_report_view),
+    url(r'^workflow/job/add/$', login_required(direct_to_template),  {'template': 'create_jobs.html',  'extra_context': {'form': JobForm(), 'action':'/workflow/job/add/confirm/'} }),
+    url(r'^workflow/job/add/confirm/$', login_required(CreateJob)),
 )
