@@ -168,7 +168,7 @@ class Deposit(models.Model):
     customer = models.ForeignKey(Customer)
     price = models.DecimalField(max_digits=100, decimal_places=2)
     active = models.BooleanField(True)
-    refBill = models.CharField("ref. Bill no", max_length=100, null=True)
+    refBill = models.CharField("Contact no", max_length=100, null=True)
     reason = models.CharField(max_length=100, null=True)
     create_at = models.DateTimeField(auto_now_add=True)    
      
@@ -265,7 +265,7 @@ class Bill(models.Model):
 class ExtraCost(models.Model):
     bill = models.ForeignKey(Bill, null=True)
     mode = models.CharField(max_length=100)
-    key = models.CharField(max_length=100) 
+    key = models.CharField("IMEI", max_length=100) 
     price = models.DecimalField(max_digits=100, decimal_places=2)
     description = models.TextField(blank=True) 
     create_at = models.DateTimeField(auto_now_add=True)
