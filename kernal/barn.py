@@ -14,12 +14,12 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
-hdlr = logging.FileHandler('d:/django_project/pos/barn.log')
-format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
-format = '%(asctime)s %(levelname)s %(message)s'
-formatter = logging.Formatter(format)
-hdlr.setFormatter(formatter)
-logger.addHandler(hdlr) 
+#hdlr = logging.FileHandler('d:/django_project/pos/barn.log')
+#format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
+#format = '%(asctime)s %(levelname)s %(message)s'
+#formatter = logging.Formatter(format)
+#hdlr.setFormatter(formatter)
+#logger.addHandler(hdlr) 
 
 class SerialRequiredException(Exception):
     def __init__(self, value):
