@@ -312,7 +312,9 @@ urlpatterns = patterns('',
     url(r'^deposit/add/$', login_required(direct_to_template),  {'template': 'deposit.html',  'extra_context': {'form': DepositForm(), 'action':'/deposit/add/confirm/'} }),    
     url(r'^deposit/add/confirm/$', DepositSave),
     url(r'^deposit/info/(?P<query>[\x20-\x7E]+)', login_required(DepositInfo)),
+    url(r'^deposit/bill/(?P<deposit_id>[\x20-\x7E]+)', login_required(QueryDeposit)),
     
+        
     url(r'^service/add/$', login_required(direct_to_template),  {'template': 'service.html',  'extra_context': {'form': ServiceJobForm(), 'action':'/service/add/confirm/'} }),    
     url(r'^service/add/confirm/$', ServiceSave),
     url(r'^service/info/(?P<query>[\x20-\x7E]+)', login_required(ServiceInfo)),    

@@ -812,7 +812,7 @@ def DepositSave(request):
     deposit.active = True
     deposit.save()
     logger.info("Deposite '%s' create success", deposit.pk)
-    return HttpResponseRedirect('/search/deposit/')
+    return HttpResponseRedirect('/deposit/bill/'+str(deposit.pk))
 
 def ServiceSave(request):
     salesDict = {}
@@ -1158,6 +1158,12 @@ def ConsignmentInBalance(request):
         if error_msg:
             return render_to_response('consignment_in_balance_form.html',{'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm/', 'error_msg': error_msg})            
         return HttpResponseRedirect('/report/consignment/in/balance/')
+
+def QueryDeposit(request, deposit_id):    
+    deposit = Deposit.objects.get(pk=deposit_id)
+    company = Company.objects.all()[0]
+    user = request.user
+    return render_to_response("deposit_bill.html",{'deposit': deposit, 'company': company, 'user': user}, context_instance=RequestContext(request))
 
         
 def QueryBill(request, displayPage, billID):    
