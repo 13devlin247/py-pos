@@ -14,6 +14,13 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+hdlr = logging.FileHandler('d:/django_project/pos/barn.log')
+format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
+format = '%(asctime)s %(levelname)s %(message)s'
+formatter = logging.Formatter(format)
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr) 
+
 class SerialRequiredException(Exception):
     def __init__(self, value):
         self.value = value
@@ -125,7 +132,7 @@ class BarnMouse:
                 cost = stockRecord.cost
                 if stockRecord.inStockRecord:
                     cost = stockRecord.inStockRecord.cost *  stockRecord.quantity
-                summary[3] = cost
+                summary[3] += cost
             else: # that mean this is InStockRecord
                 summary[3] = summary[3] + ( stockRecord.cost * stockRecord.quantity) 
         logger.debug("Product '%s' '%s' quantity count by %s ~ %s, result: B4_QTY:%s, NOW_QTY:%s, QTY:%s, COST:%s", product.name, stockRecords, starttime, endtime, summary[0], summary[1], summary[2], summary[3] )
