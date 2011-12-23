@@ -29,7 +29,7 @@
 			{% if object_list %}
 				{% for result in object_list %}
                 <tr>
-                <td><a href="/sales/{% if result.type == 'Cash Sales'%}bill{% else %}{{result.type}}{% endif %}/{{result.pk}}">{{result.pk}}</a></td>
+                <td><a href="/deposit/bill/{{result.pk}}">{{result.pk}}</a></td>
                 <td>{{result.refBill}}</td>
                 <td>{{result.create_at}}</td>
                 <td>{{result.customer}}</td>
