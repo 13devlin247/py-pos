@@ -1202,16 +1202,31 @@ class Hermes:
     def CounterAmount(self, counterID):
         return self._calcCounterTotalAmountByPK(counterID, recalc_bill_profit = False)
 
-    def _calcCounterTotalAmountByPK(self, counterID, recalc_bill_profit = False):
-        counter = Counter.objects.get(pk=counterID)
+    def _calc_bill_total_amount(self, counter, recalc_bill_profit):
+        total_amount = 0
         bills = Bill.objects.filter(counter=counter).filter(active=True)
-        totalAmount = counter.initail_amount
         for bill in bills:
-            logger.info("Calc Bill: %s, %s" , bill.pk, bill.create_at)
+            logger.debug("Calc Bill: %s, %s" , bill.pk, bill.create_at)
             if recalc_bill_profit:
                 logger.debug("ReCalc Bill '%s' outStockRecord profit", bill.pk)
                 self._recalc_bill_profit(bill)
-            totalAmount = totalAmount + bill.total_price
+            total_amount = total_amount + bill.total_price
+        logger.info("Total bill amout: %s" % total_amount)
+        return total_amount
+
+    def _calc_deposit_total_amount(self, counter):
+        total_amount = 0
+        deposits = Deposit.objects.filter(counter = counter).filter(active = True)
+        for deposit in deposits:
+            total_amount += deposit.price
+        logger.info("Total deposit amout: %s" % total_amount)
+        return total_amount
+
+    def _calcCounterTotalAmountByPK(self, counterID, recalc_bill_profit = False):
+        counter = Counter.objects.get(pk=counterID)
+        totalAmount = counter.initail_amount
+        totalAmount += self._calc_bill_total_amount(counter, recalc_bill_profit)
+        totalAmount += self._calc_deposit_total_amount(counter)
         
         date = counter.create_at.strftime("%Y-%m-%d") + " 00:00:00"
         new_date = counter.create_at.strftime("%Y-%m-%d") + " 23:59:59"

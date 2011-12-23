@@ -163,18 +163,6 @@ class ServiceJob(models.Model):
     def __unicode__(self):
         return self.imei    
 
-class Deposit(models.Model):
-    description = models.TextField(blank=True)
-    customer = models.ForeignKey(Customer)
-    price = models.DecimalField(max_digits=100, decimal_places=2)
-    active = models.BooleanField(True)
-    refBill = models.CharField("Contact no", max_length=100, null=True)
-    reason = models.CharField(max_length=100, null=True)
-    create_at = models.DateTimeField(auto_now_add=True)    
-     
-    def __unicode__(self):
-        return self.pk    
-    
 class InStockBatch(models.Model):
     supplier = models.ForeignKey(Supplier)
     do_date = models.DateField(auto_now_add=False)
@@ -234,6 +222,20 @@ class Counter(models.Model):
 
     def __unicode__(self):
         return str(self.create_at) + " " + str(self.active and  "Open" or "Close")         
+
+class Deposit(models.Model):
+    counter = models.ForeignKey(Counter)
+    description = models.TextField(blank=True)
+    customer = models.ForeignKey(Customer)
+    price = models.DecimalField(max_digits=100, decimal_places=2)
+    active = models.BooleanField(True)
+    refBill = models.CharField("Contact no", max_length=100, null=True)
+    reason = models.CharField(max_length=100, null=True)
+    create_at = models.DateTimeField(auto_now_add=True) 
+    user = models.ForeignKey(User)
+    
+    def __unicode__(self):
+        return self.pk    
         
 class Bill(models.Model):
     subtotal_price = models.DecimalField(max_digits=100, decimal_places=2)

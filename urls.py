@@ -270,6 +270,7 @@ urlpatterns = patterns('',
     url(r'^supplier/ajax/$', login_required(SupplierList)),    
     url(r'^customer/ajax/$', login_required(CustomerList)),    
     url(r'^product/ajax/$', login_required(ProductList)),
+    url(r'^sales/product/ajax/$', login_required(SalesProductList)),
     url(r'^consignmentout/ajax/$', login_required(ConsignmentOutProductList)),    
     url(r'^payment/ajax/$', login_required(PaymentList)),    
     url(r'^imei/ajax/$', login_required(IMEIList)),
@@ -414,25 +415,5 @@ urlpatterns = patterns('',
     url(r'^category/info/$', login_required(CategoryInfo)),
     url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)', login_required(PrintBarcode)),
     
-    url(r'^workflow/worker/list/$', login_required(WorkerList)),
-    url(r'^workflow/task/list/$', login_required(TaskList)),
-    url(r'^workflow/job/list/$', login_required(JobList)),
-    url(r'^workflow/task/worker/list/(?P<task_pk>[\x20-\x7E]+)$', login_required(TaskWorkerList)),
-    
-    
-    url(r'^workflow/clothes/information/add/done/$', login_required(CreateClothesInformationDone)),
-    url(r'^workflow/clothes/information/add/(?P<jobid>[\x20-\x7E]+)$', login_required(CreateClothesInformation)),
-    url(r'^done/workflow/step/add/(?P<jobid>[\x20-\x7E]+)/(?P<taskid>[\x20-\x7E]+)/(?P<workerid>[\x20-\x7E]+)/$', login_required(CreateStepDone)),
-    url(r'^workflow/step/add/(?P<jobid>[\x20-\x7E]+)$', login_required(CreateStep)),
-    
-    
-    
-    url(r'^workflow/clothes/template/add/$', login_required(direct_to_template),  {'template': 'create_clothestemplate.html',  'extra_context': {'form': ClothesTemplateForm(), 'action':'/workflow/clothes/template/add/confirm/'} }),
-    url(r'^workflow/clothes/template/add/confirm/$', login_required(CreateClothesTemplate)),
-    url(r'^workflow/clothes/template/report/$', login_required(list_detail.object_list),clothes_template_report_view),
-    
-    
-    url(r'^workflow/job/report/$', login_required(list_detail.object_list),jobs_report_view),
-    url(r'^workflow/job/add/$', login_required(direct_to_template),  {'template': 'create_jobs.html',  'extra_context': {'form': JobForm(), 'action':'/workflow/job/add/confirm/'} }),
-    url(r'^workflow/job/add/confirm/$', login_required(CreateJob)),
+    url(r'^workflow/', include('pos.scheduling.urls')),
 )
