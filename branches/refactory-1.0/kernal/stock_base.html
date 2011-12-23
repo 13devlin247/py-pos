@@ -226,7 +226,7 @@
             // row = $('#sell_detail').html();
             productTable[pk] = data;       
             row = _genRowByPK(pk, data);
-            $('#sell_detail').append(row);
+            $('#sell_detail').html(row+$('#sell_detail').html());
             if(data.model == "kernal.foc"){ // foc product no stock
                 return;
             }
@@ -235,7 +235,7 @@
             pk = pk+"RANDOM"+Math.floor(Math.random()*999999)
             productTable[pk] = data
             row = _genRowByPK(pk, data);
-            $('#sell_detail').append(row);            
+            $('#sell_detail').html(row+$('#sell_detail').html());
             // quantityPlugOne(pk);
             _queryInventory(pk, data);
             calcAmount(pk);

@@ -34,7 +34,15 @@
             </select>
           </div>  
 {% endblock %}
-
+{% block autocomplete_search %}  
+	$("#item").autocomplete ("/sales/product/ajax/", {
+		width: 260,
+        selectFirst: false,
+        extraParams: {
+                    mode: function(){ return $("#mode").attr('value'); }
+                }
+    });      
+{% endblock %}  
 {% block search_bar %}
             <label id="item_label" for="item">    Find/Scan Item
             </label>  
