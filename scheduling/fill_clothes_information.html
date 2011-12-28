@@ -1,0 +1,39 @@
+{% extends "product.php.html" %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+
+.thunmail{
+    width: 300px;
+    height: 300px;
+}
+textarea {
+	border-color: black;
+	border-style: solid;
+	border-width: thin;
+	padding: 3px;
+    height: 100%;
+    width: 100%;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Clothes Information</h1>
+        </div>  
+        <div id="table_holder">  	
+        	<form action="{{action}}" method="get" id="company_form">
+              <input type=hidden name="jobid" value="{{job.pk}}"/>
+	          <table id="sortable_table">
+                {% for clothes_template in clothes_templates %}
+	            <tr><td><input type=checkbox name="clothes_template_pk_{{clothes_template.pk}}" value='{{clothes_template.pk}}'/>{{clothes_template.name}}</td><td><a href='/{{clothes_template.draft}}' target="_blank">show<img class="thunmail" src='/{{clothes_template.draft}}'/></a></td><td><textarea rows=10 name="{{clothes_template.pk}}_fields">{{clothes_template.fields}}</textarea></td></tr> 		
+                {% endfor %}
+	          	<tr><th></th><th></th><td><input type="submit" value="submit"/></td></tr>
+	          </table>  
+          	</form>
+        </div>  
+      </div>  
+    </div>
+{% endblock %}
