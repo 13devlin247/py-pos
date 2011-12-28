@@ -36,7 +36,7 @@ class CreateJobTest(TestCase):
         assert step_agent is not None
         
         # @TODO DESIGN clothes_template
-        clothes_information_agent = job_agent.create_clothesInformation(clothes_template = clothes_template, draft = draft, fields = '{}')
+        clothes_information_agent = job_agent.choose_clothes(clothes_template = clothes_template, draft = draft, fields = '{}')
         assert clothes_information_agent is not None
                 
         # clothes_information_agent

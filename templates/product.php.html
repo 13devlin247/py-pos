@@ -105,7 +105,9 @@
             $('#deleteForm').submit();
         }
     });
-    
+
+    {% block jquery_ready %}      
+    {% endblock %}          
     
     });  // end of  $(document).ready()
     </script>

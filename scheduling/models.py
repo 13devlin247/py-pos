@@ -13,19 +13,11 @@ class ClothesTemplate(models.Model):
     
     def __unicode__(self):
         return self.name
-    
+
 class ClothesTemplateForm(ModelForm):
     class Meta:
         model = ClothesTemplate
         exclude = ('active', 'reason')
-
-class ClothesInformation(models.Model):
-    clothesTemplate = models.ForeignKey(ClothesTemplate)
-    hand_draft = models.ImageField(upload_to='static/images/upload/', max_length=100, null=True)
-    fields_values = models.TextField(null=True)
-    create_at = models.DateTimeField(auto_now_add=True)
-    active = models.BooleanField(True)
-    reason = models.CharField(max_length=100, null=True)    
 
 class Job(models.Model):
     name = models.CharField(max_length=100, null=True)
@@ -43,6 +35,15 @@ class JobForm(ModelForm):
     class Meta:
         model = Job
         exclude = ('active', 'reason', 'creator' , 'status', 'cost')
+
+class ClothesChoosed(models.Model):
+    job = models.ForeignKey(Job)
+    clothesTemplate = models.ForeignKey(ClothesTemplate)
+    hand_draft = models.ImageField(upload_to='static/images/upload/', max_length=100, null=True)
+    fields_values = models.TextField(null=True)
+    create_at = models.DateTimeField(auto_now_add=True)
+    active = models.BooleanField(True)
+    reason = models.CharField(max_length=100, null=True)    
 
 class Task(models.Model):
     name = models.CharField(max_length=100, null=True)
@@ -72,7 +73,7 @@ class Worker(models.Model):
         return self.name
     
     def natural_key(self):
-        return self.name
+        return "%s@%s" % (self.name, self.pk)
                 
 class WorkerAbility(models.Model):
     task = models.ForeignKey(Task)
@@ -88,6 +89,7 @@ class WorkerAbility(models.Model):
 
         
 class Step(models.Model):
+    job = models.ForeignKey(Job)
     task = models.ForeignKey(Task)
     worker = models.ForeignKey(Worker)
     cost = models.DecimalField(max_digits=100, decimal_places=2, null = True)
