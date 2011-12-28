@@ -7,7 +7,7 @@ from django.db.models.query_utils import Q
 
 import logging
 from scheduling.models import WorkerAbility, Worker, Job, Step,\
-    ClothesInformation, Task
+    Task, ClothesChoosed
 logging.basicConfig(
     level = logging.WARN,
     format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
@@ -120,6 +120,17 @@ class StepAgent(object):
 class JobAgent(object):
     def __init__(self, instance):
         self.instance = instance
+        self.pk = instance.pk
+    
+    def _recal_job_cost(self):
+        steps = Step.objects.filter(job = self.instance).filter(active = True)
+        total_cost = 0
+        for step in steps:
+            total_cost += step.cost
+        self.instance.cost = total_cost
+        self.instance.save()
+        logger.info("Job: %s cost :%s " %(self.instance.pk, total_cost))
+            
     
     def update(self, name = None, cost = None, desc = None, start_at = None, end_at = None, status = None):
         if name:
@@ -144,7 +155,18 @@ class JobAgent(object):
         self.instance.active = False
         self.instance.reason = reason
         logger.error('JobAgent: %s disable success, reason null' )            
-    
+
+    def remove_step(self, stepid, reason):
+        step = Step.objects.get(pk = int(stepid))
+        step.active = False
+        step.reason = reason
+        step.save()
+        logger.info("Step: %s removed." % step.pk)
+        self._recal_job_cost()
+        
+    def steps(self):
+        return Step.objects.filter(job = self.instance).filter(active = True).order_by("create_at")
+        
     def create_step(self, task, worker, cost, start_at, end_at):
         if not task:
             logger.error("JobAgent %s create step fail, task null" % self.instance.name)
@@ -169,41 +191,60 @@ class JobAgent(object):
         step.active = True
         step.save()
         logger.debug("JobAgent %s create step %s success" % (self.instance.name, step.task.name))
+        self._recal_job_cost()
         return step
+
+class ClothesAgent(object):
+
+    def __init__(self, job):
+        self.job = job
         
-    def create_clothesInformation(self, clothes_template, draft, fields = '{}'):
-        if not clothes_template:
+    def choose_clothes(self, clothes_templates, draft):
+        if not clothes_templates:
             logger.error("ClothesInformation create fail, clothes template null")
             return
-        clothes_information = ClothesInformation()
-        clothes_information.clothesTemplate = clothes_template
-        clothes_information.hand_draft = draft
-        clothes_information.fields_values = fields
-        clothes_information.active = True
-        clothes_information.save()
-        logger.debug("clothes_information %s created" % clothes_information.pk)
-        return ClothesInformationAgent(clothes_information)
+        clothes_chooseds = []
+        for clothes_template, fields in clothes_templates.items():
+            clothes_choosed = ClothesChoosed()
+            clothes_choosed.job= self.job
+            clothes_choosed.clothesTemplate = clothes_template
+            clothes_choosed.fields_values = fields
+            clothes_choosed.active = True
+            clothes_choosed.save()
+            clothes_chooseds.append(clothes_choosed)
+            logger.debug("clothes tamplate choosed: %s" % clothes_choosed.clothesTemplate)
+        logger.debug("clothes_information %s created" % self.job.pk)
+        return clothes_chooseds
 
-class ClothesInformationAgent(object):
+    def choosed_clothes_list(self):
+        return ClothesChoosed.objects.filter(job = self.job).filter(active = True)
+    
+    def remove_choosed_clothes(self, pk, reason):
+        clothesChoosed = ClothesChoosed.objects.get(pk = pk)
+        clothesChoosed.active = False
+        clothesChoosed.reason = reason
+        clothesChoosed.save()
+    
+class ClothesChoosedAgent(object):
     def __init__(self, instance):
         self.instance = instance
         
     def update(self, value):
         if not value:
-            logger.error('ClothesInformation %s update fail, value null', self.instance.pk)
+            logger.error('ClothesChoosed %s update fail, value null', self.instance.pk)
             return
         self.instance.fields_values = value
         self.instance.save()
-        logger.debug('ClothesInformation %s update success', self.instance.pk)
+        logger.debug('ClothesChoosed %s update success', self.instance.pk)
     
     def disable(self, reason):
         if not reason:
-            logger.error('ClothesInformation %s disable fail, reason null', self.instance.pk)
+            logger.error('ClothesChoosed %s disable fail, reason null', self.instance.pk)
             return
         self.instance.active = False
         self.instance.reason = reason
         self.instance.save()
-        logger.debug('ClothesInformation %s disable success', self.instance.pk)
+        logger.debug('ClothesChoosed %s disable success', self.instance.pk)
         
 class Supervisor(object):
     def __init__(self):

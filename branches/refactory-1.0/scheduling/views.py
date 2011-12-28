@@ -1,9 +1,10 @@
 from django.http import HttpResponseRedirect, HttpResponse
 from django.shortcuts import render_to_response
-from scheduling.mythology import Supervisor, SchedulerFactory, JobAgent
+from scheduling.mythology import Supervisor, SchedulerFactory, JobAgent,\
+    ClothesAgent
 from kernal.views import __json_wrapper__
 from scheduling.models import JobForm, ClothesTemplateForm, ClothesTemplate,\
-    Task, Worker, WorkerAbility
+    Task, Worker, WorkerAbility, ClothesChoosed
 import logging
 # Create your views here.
 logging.basicConfig(
@@ -43,8 +44,28 @@ def JobList(request):
 def CreateClothesInformation(request, jobid):
     factory = SchedulerFactory()
     job = factory.jobs(jobid)
+    clothes_agent = ClothesAgent(job)
+    clothesChooseds = clothes_agent.choosed_clothes_list()
     clothes_templates = ClothesTemplate.objects.filter(active = True)
-    return render_to_response('create_clothes_information.html',{'job': job, 'clothes_templates': clothes_templates, 'action': '/workflow/clothes/information/add/done/'})
+    return render_to_response('create_clothes_information.html',{'job': job, 'clothesChooseds': clothesChooseds,'clothes_templates': clothes_templates, 'action': '/workflow/clothes/information/add/done/'})
+
+def _filter_clothes_template(request):
+    if not request:
+        logger.error("filter clothes template fail, request is null")
+        return
+    clothesTemplates = {}
+    for param in request.GET:
+        if "clothes_template_pk_" in param:
+            pk = param.replace("clothes_template_pk_", "")
+            clothesTemplates[ClothesTemplate.objects.get(pk=int(pk))] = request.GET.get(pk+"_fields", "")
+    return clothesTemplates
+        
+def RemoveClothesInformationDone(request, job_id, choosed_template_id):
+    factory = SchedulerFactory()
+    clothes_agent = ClothesAgent(factory.jobs(job_id))
+    reason = request.user.username
+    clothes_agent.remove_choosed_clothes(choosed_template_id, reason)
+    return HttpResponseRedirect('/workflow/clothes/information/add/%s' % job_id)
 
 def CreateClothesInformationDone(request):
     jobid = request.GET.get('jobid', None)
@@ -52,28 +73,30 @@ def CreateClothesInformationDone(request):
         logger.error("ClothesInformation create fail, jobid null")
         return
     factory = SchedulerFactory()
-    job_agent = JobAgent(factory.jobs(jobid))
-    clothes_template_pk = int(request.GET.get('clothes_template_pk'))
-    clothes_template = ClothesTemplate.objects.get(pk = clothes_template_pk)
-    fields = request.GET.get(str(clothes_template_pk)+'_fields', '')
-    job_agent.create_clothesInformation(clothes_template, None, fields)
-    return HttpResponseRedirect('/workflow/job/report/')
+    clothes_agent = ClothesAgent(factory.jobs(jobid))
+    clothes_templates = _filter_clothes_template(request)
+    clothes_agent.choose_clothes(clothes_templates, None)
+    return HttpResponseRedirect('/workflow/clothes/information/add/%s' % jobid)
 
-def CreateStepDone(request, jobid, taskid, workerid):
+def CreateStepDone(request, jobid, taskid, workerid, cost):
     factory = SchedulerFactory()
     job_agent = JobAgent(factory.jobs(jobid))
     task = Task.objects.get(pk=int(taskid))
     worker_ability = WorkerAbility.objects.get(pk=int(workerid))
-    job_agent.create_step(task = task, worker = worker_ability.worker, cost = worker_ability.cost, start_at = '2011-12-11', end_at = '2011-12-15')
-    tasks = Task.objects.filter(active = True)
-    return render_to_response('create_step.html',{'job': job, 'tasks': tasks, 'action': '/workflow/step/add/done/'})
+    job_agent.create_step(task = task, worker = worker_ability.worker, cost = cost, start_at = '2011-12-11', end_at = '2011-12-15')
+    return HttpResponseRedirect('/workflow/step/add/'+str(job_agent.pk))
      
+def RemoveStep(request, jobid, stepid):
+    factory = SchedulerFactory()
+    job_agent = JobAgent(factory.jobs(jobid))
+    job_agent.remove_step(stepid, 'assign error')
+    return HttpResponseRedirect('/workflow/step/add/'+str(job_agent.pk))
 
 def CreateStep(request, jobid):
     factory = SchedulerFactory()
     job = factory.jobs(jobid)
     tasks = Task.objects.filter(active = True)
-    return render_to_response('create_step.html',{'job': job, 'tasks': tasks, 'action': '/workflow/step/add/done/'})
+    return render_to_response('create_step.html',{'job': JobAgent(job), 'tasks': tasks, 'action': '/workflow/step/add/done/'})
      
 def CreateClothesTemplate(request):
     form = ClothesTemplateForm(request.POST)
