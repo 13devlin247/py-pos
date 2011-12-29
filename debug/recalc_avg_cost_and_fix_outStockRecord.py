@@ -72,7 +72,10 @@ def trace_product(product, verbose=False):
                     continue
                 if record.serial_no:
                     print "serial"
-                print "================ %s product: %s %s record: %s wrong cost:%s , right cost:%s==================== " % (record.bill.mode, record.product.pk, record.product.name, record.pk, (record.cost/record.quantity), last_cost)
+                if record.quantity == 0:
+                    print "================ %s product: %s %s record: %s wrong cost:%s , right cost:%s==================== " % (record.bill.mode, record.product.pk, record.product.name, record.pk, 0, last_cost)
+                else:
+                    print "================ %s product: %s %s record: %s wrong cost:%s , right cost:%s==================== " % (record.bill.mode, record.product.pk, record.product.name, record.pk, (record.cost/record.quantity), last_cost)
                 record.cost = last_cost * int(record.quantity)
                 record.save()
 
