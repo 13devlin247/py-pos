@@ -41,6 +41,8 @@ class Stocker:
         return (self.cost, self.qty)
 
 def _query_outstock_cost(record):
+    if record.quantity == 0:
+        return (0, 0)    
     outStock_cost = round(float(record.cost)/float(record.quantity), 2)
     return (outStock_cost, record.quantity)    
         
