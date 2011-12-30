@@ -32,10 +32,12 @@ jobs_report_view = {
 }
 
 urlpatterns = patterns('',
+    url(r'^jobs/$', login_required(direct_to_template),  {'template': 'jobs.html'}),
     url(r'^worker/list/$', login_required(WorkerList)),
     url(r'^task/list/$', login_required(TaskList)),
     url(r'^job/list/$', login_required(JobList)),
     url(r'^task/worker/list/(?P<task_pk>[\x20-\x7E]+)$', login_required(TaskWorkerList)),
+    url(r'^worker/loading$', login_required(WorkerLoading)),
     
     
     url(r'^clothes/information/add/done/$', login_required(CreateClothesInformationDone)),

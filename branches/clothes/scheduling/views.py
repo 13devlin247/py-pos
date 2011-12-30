@@ -5,6 +5,7 @@ from scheduling.mythology import Supervisor, SchedulerFactory, JobAgent,\
 from kernal.views import __json_wrapper__
 from scheduling.models import JobForm, ClothesTemplateForm, ClothesTemplate,\
     Task, Worker, WorkerAbility, ClothesChoosed
+from datetime import date    
 import logging
 # Create your views here.
 logging.basicConfig(
@@ -15,6 +16,26 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
+def WorkerLoading(request):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+
+    sp = Supervisor()
+    workers_loading_table = sp.worker_loading(startDate, endDate)
+    text = '[{'
+    for key, value in workers_loading_table.items():
+        
+        text += "\"%s\":%s," % (key.pk, value)
+    text = text[0:len(text)-1]+"}]"  
+    json = __json_wrapper__(workers_loading_table)
+    return HttpResponse(text, mimetype="application/json")
+    
+    
 def TaskWorkerList(request, task_pk):
     task = Task.objects.get(pk = int(task_pk))
     sp = Supervisor()
@@ -79,11 +100,19 @@ def CreateClothesInformationDone(request):
     return HttpResponseRedirect('/workflow/clothes/information/add/%s' % jobid)
 
 def CreateStepDone(request, jobid, taskid, workerid, cost):
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    
     factory = SchedulerFactory()
     job_agent = JobAgent(factory.jobs(jobid))
     task = Task.objects.get(pk=int(taskid))
     worker_ability = WorkerAbility.objects.get(pk=int(workerid))
-    job_agent.create_step(task = task, worker = worker_ability.worker, cost = cost, start_at = '2011-12-11', end_at = '2011-12-15')
+    job_agent.create_step(task = task, worker = worker_ability.worker, cost = cost, start_at = startDate, end_at = endDate)
     return HttpResponseRedirect('/workflow/step/add/'+str(job_agent.pk))
      
 def RemoveStep(request, jobid, stepid):

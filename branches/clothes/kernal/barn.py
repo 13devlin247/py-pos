@@ -12,7 +12,7 @@ logging.basicConfig(
 )
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.ERROR)
 
 #hdlr = logging.FileHandler('d:/django_project/pos/barn.log')
 #format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
