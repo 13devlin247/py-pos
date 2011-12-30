@@ -16,6 +16,12 @@
                 {% endfor %}
                 </select></td>
               </tr>
+              <tr>
+                <td colspan=6>
+                Jobs: {{job.name}}: {{job.description}}<br/>
+                {{job.start_at|date:"Y/m/d"}} - {{job.end_at|date:"Y/m/d"}}
+                </td>
+              </tr>              
               <tr>  
                 <th style="width:auto">Task ID
                 </th>  
@@ -32,7 +38,7 @@
               </tr>  
                 
                 {% for step in job.steps %}
-                    <tr><td>{{step.task.pk}} </td><td>{{step.task}} </td><td> {{step.worker}} </td><td class="cost"> {{step.cost}} </td><td class="loading" id="{{step.worker.pk}}_loading_confirm">0</td><td><a href="/workflow/step/remove/{{job.pk}}/{{step.pk}}/">Delete</a></td></tr>
+                    <tr><td>{{step.task.pk}} </td><td>{{step.task}}<br/>{{step.start_at|date:"Y/m/d"}} - {{step.end_at|date:"Y/m/d"}} </td><td> {{step.worker}} </td><td class="cost"> {{step.cost}} </td><td class="loading" id="{{step.worker.pk}}_loading_confirm">0</td><td><a href="/workflow/step/remove/{{job.pk}}/{{step.pk}}/">Delete</a></td></tr>
                 {% endfor %}
                     <tr><td></td><td></td><td style="font-weight: bolder">Total Cost:</td><td id="summary_cost"> 0 </td><td id="summary_loading"></td><td></td></tr>              
                 <tr><th colspan=6> Available Worker </th></tr>
@@ -42,7 +48,7 @@
 
 {% endblock %}
 {% block table_script %}	
-    $("#task_pk").change(function(){
+    $("#task_pk").click(function(){
                         $.ajax({
                             url: "/workflow/task/worker/list/"+$(this).val()+ "?start_date=" + $("#id_start_date").val()+ "&end_date=" + $("#id_end_date").val(),
                             type: "JSON",
