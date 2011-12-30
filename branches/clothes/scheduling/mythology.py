@@ -121,6 +121,10 @@ class JobAgent(object):
     def __init__(self, instance):
         self.instance = instance
         self.pk = instance.pk
+        self.name = instance.name
+        self.description = instance.description
+        self.start_at = instance.start_at
+        self.end_at = instance.end_at
     
     def _recal_job_cost(self):
         steps = Step.objects.filter(job = self.instance).filter(active = True)
