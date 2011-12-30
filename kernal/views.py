@@ -32,7 +32,7 @@ from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
 from pos.kernal.excel import ExcelWriter
 from django.utils.datastructures import MultiValueDictKeyError
-from kernal.models import InStockBatch
+from kernal.models import InStockBatch, Company
 
 
 logging.basicConfig(
@@ -174,17 +174,50 @@ def ReportDailySales(request):
     
     total_amount = 0
     total_profit = 0    
+    bills = _filter_bills(startDate, endDate)
+    total_out_amount, outstocks_summary = _filter_outStockRecords(bills)
     
-    outstocks = OutStockRecord.objects.all().filter(create_at__range=(startDate,endDate)).filter(active=True)
-    for outstock in outstocks:
-       
-        outstock.tt = outstock.unit_sell_price * outstock.quantity
-        outstock.user = outstock.bill.sales_by.username
-        total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
-            
+    inStockBatchs = _filter_inStockBatch(startDate, endDate)
+    total_in_amount, instocks_summary = _filter_inStockRecords(inStockBatchs)
+        
     profitTable = {}
+    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks_summary,'instocks':instocks_summary, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount': (total_out_amount-total_in_amount),'total_out_amount':total_out_amount, 'total_in_amount':total_in_amount, 'total_profit': total_profit})
 
-    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount':total_amount, 'total_profit': total_profit})
+def _filter_inStockBatch(startDate, endDate):
+    inStockBatchs = InStockBatch.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(Q(mode = BarnOwl.pawning)|Q(mode = BarnOwl.tradein))
+    return inStockBatchs
+
+def _filter_inStockRecords(inStockBatchs):
+    instocks_summary = []
+    total_amount = 0
+    for inStockBatch in inStockBatchs:
+        instocks = InStockRecord.objects.filter(inStockBatch=inStockBatch).filter(active=True)
+        for instock in instocks:
+            instock.tt = instock.cost * instock.quantity
+            instock.user = instock.inStockBatch.user.username
+            total_amount = total_amount + instock.tt
+        instocks_summary.extend(instocks)
+    return total_amount, instocks_summary
+
+def _filter_bills(startDate, endDate):
+    payments = Payment.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(status='Complete').exclude(bill__mode = "transfer")
+    bills = []
+    for payment in payments:
+        bill = payment.bill
+        bills.append(bill)
+    return bills
+
+def _filter_outStockRecords(bills):
+    outstocks_summary = []
+    total_amount = 0
+    for bill in bills:
+        outstocks = OutStockRecord.objects.all().filter(bill=bill).filter(active=True)
+        for outstock in outstocks:
+            outstock.tt = outstock.unit_sell_price * outstock.quantity
+            outstock.user = outstock.bill.sales_by.username
+            total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
+        outstocks_summary.extend(outstocks)
+    return total_amount, outstocks_summary
 
 def _wrapper_download_file(text, filename):
     response = HttpResponse(text, mimetype="application/vnd.ms-excel; charset=utf-8")
@@ -536,7 +569,9 @@ def __build_serial_no__(request, inStockRecords, dict):
                     serials.append(serial)
                     logger.debug("build serial no: '%s' for product: '%s'", serialNO, product.name)
     return serials                
-    
+
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')
 def InventoryConfirm(request):
     inventoryDict = {}
     if request.method == 'POST':
@@ -777,33 +812,33 @@ def DepositSave(request):
     deposit.active = True
     deposit.save()
     logger.info("Deposite '%s' create success", deposit.pk)
-    return HttpResponseRedirect('/search/deposit/')
+    return HttpResponseRedirect('/deposit/bill/'+str(deposit.pk))
 
 def ServiceSave(request):
     salesDict = {}
-    if request.method == 'GET':
-        bill_dict = __convert_sales_URL_2_bill_dict__(request)
-        salesDict = __convert_sales_URL_2_dict__(request)
-        owl = BarnOwl()
-        try:
-            bills_and_payments = owl.OutStock(request.GET.get('mode', 'sale'), bill_dict, salesDict)
-            payment = bills_and_payments[1]
-            outStockRecords = bills_and_payments[2]
-        except CounterNotReadyException as e:
-            logger.warn("Can not found 'OPEN' Counter, direct to open page")
-            return HttpResponseRedirect('/admin/kernal/counter/add/')    
-        # process Request parameter
-        bill = bills_and_payments[0]
+    
+    bill_dict = __convert_sales_URL_2_bill_dict__(request)
+    salesDict = __convert_sales_URL_2_dict__(request)
+    owl = BarnOwl()
+    try:
+        bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
         payment = bills_and_payments[1]
-        if payment.type == 'Invoice':
-            logger.debug("Invoice bill, direct to invoice interface")
-            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
-        elif payment.type == 'Consignment':
-            logger.debug("Consignment bill, direct to Consignment interface")
-            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
-        else:
-            logger.debug("Cash sales bill, direct to Recept interface")
-            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
+        outStockRecords = bills_and_payments[2]
+    except CounterNotReadyException as e:
+        logger.warn("Can not found 'OPEN' Counter, direct to open page")
+        return HttpResponseRedirect('/admin/kernal/counter/add/')    
+    # process Request parameter
+    bill = bills_and_payments[0]
+    payment = bills_and_payments[1]
+    if payment.type == 'Invoice':
+        logger.debug("Invoice bill, direct to invoice interface")
+        return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
+    elif payment.type == 'Consignment':
+        logger.debug("Consignment bill, direct to Consignment interface")
+        return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+    else:
+        logger.debug("Cash sales bill, direct to Recept interface")
+        return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
     
 #    cname = request.GET.get("customer")
 #    thanatos = Thanatos()
@@ -840,17 +875,8 @@ def InStockBatchDelete(request):
         hermes.DeleteConsignmentOutReturn(inStockBatch)
     return HttpResponseRedirect('/report/stocktake/filter/')
     
-def SalarySave(request):
-    form = RepairForm(request.GET)
-    repair = form.save(commit=False)
-    repair.mode = "salary"
-    repair.status = "Incomplete"
-    repair.active = True
-    repair.key = repair.key.strip()
-    repair.save()
-    logger.info("Service job '%s' create success", repair.pk)
-    return HttpResponseRedirect('/search/salary/')    
-    
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')    
 def ProductCostUpdate(request):
     inStockBatch_pk = request.GET.get("inStockBatch_pk")
     hermes = Hermes()
@@ -1133,6 +1159,12 @@ def ConsignmentInBalance(request):
             return render_to_response('consignment_in_balance_form.html',{'form': ConsignmentInBalanceForm, 'action':'/consignment/in/balance/confirm/', 'error_msg': error_msg})            
         return HttpResponseRedirect('/report/consignment/in/balance/')
 
+def QueryDeposit(request, deposit_id):    
+    deposit = Deposit.objects.get(pk=deposit_id)
+    company = Company.objects.all()[0]
+    user = request.user
+    return render_to_response("deposit_bill.html",{'deposit': deposit, 'company': company, 'user': user}, context_instance=RequestContext(request))
+
         
 def QueryBill(request, displayPage, billID):    
     list_per_page = 25
@@ -1230,15 +1262,8 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
 #    logger.debug("Product: '%s' count: '%s' ", product.name, result)
 #    return result
 
-def CountInventory(request):
-    startDate = request.GET.get('start_date','')
-    endDate = request.GET.get('end_date','')
-    if startDate == '' or endDate == '':
-        startDate = str(date.min)
-        endDate = str(date.max)
-    startDate = startDate+" 00:00:00"
-    endDate = endDate+" 23:59:59"
-    logger.debug("%s", startDate)
+
+def _show_stock_cost_table(startDate, endDate):
     products = Product.objects.filter(Q(active=True)).order_by("name")
     list = []
     total_qty = 0
@@ -1260,12 +1285,56 @@ def CountInventory(request):
         result.append(0) # current_outStock
         result.append(stockCost.qty)
         result.append(stockCost.on_hand_value)
-        result.append(stockCost.avg_cost)        
+        result.append(stockCost.avg_cost)
         list.append(result)
         total_qty += stockCost.qty
         total_on_hand_value += stockCost.on_hand_value         
-#        list.append(__count_inventory_stock__(starttime, endtime, product)) 
-    return render_to_response('stock_take.html',{'total_qty': total_qty,'total_on_hand_value':total_on_hand_value,'stockList': list, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+    return (list, total_qty, total_on_hand_value)
+
+
+def _count_all_inventory_stock(startDate, endDate):
+    products = Product.objects.filter(Q(active=True)).order_by("name")
+    list = []
+    total_qty = 0
+    total_on_hand_value = 0
+    for product in products:
+        stockCost = None
+        try:
+            stockCost = StockCost.objects.get(product=product)
+        except StockCost.DoesNotExist:
+            BarnMouse(product)
+            stockCost = StockCost.objects.get(product=product)
+        if stockCost.qty == 0:
+            continue
+        starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
+        endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')        
+        result = BarnMouse(product).Count_inventory_stock(starttime, endtime, product)
+        list.append(result)
+        total_qty += result[5]
+        total_on_hand_value += result[6]         
+    return (list, total_qty, total_on_hand_value)
+
+def CountInventory(request):
+    show_all = False
+    startDate = request.GET.get('start_date','')
+    endDate = request.GET.get('end_date','')
+    if startDate == '' or endDate == '':
+        startDate = str(date.min)
+        endDate = str(date.max)
+        show_all = True
+    startDate = startDate+" 00:00:00"
+    endDate = endDate+" 23:59:59"
+    list = []
+    total_qty = 0 
+    total_on_hand_value = 0
+    if show_all:
+        logger.debug("filter StockCost Table, entry high performance algo")
+        list, total_qty, total_on_hand_value = _show_stock_cost_table(startDate, endDate)
+    else:
+        logger.debug("filter All relatived Table, entry low performance algo")
+        list, total_qty, total_on_hand_value =  _count_all_inventory_stock(startDate, endDate) 
+    company = Company.objects.latest("create_at")
+    return render_to_response('stock_take.html',{'company': company, 'total_qty': total_qty,'total_on_hand_value':total_on_hand_value,'stockList': list, 'dateRange': datetime.today()}, )
     
 """
     auto-complete view start
@@ -1312,15 +1381,6 @@ def RepairList(request):
     list = __autocomplete_wrapper__(querySet, lambda model: str(model.key))    
     return HttpResponse(list, mimetype="text/plain")
 
-def SalaryList(request):
-    keyword = request.GET.get('q', "")
-    logger.debug("search salary list by keyword: %s", keyword)
-    
-    querySet = __search__(ExtraCost, Q(mode="salary") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword))))
-    list = __autocomplete_wrapper__(querySet, lambda model: str(model.key))    
-    return HttpResponse(list, mimetype="text/plain")
-    
-    
 def CustomerList(request):
     keyword = request.GET.get('q', "")
     logger.debug("search Customer list by keyword: %s", keyword)
@@ -1371,13 +1431,18 @@ def ProductList(request):
     serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
     list = productList+serialNoList
     return HttpResponse(list, mimetype="text/plain")
-	
+
 def ProductNameSearch(request):
     keyword = request.GET.get('q',"")
     logger.debug("search product name by keyword:%s",keyword)
     product = __search__(Product,Q(name__contains = keyword))
     list = __autocomplete_wrapper__(product,lambda model: model.name)
     return HttpResponse(list,mimetype="text/plain")
+
+def CounterAmount(request, counter_pk):
+    logger.debug(" query CounterAmount: %s", counter_pk)
+    hermes = Hermes()
+    return HttpResponse(hermes.CounterAmount(counter_pk), mimetype="text/plain")
 
 def ProductNameInfo(request,query):
     logger.debug(" search product name by keyword: %s",query)    
@@ -1527,7 +1592,7 @@ def GadaiList(request):
     gadaiStatusQuerySet = __search__(SerialNo, Q(serial_no__contains = keyword)&Q(inStockRecord__inStockBatch__mode__exact='pawning'))
     list +=__autocomplete_wrapper__(gadaiStatusQuerySet,lambda model:str(model.pk))
     return HttpResponse(list,mimetype="text/plain")
-	
+
 def GadaiInfo(request,query):	
     logger.info("gaidai query %s:",query)
     gadai = __search__(InStockBatch,(Q(supplier__name__contains = query)))
@@ -1539,10 +1604,22 @@ def GadaiInfo(request,query):
     json =__json_wrapper__(gadai)
     return HttpResponse(json, mimetype="application/json")
 
+def TransferInList(request):
+    keyword = request.GET.get('q',"")
+    transferInQuerySet = __search__(InStockBatch,(Q(supplier__supplier_code__contains = keyword)))
+    list = __autocomplete_wrapper__(transferInQuerySet, lambda model:str(model.supplier.supplier_code))
+    return HttpResponse(list,mimetype="text/plain")
+
+def TransferOutList(request):
+    keyword = request.GET.get('q',"")
+    transferOutQuerySet = __search__(Bill,(Q(customer__customer_code__contains = keyword)))
+    list = __autocomplete_wrapper__(transferOutQuerySet, lambda model:str(model.customer.customer_code))
+    return HttpResponse(list,mimetype="text/plain")
+
 def AdjustStockList(request):
     keyword = request.GET.get('q',"")
-    voidBillQuerySet = __search__(Bill,(Q(sales_by__username__contains = keyword)))
-    list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.sales_by))
+    adjustStockQuerySet = __search__(Bill,(Q(sales_by__username__contains = keyword)))
+    list = __autocomplete_wrapper__(adjustStockQuerySet, lambda model:str(model.sales_by))
     return HttpResponse(list,mimetype="text/plain")
     
 def VoidBillList(request):
@@ -1550,6 +1627,18 @@ def VoidBillList(request):
     voidBillQuerySet = __search__(Bill,(Q(reason__contains = keyword)))
     list = __autocomplete_wrapper__(voidBillQuerySet, lambda model:str(model.reason))
     return HttpResponse(list,mimetype="text/plain")
+
+def TransferInstockInfo(request,query):
+    logger.debug("transfer instock: %s",query)
+    transfer_instock = __search__(InStockBatch, (Q(active = True)&Q(supplier__supplier_code__contains = query)&Q(mode='transfer')))
+    json = __json_wrapper__(transfer_instock.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
+
+def TransferOutstockInfo(request,query):
+    logger.debug("transfer outstock: %s",query)
+    transfer_outstock = __search__(Bill, (Q(active = True)&Q(customer__customer_code__contains = query)&Q(mode='transfer')))
+    json = __json_wrapper__(transfer_outstock.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
 
 def AdjustStockInfo(request,query):
     logger.debug("adjust stock: %s",query)
@@ -1598,12 +1687,6 @@ def RepairInfo(request, query):
     json = __json_wrapper__(repairs.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
 
-def SalaryInfo(request, query):
-    logger.info("get salary info by keyword: %s " , query)
-    repairs = __search__(ExtraCost, Q(mode="salary") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=query)|Q(refBill=query)|Q(pk=_str_2_int(query))))
-    json = __json_wrapper__(repairs.order_by("-create_at"))
-    return HttpResponse(json, mimetype="application/json")        
-    
 def RepairBinding(request, imei, billID):
     logger.info("Repair binding Bill: '%s' , IMEI: '%s' " , billID, imei)
     extraCosts = ExtraCost.objects.filter(key=imei)
@@ -1623,13 +1706,6 @@ def ExtraCostList(request, billID):
     json = __json_wrapper__(costs.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")                
 
-def SalaryComplete(request, id):
-    logger.info("complete Salary by ID: %s " , id)
-    extraCost = ExtraCost.objects.get(pk = int(id))
-    extraCost.status = "Complete"
-    extraCost.save()
-    return HttpResponseRedirect('/search/salary/')
-    
 def __find_payment_by_serial_no__(serial):
     ans = []
     outStockRecords = OutStockRecord.objects.filter(serial_no = serial).order_by("-create_at")
@@ -1694,6 +1770,8 @@ def SupplierSave(request, supplierID=None):
         else:
             return HttpResponseRedirect('/supplier/create/')
 
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')
 def ProductSave(request, productID=None):
     product = None
     if productID is not None:
@@ -1733,6 +1811,14 @@ def ProductSave(request, productID=None):
             logger.error("ProductSave fail: Form Validate faile")
             return HttpResponseRedirect('/product/search/')
 
+def ProductTraceView(request, productID):
+    product = Product.objects.get(pk = productID)
+    serials = SerialNo.objects.filter(Q(inStockRecord__product = product)).order_by('active')
+    inStockRecords = InStockRecord.objects.filter(product = product).order_by("create_at")
+    outStockRecords = OutStockRecord.objects.filter(product = product).order_by("create_at")
+    stock = StockCost.objects.get(product = product)
+    return render_to_response('product_trace.html',{'product': product, 'serials': serials, 'inStockRecords': inStockRecords, 'outStockRecords': outStockRecords, 'stock': stock})
+
 def ProductUpdateView(request, productID):
     product = Product.objects.get(pk=productID)
     form = ProductForm(instance=product)
@@ -1741,7 +1827,8 @@ def ProductUpdateView(request, productID):
 
 def PrintBarcode(request, barcode):    
     return render_to_response('printBarcode.html',{'barcode': barcode})
-    
+
+@permission_required('kernal.delete_product', login_url='/accounts/login/')    
 def ProductDelete(request):
     if request.method == 'GET':
         delete_products = request.GET.getlist('delete_product[]')
@@ -2123,12 +2210,12 @@ def _build_person_sold_dict(user, startDate, endDate):
 def _build_commission_sold_dict(user, startDate, endDate,search):
     #outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by__exact = user).filter(create_at__range=(startDate,endDate))
     if search=='newhp/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.purchase).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         logger.debug("*********outStock********%s", outStockRecordSet)
     elif search == '2ndhp/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.tradein).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'gadai/':
-        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.pawning).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'acc/':
         outStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(product__category__category_name__exact = 'ACCESSORIES').filter(create_at__range=(startDate,endDate)).filter(active=True)
     else:
@@ -2159,11 +2246,11 @@ def _build_commission_sold_dict(user, startDate, endDate,search):
 def _build_stock_sold_dict(productg, startDate, endDate,search):
     if search == 'newhp_stock/':
         #inStockRecordSet = OutStockRecord.objects.filter(bill__sales_by = user).filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
-        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = BarnOwl.purchase).filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'Sndhp_stock/':
-        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = BarnOwl.tradein).filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
     elif search == 'pawning_stock/':
-        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = BarnOwl.pawning).filter(product = productg).filter(Q(product__category__category_name__exact = 'HANDPHONE')|Q(product__category__category_name__exact = 'HP')).filter(create_at__range=(startDate,endDate)).filter(active=True)
     else:
         pass
     products = {}
@@ -2257,17 +2344,17 @@ def _build_simpack_sold_dict(productg, startDate, endDate):
 
 def _build_sales_sold_dict(productg, startDate, endDate,search):
     if search == 'newhp_stock/':
-        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.purchase).filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'purchase').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         
         logger.debug("*********outStock********%s", inStockRecordSet)
     elif search == 'Sndhp_stock/':
         
-        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.tradein).filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'trade-in').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         logger.debug("*********outStock********%s", inStockRecordSet)
     elif search == 'pawning_stock/':
-        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
+        inStockRecordSet = OutStockRecord.objects.filter(inStockRecord__inStockBatch__mode__exact = BarnOwl.pawning).filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         #inStockRecordSet = InStockRecord.objects.filter(inStockBatch__mode__exact = 'pawning').filter(product = productg).filter(product__category__category_name__exact = 'HANDPHONE').filter(create_at__range=(startDate,endDate)).filter(active=True)
         logger.debug("*********outStock********%s", inStockRecordSet)
     else:

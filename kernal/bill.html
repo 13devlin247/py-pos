@@ -110,7 +110,6 @@ th,td{
             <tbody>
               <tr>        
                 <td colspan="4">            
-                  <p align="center">
 					{% block CompanyProfile %}
 						<div id="CompanyProfile">
 							<div class="logo"><img src="/{{company.logo}}"/></div>
@@ -119,14 +118,18 @@ th,td{
 							<div class="contect"><span>TEL: {{company.phone_office}}</span><span> FAX: {{company.fax}} </span><span>EMAIL: {{company.email}}</span></div>
 						</div>
 					{% endblock %}
+				</td>    
+              </tr>                        
+              <tr>        
+                <td colspan="4" style="height: auto; padding:0; margin:0">            
 					{% block PageTitle %}
 						<div id="PageTitle">
 							RECEIPT
 						</div>					
 					{% endblock %}
-                  </p>
 				</td>    
-              </tr>    
+              </tr>                                          
+
 			  {% block BillTitle %}
               <tr>        
                 <td class="Receipt label">            Bill No<span>:</span>         </td>        
