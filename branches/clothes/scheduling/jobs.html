@@ -1,0 +1,40 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}   
+<style type="text/css">
+/* LIST #5 */
+
+#list5 { color:#111; }
+#list5 ol { font-size:18px; }
+#list5 ol li { }
+#list5 ol li ol { list-style-image: url("/static/images/nested.png"); padding:5px 0 5px 18px; font-size:15px; }
+#list5 ol li ol li { color:gray; height:15px; margin-left:10px;}
+</style> 
+<div style="margin: auto; font: 62.5% Georgia,Arial,sans-serif;">
+<div id="list5">
+   <ol>
+      <li>Jobs
+         <ol>
+            <li><a href="/workflow/job/add/">Create Jobs</a></li>
+            <li><a href="/workflow/job/report/">Jobs report</a></li>
+            <li><a href="/inventory/list/">Delay Alert</a></li>
+         </ol>
+      </li>
+      <li>Others
+         <ol>
+            <li><a href="/admin/scheduling/workerability/">Worker Ability Management</a></li>
+            <li><a href="/admin/scheduling/worker/">Worker Management</a></li>
+            <li><a href="/admin/scheduling/task/">Task Management</a></li>
+            <li><a href="/admin/scheduling/clothestemplate/">Clothes Template</a></li>
+         </ol>
+      </li>      
+   </ol>
+</div>
+</div>
+{% endblock %}	
