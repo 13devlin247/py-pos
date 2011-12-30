@@ -1,0 +1,224 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}
+        <div align="center"><h1>Product Trace</h1></div>
+        <div class="span-21">
+        <div style="font-size: 16pt">Product Info</div>
+            <div class="span-24" id="updown">
+                <div class="span-5">
+                    Name
+                </div>
+                <div class="span-3">
+                    Code
+                </div>	                                
+                <div class="span-3">
+                    Algo
+                </div>	    
+                <div class="span-3">
+                    PK
+                </div>	                                                
+            </div>
+    
+            <div class="span-24" style="border-bottom:1px solid gray;">
+                <div class="span-5">
+                    {{product.description}}
+                </div>
+                <div class="span-3">
+                    {{product.name}}
+                </div>                                
+                <div class="span-3">
+                    {{product.algo}}
+                </div>           
+                <div class="span-3">
+                    {{product.pk}}
+                </div>                           
+            </div>
+        </div>
+        <hr/>
+        <div class="span-21">
+        <div style="font-size: 16pt">Current Stock</div>
+            <div class="span-24" id="updown">
+                <div class="span-5">
+                    Product Code
+                </div>
+                <div class="span-3">
+                    Qty
+                </div>	                                
+                <div class="span-3">
+                    Avg Cost
+                </div>	    
+                <div class="span-3">
+                    On Hand Value
+                </div>	                                                
+            </div>
+    
+            <div class="span-24" style="border-bottom:1px solid gray;">
+                <div class="span-5">
+                    {{product.name}}
+                </div>
+                <div class="span-3">
+                    {{stock.qty}}
+                </div>                                
+                <div class="span-3">
+                    {{stock.avg_cost}}
+                </div>           
+                <div class="span-3">
+                    {{stock.on_hand_value}}
+                </div>                           
+            </div>
+        </div>
+        <hr/>        
+        <div class="span-24">
+        <div style="font-size: 16pt">Instock Record</div>
+            <div class="span-24" id="updown">
+                <div class="span-5">
+                    Date
+                </div>
+
+                <div class="span-3">
+                    User
+                </div>
+
+                <div class="span-3">
+                    Cost
+                </div>
+                <div class="span-3">
+                    QTY
+                </div>				
+                <div class="span-3">
+                    Batch No
+                </div>	
+                <div class="span-3">
+                    InStockRecord No
+                </div>	                
+                <div class="span-3">
+                    Active
+                </div>	                                
+            </div>
+
+    {% for inStockRecord in inStockRecords %}
+            <div class="span-24" style="border-bottom:1px solid gray;{% if not inStockRecord.active %} color: red {% endif %}">
+                <div class="span-5">
+                    {{inStockRecord.create_at}}
+                </div>
+
+                <div class="span-3">
+                    {{inStockRecord.inStockBatch.user.username}}
+                </div>
+
+                <div class="span-3">
+                    {{inStockRecord.cost}}
+                </div>
+                <div class="span-3">
+                    {{inStockRecord.quantity}}
+                </div>                
+                <div class="span-3">
+                    {{inStockRecord.inStockBatch.pk}}
+                </div>                
+                <div class="span-3">
+                    {{inStockRecord.pk}}
+                </div>                
+                <div class="span-3">
+                    {{inStockRecord.active}}
+                </div>                                
+            </div>
+            {% for serial in inStockRecord.serialno_set.select_related %}
+            <div class="span-24" style="border-bottom:1px solid gray;">
+                <div class="span-5">
+                    <div style="margin-left:1em">{{serial.serial_no|IMEIOnly}}</div>
+                </div>
+            </div>            
+            {% endfor %}
+            
+    {% endfor %}
+            </div>				
+        <hr/>        
+        <div class="span-21">
+        <div style="font-size: 16pt">Outstock Record</div>
+            <div class="span-24" id="updown">
+                <div class="span-5">
+                    Date
+                </div>
+
+                <div class="span-3">
+                    User
+                </div>
+
+                <div class="span-3">
+                    Price
+                </div>
+                <div class="span-3">
+                    QTY
+                </div>				
+                <div class="span-3">
+                    Bill No
+                </div>	                
+                <div class="span-3">
+                    OutStockRecord No
+                </div>	                
+                <div class="span-3">
+                    SerialNo
+                </div>	                                
+            </div>
+
+    {% for outStockRecord in outStockRecords %}
+            <div class="span-24" style="border-bottom:1px solid gray;{% if not outStockRecord.active %} color: red {% endif %}">
+                <div class="span-5">
+                    {{outStockRecord.create_at}}
+                </div>
+
+                <div class="span-3">
+                    {{outStockRecord.bill.sales_by.username}}{% if not outStockRecord.active %}<br/>({{outStockRecord.reason}}){% endif %}
+                </div>
+
+                <div class="span-3">
+                    {{outStockRecord.unit_sell_price}}
+                </div>
+                <div class="span-3">
+                    {{outStockRecord.quantity}}
+                </div>                
+                <div class="span-3">
+                    {{outStockRecord.bill.pk}}
+                </div>                
+                <div class="span-3">
+                    {{outStockRecord.pk}}
+                </div>                              
+                <div class="span-3">
+                    {{outStockRecord.serial_no.serial_no|IMEIOnly}}
+                </div>                                
+            </div>
+    {% endfor %}
+            </div>				            
+        <hr/>            
+        <div class="span-21">
+        <div style="font-size: 16pt">Serial Number</div>
+            <div class="span-24" id="updown">
+                <div class="span-5">
+                    Date
+                </div>
+                <div class="span-3">
+                    SerialNo
+                </div>	                                
+            </div>
+
+    {% for serial in serials %}
+            <div class="span-24" style="border-bottom:1px solid gray;{% if not serial.active %} color: red {% endif %}">
+                <div class="span-5">
+                    {{serial.create_at}}
+                </div>
+                <div class="span-3">
+                    {{serial.serial_no|IMEIOnly}}
+                </div>                                
+            </div>
+    {% endfor %}
+            </div>				                        
+{% endblock %}
+
+
+

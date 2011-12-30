@@ -5,13 +5,49 @@
 .innertable {
 	display: none;
 }
+
+
+
+
+#CompanyProfile{
+	text-align: left;
+}
+
+#CompanyProfile .logo{
+	float: left;
+    margin: 0 2em 0 0;    
+}
+.logo img{
+	width: 150px;
+	height:  150px;
+}
+
+#CompanyProfile .company{
+	font-size: 22pt;
+}
+
+#CompanyProfile .address{
+	font-size: 12pt;
+}
+
+#CompanyProfile .contect span{
+	font-size: 12pt;
+	margin: 0 1.5em 0 0;
+}
 </style> 
 	<div id="content_area_wrapper">  
-      <div id="content_area">  
-        <div id="page_title" style="margin-bottom:8px;"><h1>STOCK BALANCE</h1>
-        </div>  
-        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
-        </div>  
+      <div id="content_area">
+        <div id="CompanyProfile">
+            <div class="logo"><img src="/{{company.logo}}"/></div>
+            <div class="company">{{company.name}}</div>
+            <div class="address">{{company.address}}</div>
+            <div class="contect"><span>TEL: {{company.phone_office}}</span><span> FAX: {{company.fax}} </span><span>EMAIL: {{company.email}}</span></div>
+            <p/>
+            <hr style="border-bottom: double 4px black; margin-top: 6em" />
+        </div>
+      
+        <div id="page_title" style="margin-bottom:8px; text-align: center"><h1>STOCK BALANCE</h1></div>  
+        <div id="page_subtitle" style="margin-bottom:8px;text-align: right;font-weight: bolder; font-size: 10pt">{{dateRange}}</div>  
         <div id="table_holder">  	
           <table class="tablesorter report" id="sortable_table">  		
             <thead>  			
@@ -44,6 +80,15 @@
                   <td>{{value.6}}</td>
               </tr>  			
 			{%endfor%}
+              <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>{{total_qty}}</td>
+                  <td>{{total_on_hand_value}}</td>
+              </tr>  			            
             </tbody>  	
           </table>  
         </div>  

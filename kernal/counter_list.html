@@ -8,12 +8,13 @@
 
 {% block content %}
         <div class="span-24">
-            <div class="span-20">
+            <div class="span-19">
                 Product List
             </div>
 
-            <div class="span-4 last">
+            <div class="span-5 last">
                 <a href="/admin/kernal/counter/add/">Open Counter</a>
+                <a href="/admin/kernal/counter/">Counter History</a>
             </div>
         <form id="deleteForm" action="{{submit_form}}" method="get">
             
@@ -29,6 +30,10 @@
                     Initial Amount
                 </div>
 
+                <div class="span-3">
+                    Current Amount
+                </div>                
+                
                 <div class="span-3">
                     Creater
                 </div>
@@ -50,6 +55,10 @@
                     {{product.initail_amount}}
                 </div>
 
+                <div class="span-3" id="{{product.pk}}_current_amount">
+                    0
+                </div>                
+                
                 <div class="span-3">
                     {{product.user.username}}
                 </div>
@@ -57,6 +66,17 @@
                     <input type="submit" value="close" id="close"/>
                 </div>				
             </div>
+            <script type="text/javascript">
+                        $.ajax({
+                            url: "/counter/amount/{{product.pk}}",
+                            type: "GET",
+                            success: function(data){  
+                                $('#{{product.pk}}_current_amount').html(data)
+                            },
+                            error: function(data){},
+                            complete: function(data){},
+                        });    
+            </script>            
     {% endfor %}
 	            </form>
             </div>				

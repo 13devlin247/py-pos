@@ -23,6 +23,7 @@
 }
 
 </style>
+
 <div id="content_area_wrapper">  
       <div id="content_area">  
         <div id="page_title" style="margin-bottom:8px;">{{title}}
@@ -33,7 +34,7 @@
             </label>  
             <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
 {% endblock %}		  			
-          <table id="register">  
+          <table id="register" style="width: 800px">  
 {% block table_head %}		  
             <thead>  
               <tr>  
@@ -50,7 +51,10 @@
               </tr>  
             </thead>  
 {% endblock %}			
-			<tbody id="sell_detail">{% block sell_detail %}{% endblock %}</tbody>			
+			<tbody id="sell_detail">{% block sell_detail %}{% endblock %}</tbody>
+            <tfoot>  
+                {% block footer %}{% endblock %}
+            </tfoot>  			
 			<!--
             <tfoot>  
               <tr>  
@@ -75,8 +79,10 @@
           </table>  
         </div>      
 <script type="text/javascript">
+    
 	var dataTable = new Array();
-	
+	dataTable = $.parseJSON("{{default_result}}".replace(/&quot;/g, '\"'));  
+  
 	
   $("#item").autocomplete ("{{autocomplete_url}}", {
 		width: 260,

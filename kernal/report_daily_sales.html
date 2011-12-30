@@ -1,0 +1,143 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+#total_style td{
+    font-weight: bolder;
+}
+
+.summary td{
+	color: blue; 
+	font-weight: bolder;
+}
+
+.detail{
+	display: none;
+}
+.detail td{
+	background-color: #eff5fe; 
+	color: black; 
+	padding: 0 0 0 0.8em;
+	font-weight: lighter;
+}
+
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Daily Sales Report</h1>
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder"> <a href='/report/daily_sales/excel/?start_date={{start_date}}&end_date={{end_date}}'>Download Excel</a>
+        <div id="toggle" style="margin-bottom:8px;text-align: right">Expand/ Collapse Detail</div>
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>Inv No
+                </th>  								
+                <th>Product
+                </th>  								
+                <th>Cashier
+                </th>  								
+                <th>Total
+                </th>  								
+                <th>Deposit
+                </th>  								
+                <th>Type
+                </th>  								
+                <th>Date
+                </th>  												
+              </tr>  		
+            </thead>  		
+            <tbody>  						
+			{%for outstock in outstocks %}
+                {% if outstock.is_bill %}
+              <tr class="summary">  				
+                <td>
+                  <a href="/sales/bill/{{outstock.bill.pk}}" target="_blank">{{outstock.bill.pk}}</a></td>  <td>{{outstock.product}}</td>  <td>{{outstock.user}}</td>  <td>{{outstock.tt}}</td> <td>{{outstock.bill.deposit_price}}</td> <td>{{outstock.bill.mode}}</td>  <td>{{outstock.create_at}}</td>
+              </tr>  
+                {% else %}
+              <tr class="detail">  				
+                <td>
+                  <a href="/sales/bill/{{outstock.bill.pk}}" target="_blank">{{outstock.pk}}</a></td>  <td>{{outstock.product}}</td>  <td></td>  <td>{{outstock.tt}}</td> <td></td>  <td></td>  <td></td>
+              </tr>                  
+                {% endif %}
+			{%endfor%}
+                <tr>
+                    <td colspan=3>Sub Total:</td>
+                    <td>{{total_out_amount}}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tbody>  	
+            <tbody>  	
+            <tr><td colspan=7><h3>Deposit</h3></td></tr>
+			{%for deposit in deposits %}
+              <tr>  				
+                <td>
+                  <a href="/deposit/bill/{{deposit.pk}}" target="_blank">{{deposit.pk}}</a></td>  <td>{{deposit.description}}</td>  <td>{{deposit.user.username}}</td>  <td>{{deposit.price}}</td>  <td> </td> <td></td> <td>{{deposit.create_at}}</td>
+              </tr>  			
+			{%endfor%}
+                <tr>
+                    <td colspan=3>Sub Total:</td>
+                    <td>{{total_deposit_amount}}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            
+            </tbody>  	   
+            
+            <tbody>  	
+            <tr><td colspan=7><h3>Trade-in or Pawning</h3></td></tr>
+			{%for instock in instocks %}
+              <tr>  				
+                <td>
+                  <a href="/inventory/result/{{instock.inStockBatch.pk}}" target="_blank">{{instock.inStockBatch.pk}}</a></td>  <td>{{instock.product}}</td>  <td>{{instock.user}}</td>  <td>-{{instock.tt}}</td> <td></td> <td>{{instock.inStockBatch.mode}}</td>  <td>{{instock.create_at}}</td>
+              </tr>  			
+			{%endfor%}
+                <tr>
+                    <td colspan=3>Sub Total:</td>
+                    <td>-{{total_in_amount}}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            
+            </tbody>  	            
+            <tfoot>
+                <tr id="total_style">
+                    <td colspan=3>Total:</td>
+                    <td>{{total_amount}}</td>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+            </tfoot>
+          </table>  
+        </div>  
+      </div>  
+    </div>
+<script type="text/javascript">
+	$("#toggle").click(function(){
+		if ($(".detail").css('display') == 'none'){
+			$(".detail").css('display', 'table-row')
+		}else{
+			$(".detail").css('display', 'none')
+		}
+	})
+</script>
+{% endblock %}
+
+
+	

@@ -4,7 +4,6 @@
 {% endblock %}
 
 {% block hiddenValue %}
-    <input type="hidden" name="salesMode" value="cash"/>
 {% endblock %}
 
 {% block title %}
@@ -12,21 +11,38 @@
         </div>  
 {% endblock %}
 
+{% block foc_algo %}
+
+{% endblock %}  
+
 {% block mode_form %}
           <div id="mode_form">
             <span>Register Mode
             </span>  
-            <select name="mode" onchange="$('#mode_form').submit();">  
-              <option value="sale" selected="selected">Sale
+            <select name="mode" id="mode" onchange="$('#mode_form').submit();">  
+              <option value="cash" selected="selected">Sale
               </option>  
+              <!--
               <option value="trade-in">Trade-in
-              </option>  			  
+              </option>  			  -->
               <option value="warranty">Warranty
               </option>  
+              <option value="pawning">Pawning
+              </option> 
+              <option value="transfer">Transfer
+              </option>               
             </select>
           </div>  
 {% endblock %}
-
+{% block autocomplete_search %}  
+	$("#item").autocomplete ("/sales/product/ajax/", {
+		width: 260,
+        selectFirst: false,
+        extraParams: {
+                    mode: function(){ return $("#mode").attr('value'); }
+                }
+    });      
+{% endblock %}  
 {% block search_bar %}
             <label id="item_label" for="item">    Find/Scan Item
             </label>  
@@ -39,17 +55,40 @@
                 <th style="width:auto">Item #
                 </th>  
                 <th style="width:auto">Item Name
+                </th> 
+                <th style="width:10%;">Cost
+                </th>                  
+                <th style="width:10%;">Price
                 </th>  
-                <th style="width:11%;">Price
+                <th style="width:5%;">Qty.
                 </th>  
-                <th style="width:11%;">Qty.
-                </th>  
-                <th style="width:15%;">Amount
+                <th style="width:10%;">Amount
                 </th>  
               </tr>  
             </thead> 
 {% endblock %}
-
+        {% block table_foot %}
+			<tbody id="sell_detail"></tbody>			
+            <tfoot>
+              <tr>  
+                <td style="widtd:auto">
+                </td>              
+                <td style="widtd:auto">
+                </td>
+                <td style="widtd:auto">
+                </td>                  
+                <td style="widtd:10%;" id="cost_total">0
+                </td>  
+                <td style="widtd:5%;" id="quantity_total">0
+                </td>  
+                <td style="widtd:15%;">
+                </td>
+  
+              </tr>              
+            </tfoot>
+          </table>  
+        </div>      
+        {% endblock %}	
 {% block bill_infor %}
             <label >Issue by: 
             </label>{{request.user.username}} <br>
@@ -65,8 +104,52 @@
 			{% block Customer %}
             <label id="customer_label" for="customer">Select Customer
             </label>  		
-            <input type="text" name="customer" value="Cash" id="customer" size="30"  />		
+            <input type="text" name="customer" value="Cash" id="customer" size="30"  /></br>
+            <label id="customer_label" for="customer">Deposit No
+            </label>  		
+            <input type="text" name="depositField" value="" id="depositField" size="30"  />						
             <script type="text/javascript">
+                $("#depositField").autocomplete("/deposit/ajax/", {
+                    width: 260,
+                    selectFirst: false,
+                });
+                $("#depositField").keydown(function(event){
+                    if(event.keyCode == '13'){
+                        if ($("#depositField").val()==''){
+                            $("#depositDetail").html("")
+                            $("#deposit").attr("value", "0.00")
+                            calcTotalPrice();                            
+                        }
+                    }
+                });
+                
+                $("#depositField").result(function(event, data, formatted)
+                {
+                    customerName = $("#depositField").val();
+                    $("#depositDetail").html(customerName);
+                        $.ajax({
+                            url: "/deposit/info/"+customerName,
+                            type: "JSON",
+                            success: function(data){  
+                                var customerShow = '<div style="text-align: left; border: solid 1px black">';
+                                customerShow += "<div><b>Deposite</b></div>";
+                                customerShow += "<div>Customer: "+data[0].fields.customer+"</div>";
+                                customerShow += "<div>Deposite: "+data[0].fields.price+"</div>";
+                                customerShow += "<div>Date: "+data[0].fields.create_at+"</div>";
+                                customerShow += "<div>Ref. Bill: "+data[0].fields.refBill+"</div>";                                
+                                customerShow += "<div>Description: <br/>"+data[0].fields.description+"</div>";
+                                customerShow += "</div>";
+                                
+                                $("#depositDetail").html(customerShow);
+                                $("#deposit").attr("value",data[0].fields.price)
+                            },
+                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
+                            complete: function(data){
+			                    calcTotalPrice();                            
+                            },
+                        });            
+                });              
+				
                 $("#customer").autocomplete("/customer/ajax/", {
                     width: 260,
                     selectFirst: false
@@ -93,11 +176,10 @@
                         });            
                 });              
             </script>
-            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
+            <div style="margin-top:5px;text-align:center;" id="supplierDetail">          </div>
+            <div style="margin-top:5px;text-align:center;" id="depositDetail">          </div>
 			{% endblock %}
-          
-            		
-          </div>  		
+  		
           <div class="clearfix">&nbsp;
           </div>  		 	
           <div id='sale_details'>  		
@@ -108,7 +190,14 @@
             <div class="float_left" style='width:50%;'>Discount:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
-            </div>  		 		
+            </div>
+			<div id="deposit_block">
+				<div class="float_left" style='width:50%;'>Deposit:
+				</div>  		
+				<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="deposit" value="0.00" id="deposit" size="10" style="border: none; background: transparent;"/>
+				</div>  	
+			</div>            
+              		 		
             <div class="float_left" style='width:50%;'>Total:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
@@ -197,13 +286,15 @@
 {% block ajaxGenTableBody %}
 			var IMEI_str = "";
 			if (data.imei != undefined){
-				IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
+				IMEI_str =  " <br/> IMEI: "+data.imei.replace(data.fields.name+'-', '')+" <input type=hidden name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
 			}
+             
 			row = ""+
 					"<tr id=\""+pk+"_tr\">"+
 					"<td><a href='#' id='removeItem' onclick=\"removeItem('"+pk+"')\"><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
-					"<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +"</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
-					"<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
+					"<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +" <br/>[<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch \ only-->
+					"<td id=\""+pk+"_avgcost\">"+data.fields.cost+"</td>"+
+                    "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
 					"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
 					"<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data.fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data.pk+"\" /></td>"+
 					"</tr>"
@@ -216,24 +307,46 @@
         reject_msg = "";
         if(_checkInputData() == false){ return; }
 		var msg = '';
+        var code = new Array();
+        for(var pk in productTable){
+            product_name = productTable[pk].fields.name
+            if( "imei" in productTable[pk]){
+                product_name = productTable[pk].imei
+            }        
+            qty = parseInt($("#"+pk+"_quantity").val())
+            pk = pk.split('RANDOM')[0]
+            if (code[pk] == undefined){
+                code[pk] = 0
+            }
+            code[pk] += qty
+                    
+            if(code[pk] >  productTable[pk].fields.stockCount){
+                reject = true;
+                reject_msg += "Product: '" + product_name + "' only '"+productTable[pk].fields.stockCount+"' item in hand \n"; 
+            }
+            
+        }
 		for(var pk in productTable){
-            if ("imei" in productTable[pk]){
-                if(parseInt($("#"+pk+"_quantity").val()) >  1){
-                    reject = true;
-                    reject_msg += "Product: '" + productTable[pk].imei + "' only '1' item in hand \n";                     
-                }
+            product_name = productTable[pk].fields.name
+            if( "imei" in productTable[pk]){
+                product_name = productTable[pk].imei
             }
             if(parseInt($("#"+pk+"_quantity").val()) >  productTable[pk].fields.stockCount){
                 reject = true;
-                reject_msg += "Product: '" + productTable[pk].fields.name + "' only '"+productTable[pk].fields.stockCount+"' item in hand \n"; 
+                reject_msg += "Product: '" + product_name + "' only '"+productTable[pk].fields.stockCount+"' item in hand \n"; 
             }
         
 			var price = parseFloat($("#"+pk+"_price").val());
 			var cost = parseFloat(productTable[pk].fields.cost);
 			if(cost > price){
-				msg += productTable[pk].fields.name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n';
+				msg += product_name + ' PRICE: $'+price+' lower than COST: $'+ cost + ' \n';
 			}
 		}
+        
+        if ($("#change").val() < 0){
+                reject = true;
+                reject_msg += "Amount Tendered Invalid \n";             
+        }
         
         if (reject){
             alert(reject_msg);

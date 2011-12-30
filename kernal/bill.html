@@ -40,11 +40,11 @@ tfoot td {
 }
 
 #CompanyProfile .address{
-	font-size: 10pt;
+	font-size: 12pt;
 }
 
 #CompanyProfile .contect span{
-	font-size: 10pt;
+	font-size: 12pt;
 	margin: 0 1.5em 0 0;
 }
 
@@ -110,7 +110,6 @@ th,td{
             <tbody>
               <tr>        
                 <td colspan="4">            
-                  <p align="center">
 					{% block CompanyProfile %}
 						<div id="CompanyProfile">
 							<div class="logo"><img src="/{{company.logo}}"/></div>
@@ -119,14 +118,18 @@ th,td{
 							<div class="contect"><span>TEL: {{company.phone_office}}</span><span> FAX: {{company.fax}} </span><span>EMAIL: {{company.email}}</span></div>
 						</div>
 					{% endblock %}
+				</td>    
+              </tr>                        
+              <tr>        
+                <td colspan="4" style="height: auto; padding:0; margin:0">            
 					{% block PageTitle %}
 						<div id="PageTitle">
 							RECEIPT
 						</div>					
 					{% endblock %}
-                  </p>
 				</td>    
-              </tr>    
+              </tr>                                          
+
 			  {% block BillTitle %}
               <tr>        
                 <td class="Receipt label">            Bill No<span>:</span>         </td>        
@@ -179,6 +182,10 @@ th,td{
 				<td colspan="5" id="bill_detail">
                 {% block bill_detail %}
 					<table>   
+                        <thead>
+                        {% block extra_cost%}
+                        <div align=left id="AppendExtraCost">[+<a href="/sales/extra_cost/{{bill.pk}}"> Append Extra Cost </a>]</div>
+                        {% endblock %}                    
 						  <tr>        
 							<td colspan="5" class="border-bottom"></td>    
 						  </tr>   
@@ -191,17 +198,22 @@ th,td{
 						  </tr>    
 						  <tr>        
 							<td colspan="5" class="border-top"></td>    
-						  </tr>    
+						  </tr>   
+                        </thead>                          
+                        <tbody>
 						{% for outStockRecord in outStockRecordset.object_list %}
 							{{record}}
 							<tr>
-							<td class="Receipt itemno"> {{forloop.counter}} {{outStockRecord.product.name}}</td>
-							<td class="Receipt">{{outStockRecord.product.description}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMEI: {{outStockRecord.serial_no.serial_no}}</span>{% endif %}</td>
+							<td class="Receipt itemno"> {{forloop.counter}} {{outStockRecord.product.name|FOCHidden}}</td>
+							<td class="Receipt">{{outStockRecord.product.description|FOCHidden}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> IMEI: {{outStockRecord.serial_no.serial_no|IMEIOnly}}</span>{% endif %}</td>
 							<td class="right qty">{{outStockRecord.quantity}}</td>
 							<td align="right" class="price">{{outStockRecord.unit_sell_price}}</td>
 							<td align="right" class="price">{{outStockRecord.amount}}</td>
 							</tr>
-						{% endfor %}			  
+						{% endfor %}
+                        </tbody>
+                        {% block extra_cost_detail%}
+                        {% endblock %}     
 					</table>				
                 {% endblock %}
 				</td>
@@ -225,6 +237,13 @@ th,td{
                 <td  align="right" class="summary" >            Disc         </td>        
                 <td align="right" class="summary" >            {{bill.discount}}       </td>    
               </tr>            
+              <tr>        
+				<td  align="right" class="summary" >            </td>        			  
+				<td  align="right" class="summary" >            </td>        
+				<td  align="right" class="summary" >            </td>        
+                <td  align="right" class="summary" >            Deposit         </td>        
+                <td align="right" class="summary" >            {{bill.deposit_price}}       </td>    
+              </tr>                          
               <tr>        
 				<td  align="right" class="summary" >            </td>        			  
                 <td align="right" class="summary" >                     </td>        
@@ -257,7 +276,7 @@ th,td{
                 <tr>
                 <form action="/bill/void/" id="void_bill_form">
                 <input type="hidden" name="bill_id" value="{{bill.pk}}"/>
-                <table style="border: solid black 1px; width: 30%; background-color: #CCC">
+                <table id="void_bill_form_table" style="border: solid black 1px; width: 30%; background-color: #CCC">
                     <tr><th colspan=2 style="text-align: center"> Void this Bill</th></tr>
                     {{form}}
                     <tr><td colspan=2><input type="submit" value="VOID" onclick="checkField();return false;"/></td></tr>
