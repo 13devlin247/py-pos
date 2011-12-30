@@ -1,0 +1,96 @@
+{% extends "product.php.html" %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+
+.summary td{
+	color: blue; 
+	font-weight: bolder;
+}
+
+.detail{
+	display: none;
+}
+.detail td{
+	background-color: #eff5fe; 
+	color: black; 
+	padding: 0 0 0 0.8em;
+	font-weight: lighter;
+}
+
+.productName{
+    font-size: 12pt;
+    font-weight: bolder;
+    color: red;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>{{title}}Report</h1>
+        </div>
+		
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder">  	
+		<div id="toggle" style="margin-bottom:8px;text-align: right">Expand/ Collapse Detail</div>
+		
+              <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>Employee
+                </th>
+                <th>QTY
+                </th>   								
+                <th>Selling P.
+                </th>  								
+ 				<th>Cost
+                </th>  	
+                <th>Total Price
+                </th>  												
+								
+                <th>Profit
+                </th>
+                 <th>Commision
+                </th>  
+              </tr>  		
+            </thead>  		
+            <tbody>  	
+        {% for users in group %}
+			<div class="productName">
+            </div>
+    
+			
+			{%for user, outStockRecordSet in users.items%}
+				{%for outStockRecord in outStockRecordSet%}
+					{% if forloop.counter == 1%}
+						<tr class="summary"><td>{{outStockRecord.bill.sales_by.username}}</td><td>{{outStockRecord.quantity}}</td> <td> {{outStockRecord.unit_sell_price}}</td> <td>{{outStockRecord.cost}}</td> <td>{{outStockRecord.amount}}</td>  <td>{{outStockRecord.profit}}</td> </tr>
+					{% else %}
+						<tr class="detail"><td>{{outStockRecord.product}} ({{outStockRecord.serial_no.serial_no}})</td><td>{{outStockRecord.quantity}}</td><td>{{outStockRecord.unit_sell_price}}</td> <td>{{outStockRecord.cost}}</td><td>{{outStockRecord.amount}}</td>   <td>{{outStockRecord.profit}}</td> <td></td> </tr>
+					{% endif %}
+				{%endfor%}
+			{%endfor%}
+            </tbody>  	
+          
+		  {% endfor %}
+          
+          </table>  
+        </div>  
+      </div>  
+    </div>
+
+<script type="text/javascript">
+	$("#toggle").click(function(){
+		if ($(".detail").css('display') == 'none'){
+			$(".detail").css('display', 'table-row')
+		}else{
+			$(".detail").css('display', 'none')
+		}
+	})
+</script>
+{% endblock %}
+
+
+	

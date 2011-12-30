@@ -1,0 +1,69 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}   
+<style type="text/css">
+/* LIST #5 */
+
+#list5 { color:#111; }
+#list5 ol { font-size:18px; }
+#list5 ol li { }
+#list5 ol li ol { list-style-image: url("/static/images/nested.png"); padding:5px 0 5px 18px; font-size:15px; }
+#list5 ol li ol li { color:gray; height:15px; margin-left:10px;}
+</style> 
+<div style="margin: auto; font: 62.5% Georgia,Arial,sans-serif;">
+<div id="list5">
+   <ol>
+      <li>Summary Report
+         <ol>
+            <li><a href="/report/daily_sales/filter/"> Daily Sales</a></li>
+            <li><a href="/report/daily/category/filter/"> Daily Sales Summary</a></li>            
+            <li><a href="/report/person_sales/filter/">Personal Sales</a></li>
+         </ol>
+      </li>
+      <li>Sales Report
+         <ol>
+            <li><a href="/sales/cash/filter/"> Cash Sales</a></li>
+            <li><a href="/sales/invoice/filter/"> Invoice and Delivery Orders</a></li>
+            <li><a href="/sales/items/filter/"> Item Sales Summary</a></li>
+            <li><a href="/report/newhp_sales/filter/">New Hp Sales</a></li>
+            <li><a href="/report/2ndhp_sales/filter/">2nd Hp Sales</a></li>
+            <li><a href="/report/pawning_sales/filter/">Pawning Sales</a></li>
+         </ol>
+      </li>      
+      <li>Return Report
+         <ol>
+            <li><a href="/sales/return/filter/">Sales Return</a></li>
+            <li><a href="/inventory/return/filter/">Inventory Return</a></li>
+         </ol>
+      </li>            
+      <li>Other Report
+         <ol>
+            <li><a href="/search/gadai/">Pawning Report</a></li>
+            <li><a href="/search/void_bill/">Void Bill Report</a></li>
+            <li><a href="/search/adjust_stock/">Adjust Stock Report</a></li>
+            <li><a href="/search/close_counter/">Daily Counter Report</a></li>
+            <li><a href="/search/service/">Service Report</a></li>
+            <li><a href="/search/transfer/instock/">Transfer InStock Report</a></li>
+            <li><a href="/search/transfer/outstock/">Transfer OutStock Report</a></li>
+            
+         </ol>
+      </li>   
+      <li>Commision Report
+         <ol>
+            <li><a href="/report/commission/newhp/filter/">New Handphone</a></li>
+            <li><a href="/report/commission/2ndhp/filter/">2nd Handphone</a></li>
+            <li><a href="/report/commission/gadai/filter/">Pawning</a></li>
+            <li><a href="/report/commission/acc/filter/">Accessories</a></li>
+            
+         </ol>
+      </li>          
+   </ol>
+</div>
+</div>
+{% endblock %}	

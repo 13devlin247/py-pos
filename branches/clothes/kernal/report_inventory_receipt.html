@@ -1,0 +1,49 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Inventory Receipt Report</h1>
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder">  	
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>InStockBatch ID
+                </th>  								
+                <th>Date
+                </th>  								
+                <th>Supplier
+                </th>  								
+              </tr>  		
+            </thead>  		
+            <tbody>  						
+			{%for inStockBatch in inStockBatch%}
+              <tr>  				
+                <td>
+                  <a href="/inventory/result/{{inStockBatch.pk}}">{{inStockBatch.pk}}</a></td>  								<td>{{inStockBatch.create_at}}</td>  								<td>{{inStockBatch.supplier.name}}</td>
+              </tr>  			
+			{%endfor%}
+            </tbody>  	
+          </table>  
+        </div>  
+      </div>  
+    </div>
+
+{% endblock %}
+
+
+	

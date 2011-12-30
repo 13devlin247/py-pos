@@ -1,0 +1,176 @@
+{% extends "stock_base.html" %}
+
+{% block css %}
+{% endblock %}
+
+{% block hiddenValue %}
+    <input type="hidden" name="salesMode" value="cash"/>
+{% endblock %}
+
+{% block title %}
+        <div id="page_title" style="margin-bottom:8px;">Items Receiving
+        </div>  
+{% endblock %}
+
+{% block foc_algo %}
+{% endblock %} 
+
+{% block mode_form %}
+		  <div id="error_msg">{{msg}}</div>
+          <div id="mode_form">
+            <span>Receiving Mode
+            </span>  
+            <select name="mode" onchange="$('#mode_form').submit();">  
+              <option value="purchase" selected="selected">Purchase
+              </option>  
+			  <option value="trade-in">Trade-in
+              </option>  			  
+              <option value="warranty">Warranty
+              </option>
+              <option value="pawning">Pawning
+              </option>                
+              <option value="transfer">Transfer
+              </option>                             
+            </select>
+          </div>   
+{% endblock %}
+
+{% block search_bar %}
+            <label id="item_label" for="item">    Find/Scan Item
+            </label>  
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+{% endblock %}
+
+{% block table_header %}
+            <thead>  
+              <tr>  
+                <th style="width:30%;">Item #
+                </th>  
+                <th style="width:30%;">Item Name
+                </th>  
+                <th style="width:11%;">Cost
+                </th>  
+                <th style="width:11%;">Qty.
+                </th>  
+                <th style="width:15%;">Serial no.
+                </th>  
+              </tr>  
+            </thead>  
+{% endblock %}
+
+{% block bill_infor %}
+        <table id="supplierForm">                    
+          <th colspan=2 style="border-bottom: black 1.5px solid;"> Receivings Record
+          </th>                    {{form}}                              
+        </table> 
+        <script type="text/javascript">
+             $("#id_supplier").autocomplete("/supplier/ajax/", {
+                width: 260,
+                selectFirst: false
+            });
+            $("#id_supplier").result(function(event, data, formatted)
+            {
+                supplierName = $("#id_supplier").val();
+                $("#supplierDetail").html(supplierName);
+                    $.ajax({
+                        url: "/supplier/info/"+supplierName,
+                        type: "JSON",
+                        success: function(data){  
+                            var supplierShow = '<div style="text-align: left">';
+                            supplierShow += "<div>Contact Person: "+data[0].fields.contact_person+"</div>";
+                            supplierShow += "<div>mobile: "+data[0].fields.phone_mobile+"</div>";
+                            supplierShow += "<div>Address: <br/>"+data[0].fields.address+"</div>";
+                            supplierShow += "</div>";
+                            
+                            $("#supplierDetail").html(supplierShow);
+                        },
+                        error: function(data){ alert("Product Not found! please check your barcode: " + $("#id_supplier").val()) },
+                        complete: function(data){},
+                    });            
+                
+                
+            });              
+            $("#id_do_date").datepicker({dateFormat: 'yy-mm-dd'});
+        </script>
+        <div class="clearfix">&nbsp;           
+        </div>  		 	           
+        <div id='sale_details'>  		           
+          <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		           
+          </div> 	           
+        </div>          	     	           
+        <div class="clearfix" style="margin-bottom:1px;">&nbsp;           
+        </div>  		               
+        <div id="Payment_Types" >    		             
+          <div style="">    			               
+            <div id="add_payment_form">			                 
+              <div class='small_button' id='confirm' style='float:right;margin-top:5px;'>  				                   
+                <span>Confirm                   
+                </span>  			                 
+              </div>  		             
+            </div>  		             
+          </div>    		     	           
+        </div>    
+{% endblock %}
+
+{% block ajaxSubmitCheck %}
+		if($("#id_supplier").val() == ''){
+			alert("please fulfill Supplier field");
+			return false;
+		}
+		if($("#id_do_date").val() == ''){
+			alert("please fulfill Do date field");
+			return false;
+		}
+		if($("#id_do_no").val() == ''){
+			alert("please fulfill Do no field");
+			return false;
+		}
+        return true;
+{% endblock %}
+
+{% block ajaxGenTableBody %}
+							row = ""+
+									"<tr id=\""+pk+"_tr\">"+
+									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
+									"<td id=\""+pk+"_productName\">"+data.fields.name+" <br/> [<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+
+									"<td><input type=\"text\" name=\""+pk+"_cost\" id=\""+pk+"_cost\" value=\""+data.fields.cost+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onChange=checkInput('"+pk+"') /></td>"+
+									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
+									"<td><a href=\"#\" class='totalPrice' onclick=\"buildSerialNo('"+pk+"');return false;\">optional</a></td>"+
+									"</tr>"+
+									"<tr id=\""+pk+"_serial_tr\" >"+
+									"<td colspan=5 id=\""+pk+"_serial_td\" style='display: none'><div id=\""+pk+"_serial\" ></div></td>"+
+									"</tr>"
+							;
+			return row;
+{% endblock %}
+
+{% block extendJavascript %}
+    function buildSerialNo(pk){
+		// if input box not exist, build it
+		if($("#"+pk+"_serial").html() == ''){
+			var quantity = $("#"+pk+"_quantity").val();
+			var inputField = _build_serial_input_textfield_by_pk_and_quantity(pk, quantity);
+			$("#"+pk+"_serial").html(inputField);		
+		}
+		
+        if($("#"+pk+"_serial_td").css("display") == "block"){
+            $("#"+pk+"_serial_td").css("display", "none");
+        }else{
+            $("#"+pk+"_serial_td").css("display", "block");
+        }        
+    }
+
+	function _build_serial_input_textfield_by_pk_and_quantity(pk, quantity){
+		var inputField = '';
+        for (var i = 0 ; i < quantity ; i ++){
+            inputField += "<input name="+pk+"_serial-"+i+"></input> <br/>";
+        }
+		return inputField;
+	}
+{% endblock %}
+
+{% block ajaxCheckBeforeSend %}
+        if(_checkInputData() == false){ return; }
+		ans = confirm("Are you sure?");
+		if(!ans){ return; }
+{% endblock %}
