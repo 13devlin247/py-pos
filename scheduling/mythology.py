@@ -249,11 +249,39 @@ class ClothesChoosedAgent(object):
 class Supervisor(object):
     def __init__(self):
         pass
-
+    
+    def worker_loading(self, startDate, endDate):
+        logger.debug("calc workers loading")
+        if not startDate:
+            logger.error(" Supervisor filter worker fail, start date null")
+            return []
+        if not endDate:
+            logger.error(" Supervisor filter worker fail, end date null")
+            return []
+        
+        steps = Step.objects.filter(
+                                    Q(start_at__range=(startDate, endDate)) | 
+                                    Q(end_at__range=(startDate, endDate))
+                                    ).filter(active=True)
+        worker_loading = {}
+        for step in steps:
+            logger.debug("===== %s" % (step.pk))
+            if step.worker not in worker_loading:
+                worker_loading[step.worker] = 0
+            worker_loading[step.worker] += 1
+        workers = Worker.objects.filter(active=True)
+        for worker in workers:
+            if worker not in worker_loading:
+                worker_loading[worker] = 0
+                
+        logger.debug("calc worker loading table done")
+        return worker_loading
+    
     def filter_worker_ability(self, task):
         if not task:
             logger.error(" Supervisor filter worker fail, task null")
-            return Worker.objects.filter(active = True)
+            return []
+        
         workers = [] 
         workers_abilitys = WorkerAbility.objects.filter(task = task).filter(active = True)
         for workers_ability in workers_abilitys:

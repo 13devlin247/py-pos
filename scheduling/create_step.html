@@ -1,16 +1,16 @@
 {% extends "search.html" %}
 
 {% block searchField %}		  		
-			<div><span class="date"><label for="id_start_date">Start Date: </label> </span><span class="date"> <input id="id_start_date" type="text" class="vDateField" name="start_date" size="10"/> </span><span class="date"> <label for="id_end_date">End Date: </label> </span><span class="date"> <input id="id_end_date" type="text" class="vDateField" name="end_date" size="10"/></span></div> 		
-            <label id="item_label" for="item">    Name: 
-            </label>  
-            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+			
 {% endblock %}		  			
 
 {% block table_head %}		  
             <thead>  
               <tr>
-                <td colspan=6><select name="task_pk" id="task_pk"> 
+                <td colspan=6>
+                <span class="date"><label for="id_start_date">Start Date: </label> </span><span class="date"> <input id="id_start_date" type="text" class="vDateField" name="start_date" size="10"/> </span><span class="date"> <label for="id_end_date">End Date: </label> </span><span class="date"> <input id="id_end_date" type="text" class="vDateField" name="end_date" size="10"/></span>
+                Step: <select name="task_pk" id="task_pk"> 
+                    <option value="#">----------------</option>
                 {% for task in tasks %}
                     <option value="{{task.pk}}">{{task.name}}</option>
                 {% endfor %}
@@ -30,26 +30,21 @@
                 <th style="width:auto">Action
                 </th>                  
               </tr>  
+                
+                {% for step in job.steps %}
+                    <tr><td>{{step.task.pk}} </td><td>{{step.task}} </td><td> {{step.worker}} </td><td class="cost"> {{step.cost}} </td><td class="loading" id="{{step.worker.pk}}_loading_confirm">0</td><td><a href="/workflow/step/remove/{{job.pk}}/{{step.pk}}/">Delete</a></td></tr>
+                {% endfor %}
+                    <tr><td></td><td></td><td style="font-weight: bolder">Total Cost:</td><td id="summary_cost"> 0 </td><td id="summary_loading"></td><td></td></tr>              
+                <tr><th colspan=6> Available Worker </th></tr>
             </thead>  
 {% endblock %}	
 {% block sell_detail %}
-			{% if object_list %}
-				{% for result in object_list %}
-                <tr>
-                <td><a href="/sales/bill/{{result.pk}}">{{result.pk}}</a></td>
-                <td>{{result.name}}</td>
-                <td>{{result.description}}</td>
-                <td>{{result.cost}}</td>
-                <td>{{result.status}}</td>
-                <td><a href="/workflow/clothes/information/add/{{result.pk}}">[ Clothes Detail ]</a> <a href="/workflow/step/add/{{result.pk}}">[ Step ]</a></td>
-                </tr>					
-				{% endfor %}
-			{% endif %}
+
 {% endblock %}
 {% block table_script %}	
     $("#task_pk").change(function(){
                         $.ajax({
-                            url: "/workflow/task/worker/list/"+$(this).val(),
+                            url: "/workflow/task/worker/list/"+$(this).val()+ "?start_date=" + $("#id_start_date").val()+ "&end_date=" + $("#id_end_date").val(),
                             type: "JSON",
                             success: function(data){  
                                 row = '';
@@ -62,6 +57,25 @@
                             error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
                             complete: function(data){},
                         });       
+                        
+                        $.ajax({
+                            url: "/workflow/worker/loading?start_date=" + $("#id_start_date").val()+ "&end_date=" + $("#id_end_date").val(),
+                            type: "JSON",
+                            success: function(data){  
+                                
+                                for(i=0 ; i < data.length; i++){
+                                    dict = data[i]
+                                    for(key in dict){
+                                        pk = key
+                                        v = dict[key]
+                                        $("#"+pk+"_loading_confirm").text(v)
+                                        $("#"+pk+"_loading").text(v)
+                                    }
+                                }
+                            },
+                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
+                            complete: function(data){},
+                        });                               
     
     });
     
@@ -107,7 +121,8 @@
 {% block table_content %}	
     function _submit(job_pk, task_pk, worker_pk){
         cost = $("#"+ worker_pk +"_cost").val();
-        link = "/workflow/step/save/" + job_pk + "/" + task_pk + "/" + worker_pk + "/" + cost + "/";
+        date_range = "?start_date="+$("#id_start_date").val()+"&end_date="+$("#id_end_date").val()
+        link = "/workflow/step/save/" + job_pk + "/" + task_pk + "/" + worker_pk + "/" + cost + "/" + date_range;
         $("#choosed_worker_"+worker_pk).attr("href",link);
         return true;
     };
@@ -124,7 +139,7 @@
                 "<td>"+data.fields.task+"</td>"+
                 "<td>"+data.fields.worker.split("@")[0]+"</td>"+
                 "<td><input type=text size=3 id='"+ worker_cost_id +"' value="+ cost +" /></td>"+
-                "<td>0</td>"+
+                "<td id='"+data.fields.worker.split("@")[1]+"_loading'>0</td>"+
                 "<td><a id='choosed_worker_" + worker_pk + "' href='' onClick='_submit(" + job_pk + "," + task_pk + "," + worker_pk + ")'>choose</a></td>"+                
                 "</tr>";    
                 
@@ -145,10 +160,3 @@
         calc_summary_cost();
     {% endblock %}          
 
-{% block footer %}
-            <tr><th colspan=6> Confirm Step </th></tr>
-            {% for step in job.steps %}
-                <tr><td>{{step.task.pk}} </td><td>{{step.task}} </td><td> {{step.worker}} </td><td class="cost"> {{step.cost}} </td><td class="loading">0</td><td><a href="/workflow/step/remove/{{job.pk}}/{{step.pk}}/">Delete</a></td></tr>
-            {% endfor %}
-                <tr><td></td><td></td><td>Total Cost:</td><td id="summary_cost"> 0 </td><td id="summary_loading"></td><td></td></tr>
-{% endblock %}
