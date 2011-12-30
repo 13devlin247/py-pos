@@ -10,7 +10,6 @@
                 <td colspan=6>
                 <span class="date"><label for="id_start_date">Start Date: </label> </span><span class="date"> <input id="id_start_date" type="text" class="vDateField" name="start_date" size="10"/> </span><span class="date"> <label for="id_end_date">End Date: </label> </span><span class="date"> <input id="id_end_date" type="text" class="vDateField" name="end_date" size="10"/></span>
                 Step: <select name="task_pk" id="task_pk"> 
-                    <option value="#">----------------</option>
                 {% for task in tasks %}
                     <option value="{{task.pk}}">{{task.name}}</option>
                 {% endfor %}
