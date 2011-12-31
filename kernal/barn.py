@@ -7,7 +7,7 @@ import logging
 from django.db.models.query_utils import Q
 
 logging.basicConfig(
-    level = logging.WARN,
+    level = logging.DEBUG,
     format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
 )
 # Get an instance of a logger
@@ -841,6 +841,7 @@ class BarnOwl:
             bill.deposit = Deposit.objects.get(pk=int(deposit_id))
         bill.total_price = dict.get('total', '0')
         bill.tendered_amount = dict.get('amountTendered', '0')
+        bill.credit_card_amount = dict.get('amountCreditCard', '0')
         bill.change = dict.get('change', '0')
         bill.customer = customer
         bill.refbill = dict.get('refbill', '')
@@ -871,6 +872,10 @@ class BarnOwl:
         payment_dict['adjust_term'] = 'adjust'
         payment_dict['adjust_type'] = 'Adjust'
         payment_dict['adjust_status'] = 'Complete'        
+
+        payment_dict['trade-in_term'] = 'trade-in'
+        payment_dict['trade-in_type'] = 'Trade-in'
+        payment_dict['trade-in_status'] = 'Complete'                
         
         payment_dict['Consignment_IN_Return_term'] = 'Consignment IN Return'
         payment_dict['Consignment_IN_Return_type'] = 'Consignment_IN_Return'
@@ -1579,4 +1584,5 @@ class Thanatos:
             supplier = supplierList[0]
         logger.debug("Supplier: '%s' found", supplier.name)
         return supplier    
+        
         

@@ -358,9 +358,10 @@
         $("#total").attr("value", (subTotal-discount-deposit));
     }
     function calcChange(){
-        total = $("#total").val();
-        amount_tendered = $("#amount_tendered").val();
-        $("#change").attr("value", (amount_tendered-total));
+        total = parseFloat($("#total").val());
+        amount_tendered = parseFloat($("#amount_tendered").val());
+        amount_credit_card = parseFloat($("#amount_credit_card").val());
+        $("#change").attr("value", ((amount_tendered+amount_credit_card) - total));
     }
 
     function calcItemSum(){
