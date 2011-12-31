@@ -213,7 +213,6 @@ out_stock_record_crud_view  = {
 
 
 
-
 urlpatterns = patterns('',
     # Examples:
     # url(r'^$', 'pos.views.home', name='home'),
@@ -225,7 +224,8 @@ urlpatterns = patterns('',
     # Uncomment the next line to enable the admin:
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', login_required(list_detail.object_list), product_list_view),
-    
+    url(r'^getlogo/',GetLogo),
+	
     url(r'^product/create/$', login_required(create_update.create_object), product_form), 
     url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
     url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)),

@@ -48,6 +48,14 @@ Below function for ajax use
 #def ajaxProductDetailView(request):
    # if request.method == 'GET':
 
+   
+def GetLogo(request):
+    company = Company.objects.get(pk=1)
+    #companySet = __search__(Company, (Q(pk__exact=1)))
+    companySet = Company.objects.all()
+    json = __json_wrapper__(companySet)
+    return HttpResponse(json, mimetype="application/json")
+	
 def InventoryReturnReport(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
