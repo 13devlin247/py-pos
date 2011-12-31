@@ -172,16 +172,36 @@ def ReportDailySales(request):
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
     
-    total_amount = 0
-    total_profit = 0    
     bills = _filter_bills(startDate, endDate)
     total_out_amount, outstocks_summary = _filter_outStockRecords(bills)
     
     inStockBatchs = _filter_inStockBatch(startDate, endDate)
     total_in_amount, instocks_summary = _filter_inStockRecords(inStockBatchs)
-        
-    profitTable = {}
-    return render_to_response('report_daily_sales.html',{ 'outstocks':outstocks_summary,'instocks':instocks_summary, 'profitTable':profitTable, 'dateRange': str(startDate)+" to "+str(endDate),'start_date': str(startDate), 'end_date': str(endDate),'total_amount': (total_out_amount-total_in_amount),'total_out_amount':total_out_amount, 'total_in_amount':total_in_amount, 'total_profit': total_profit})
+
+    deposits = _filter_deposit(startDate, endDate)
+    total_deposit_amount, deposit_summary = _filter_deposit_summary(deposits)
+            
+    return render_to_response('report_daily_sales.html',{ 'deposits':deposit_summary, 
+                                                          'outstocks':outstocks_summary,
+                                                          'instocks':instocks_summary, 
+                                                          'dateRange': str(startDate)+" to "+str(endDate),
+                                                          'start_date': str(startDate), 
+                                                          'end_date': str(endDate),
+                                                          'total_amount': (total_out_amount+total_deposit_amount-total_in_amount),
+                                                          'total_out_amount':total_out_amount, 
+                                                          'total_in_amount':total_in_amount, 
+                                                          'total_deposit_amount':total_deposit_amount
+                                                          })
+
+def _filter_deposit(startDate, endDate):
+    deposits = Deposit.objects.filter(create_at__range=(startDate,endDate)).filter(active=True)
+    return deposits
+
+def _filter_deposit_summary(deposits):
+    total_amount = 0
+    for deposit in deposits:
+        total_amount = total_amount + deposit.price
+    return total_amount, deposits
 
 def _filter_inStockBatch(startDate, endDate):
     inStockBatchs = InStockBatch.objects.filter(create_at__range=(startDate,endDate)).filter(active=True).filter(Q(mode = BarnOwl.pawning)|Q(mode = BarnOwl.tradein))
@@ -211,10 +231,20 @@ def _filter_outStockRecords(bills):
     outstocks_summary = []
     total_amount = 0
     for bill in bills:
+        outstock = OutStockRecord()
+        outstock.bill = bill
+        outstock.tt = bill.total_price
+        outstock.user = bill.sales_by.username
+        outstock.deposit = bill.deposit_price
+        outstock.create_at = bill.create_at
+        outstock.is_bill = True
+        outstocks_summary.append(outstock)
+        
         outstocks = OutStockRecord.objects.all().filter(bill=bill).filter(active=True)
         for outstock in outstocks:
             outstock.tt = outstock.unit_sell_price * outstock.quantity
             outstock.user = outstock.bill.sales_by.username
+            outstock.deposit = 0
             total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
         outstocks_summary.extend(outstocks)
     return total_amount, outstocks_summary
@@ -803,6 +833,11 @@ def __build_outstock_record__(request, bill, payment, dict , type):
         return outStockRecords
 
 def DepositSave(request):
+    counter = Counter.objects.latest('create_at')
+    if not counter or not counter.active:
+        logger.warn("Can not found 'OPEN' Counter, direct to open page")
+        return HttpResponseRedirect('/admin/kernal/counter/add/')     
+    
     cname = request.GET.get("customer")
     thanatos = Thanatos()
     customer = thanatos.Customer(cname)
@@ -810,7 +845,10 @@ def DepositSave(request):
     deposit = form.save(commit=False)
     deposit.customer = customer
     deposit.active = True
+    deposit.counter = counter
+    deposit.user = request.user
     deposit.save()
+    
     logger.info("Deposite '%s' create success", deposit.pk)
     return HttpResponseRedirect('/deposit/bill/'+str(deposit.pk))
 
@@ -1264,7 +1302,7 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
 
 
 def _show_stock_cost_table(startDate, endDate):
-    products = Product.objects.filter(Q(active=True)).order_by("name")
+    products = Product.objects.all().order_by("name")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -1417,20 +1455,28 @@ def ProductList(request):
     else:
         productQuerySet = __search__(Product, Q(active=True)&(Q(barcode__icontains=keyword)|Q(name__icontains=keyword))).order_by("name")
         productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
-        
-        serialNoQuerySet = __search__(SerialNo, Q(serial_no__icontains=keyword) & Q(active__exact=True)).exclude(inStockRecord__inStockBatch__mode__exact='pawning')
-        serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
-        list = productList+serialNoList
+        list = productList
         return HttpResponse(list, mimetype="text/plain")    
-        
-    
-    productQuerySet = __search__(Product, Q(barcode__icontains=keyword)|Q(name__icontains=keyword))
-    productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
 
-    serialNoQuerySet = __search__(SerialNo, Q(serial_no__icontains=keyword) & Q(active__exact=True))
-    serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
-    list = productList+serialNoList
-    return HttpResponse(list, mimetype="text/plain")
+def SalesProductList(request):    
+    keyword = request.GET.get('q', "")
+    logger.debug("search product list by keyword: %s", keyword)
+    mode = request.GET.get('mode','purchase')
+    if mode == 'pawning':        
+        serialNoQuerySet = __search__(SerialNo, Q(serial_no__icontains=keyword) & Q(active__exact=True))
+        serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)        
+        list = serialNoList
+        return HttpResponse(list, mimetype="text/plain")
+    else:
+        serialNoQuerySet = __search__(SerialNo, Q(serial_no__icontains=keyword) & Q(active__exact=True)).exclude(inStockRecord__inStockBatch__mode__exact='pawning')
+        if serialNoQuerySet.count() > 0:
+            serialNoList = __autocomplete_wrapper__(serialNoQuerySet, lambda model: model.serial_no)
+            list = serialNoList
+        else:
+            productQuerySet = __search__(Product, Q(active=True)&(Q(barcode__icontains=keyword)|Q(name__icontains=keyword))).order_by("name")
+            productList = __autocomplete_wrapper__(productQuerySet, lambda model: model.name)        
+            list = productList
+        return HttpResponse(list, mimetype="text/plain")    
 
 def ProductNameSearch(request):
     keyword = request.GET.get('q',"")
@@ -2458,3 +2504,36 @@ def _build_item_sold_dict(product1, startDate, endDate):
 #        logger.info("Bill %s, %s cost:  %s  " , outStockRecord.bill.pk, product.name , cost)
 #        totalproductCost = totalproductCost + cost
 #    return totalproductCost
+
+def SalarySave(request):
+    form = RepairForm(request.GET)
+    repair = form.save(commit=False)
+    repair.mode = "salary"
+    repair.status = "Incomplete"
+    repair.active = True
+    repair.key = repair.key.strip()
+    repair.save()
+    logger.info("Service job '%s' create success", repair.pk)
+    return HttpResponseRedirect('/search/salary/')    
+    
+def SalaryList(request):
+    keyword = request.GET.get('q', "")
+    logger.debug("search salary list by keyword: %s", keyword)
+    
+    querySet = __search__(ExtraCost, Q(mode="salary") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword))))
+    list = __autocomplete_wrapper__(querySet, lambda model: str(model.key))    
+    return HttpResponse(list, mimetype="text/plain")
+    
+def SalaryInfo(request, query):
+    logger.info("get salary info by keyword: %s " , query)
+    repairs = __search__(ExtraCost, Q(mode="salary") & Q(status = "Incomplete") & Q(active = True) & (Q(key__contains=query)|Q(refBill=query)|Q(pk=_str_2_int(query))))
+    json = __json_wrapper__(repairs.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")        
+ 
+def SalaryComplete(request, id):
+    logger.info("complete Salary by ID: %s " , id)
+    extraCost = ExtraCost.objects.get(pk = int(id))
+    extraCost.status = "Complete"
+    extraCost.save()
+    return HttpResponseRedirect('/search/salary/')
+     

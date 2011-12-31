@@ -51,7 +51,10 @@
               </tr>  
             </thead>  
 {% endblock %}			
-			<tbody id="sell_detail">{% block sell_detail %}{% endblock %}</tbody>			
+			<tbody id="sell_detail">{% block sell_detail %}{% endblock %}</tbody>
+            <tfoot>  
+                {% block footer %}{% endblock %}
+            </tfoot>  			
 			<!--
             <tfoot>  
               <tr>  
