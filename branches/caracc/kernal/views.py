@@ -25,6 +25,7 @@ from django.contrib.auth.decorators import permission_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template import RequestContext
 from barn import BarnOwl 
+import serial
 # import the logging library
 
 import logging
@@ -682,6 +683,7 @@ def __build_bill__(request, customer, counter):
     bill.discount = request.GET.get('discount', '0')
     bill.total_price = request.GET.get('total', '0')
     bill.tendered_amount = request.GET.get('amountTendered', '0')
+    bill.credit_card_amount = request.GET.get('amountCreditCard', '0')
     bill.change = request.GET.get('change', '0')
     bill.customer = customer
     bill.profit = 0
@@ -984,6 +986,10 @@ def SalesConfirm(request):
 #    return HttpResponseRedirect('/sales/list/')
 
 def ConsignmentOutSalesConfirm(request):
+    ser = serial.Serial(0)
+    ser.write('go')
+    ser.close()
+    
     salesDict = {}
     if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)

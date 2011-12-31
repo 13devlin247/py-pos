@@ -176,42 +176,48 @@
           <div class="clearfix">&nbsp;
           </div>  		 	
           <div id='sale_details'>  		
-            <div class="float_left" style="width:50%;">Sub Total:
+            <div class="float_left" style="width:50%;padding-top: 1em">Sub Total:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="subTotal" id="subTotal" value="0.00" readonly=false size="10" style="border: none; background: transparent;"/>
             </div>    				
-            <div class="float_left" style='width:50%;'>Discount:
+            <div class="float_left" style='width:50%;padding-top: 1em'>Discount:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="discount" value="0.00" id="discount" size="10" onkeyup="calcTotalPrice();calcChange();" autocomplete="off" />
             </div>
 			<div id="deposit_block">
-				<div class="float_left" style='width:50%;'>Deposit:
+				<div class="float_left" style='width:50%;padding-top: 1em'>Deposit:
 				</div>  		
 				<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="deposit" value="0.00" id="deposit" size="10" style="border: none; background: transparent;"/>
 				</div>  	
 			</div>            
               		 		
-            <div class="float_left" style='width:50%;'>Total:
+            <div class="float_left" style='width:50%;padding-top: 1em'>Total:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type=text name="total" id="total" value="0.00" readonly=true size="10" style="border: none; background: transparent;"/>
             </div>  	
 			{% block AmountTendered %}
-            <div class="float_left" style='width:50%;'>Amount Tendered:
+            <div class="float_left" style='width:50%;padding-top: 1em'>Cash:
             </div>  		
             <div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="amountTendered" value="0.00" id="amount_tendered" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
             </div>  	
+			<div id="creaditCard_block">
+					<div class="float_left" style='width:50%;padding-top: 1em'> Credit Card:
+					</div>  		
+					<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="amountCreditCard" value="0.00" id="amount_credit_card" size="10"  onkeyup="calcChange()"  autocomplete="off"/>
+            </div>  	
+                    
+					<div class="float_left" style='width:50%;padding-top: 1em'>Transaction No:
+					</div>  		
+					<div class="float_left" style="width:50%;font-weight:bold;"><input type="text" name="transactionNo" id="transactionNo" size="10"/>
+					</div>  	
+			</div>			
 			<div id="change_block">
-				<div class="float_left" style='width:50%;'>Change:
+				<div class="float_left" style='width:50%;padding-top: 1em'>Change:
 				</div>  		
 				<div class="float_left" style="width:50%;font-weight:bold;">$<input type="text" name="change" value="0.00" id="change" size="10" style="border: none; background: transparent;"/>
 				</div>  	
 			</div>		
-			<div id="creaditCard_block" style="display: none">
-					<div class="float_left" style='width:50%;'>Transaction No:
-					</div>  		
-					<div class="float_left" style="width:50%;font-weight:bold;"><input type="text" name="transactionNo" id="transactionNo" size="10" />
-					</div>  	
-			</div>			
+            
 			{% endblock %}	
           </div>          	     	
           <div class="clearfix" style="margin-bottom:1px;">&nbsp;
@@ -241,25 +247,6 @@
 				</div>  		             
 			  </div>    		     	           
 			</div>    	
-            <script type="text/javascript">
-                $("#creadit_card").click(function(){
-                    calcTotalPrice();
-                    $("#amount_tendered").attr("value",$("#total").val());
-                    calcChange();
-                    $("#creadit_card").css("display","none");
-                    $("#cash").css("display","block");
-                    $("#change_block").css("display","none");
-                    $("#creaditCard_block").css("display","block");
-
-                });  
-
-                $("#cash").click(function(){
-                    $("#creadit_card").css("display","block");
-                    $("#cash").css("display","none");
-                    $("#change_block").css("display","block");
-                    $("#creaditCard_block").css("display","none");
-                });  
-            </script>            
 			{% endblock %}
         </div>  
         <div class="clearfix" style="margin-bottom:30px;">&nbsp;

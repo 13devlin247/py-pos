@@ -244,6 +244,7 @@ class Bill(models.Model):
     deposit_price = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
     deposit = models.ForeignKey(Deposit, null=True) 
     tendered_amount = models.DecimalField(max_digits=100, decimal_places=2)
+    credit_card_amount = models.DecimalField(max_digits=100, decimal_places=2)
     profit = models.DecimalField(max_digits=100, decimal_places=2)
     change = models.DecimalField(max_digits=100, decimal_places=2)
     customer = models.ForeignKey(Customer)
