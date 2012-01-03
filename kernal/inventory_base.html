@@ -13,6 +13,7 @@
 {% endblock %}
 
 {% block mode_form %}
+		  <div id="error_msg">{{msg}}</div>
           <div id="mode_form">
             <span>Receiving Mode
             </span>  
@@ -22,7 +23,9 @@
 			  <option value="trade-in">Trade-in
               </option>  			  
               <option value="warranty">Warranty
-              </option>  
+              </option>
+              <option value="pawning">Pawning
+              </option>                
             </select>
           </div>   
 {% endblock %}
@@ -30,7 +33,11 @@
 {% block search_bar %}
             <label id="item_label" for="item">    Find/Scan Item
             </label>  
-            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/> 
+            <div>
+                <a href="/product/create/ajax/" name="modal" id="modal">New Product</a>
+            </div>
+            
 {% endblock %}
 
 {% block table_header %}
@@ -125,9 +132,9 @@
 									"<tr id=\""+pk+"_tr\">"+
 									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
 									"<td id=\""+pk+"_productName\">"+data.fields.name+" <br/> [<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+
-									"<td><input type=\"text\" name=\""+pk+"_cost\" id=\""+pk+"_cost\" value=\""+data.fields.cost+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') /></td>"+
+									"<td><input type=\"text\" name=\""+pk+"_cost\" id=\""+pk+"_cost\" value=\""+data.fields.cost+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onChange=checkInput('"+pk+"') /></td>"+
 									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
-									"<td><a href=\"#\" class='totalPrice' onclick=\"buildSerialNo("+pk+");return false;\">optional</a></td>"+
+									"<td><a href=\"#\" class='totalPrice' onclick=\"buildSerialNo('"+pk+"');return false;\">optional</a></td>"+
 									"</tr>"+
 									"<tr id=\""+pk+"_serial_tr\" >"+
 									"<td colspan=5 id=\""+pk+"_serial_td\" style='display: none'><div id=\""+pk+"_serial\" ></div></td>"+

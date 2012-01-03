@@ -26,6 +26,8 @@
                 </th>  								
                 <th>Total
                 </th>  								
+                <th>Profit
+                </th>  	                
                 <th>Receipts
                 </th>  								
               </tr>  		
@@ -38,6 +40,7 @@
                   <td>{{payment.bill.customer.name}}</td>
                   <td>{{payment.bill.sales_by.username}}</td>
                   <td>{{payment.bill.total_price}}</td>
+                  <td>{{payment.bill.profit}}</td>
                   <td><a href="/sales/bill/{{payment.bill.pk}}" target="_blank">Show</a></td>
               </tr>  			
 			{%endfor%}

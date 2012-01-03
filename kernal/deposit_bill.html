@@ -1,0 +1,139 @@
+{% extends "bill.html" %}
+{% block css %}
+	#bill_detail{
+		height: 700px;
+		vertical-align:top;
+		margin:0;
+		padding:0;		
+	}	
+    
+    #PageTitle{
+        text-align:center;
+        font-size: 18pt;
+        font-weight: bold;
+        margin: 0;
+        padding: 0;
+    }
+    
+{% endblock %}
+			{% block PageTitle %}
+			<div id="PageTitle">
+				DEPOSIT
+			</div>			
+			{% endblock %}
+
+			  {% block BillTitle %}
+              <tr>        
+                <td class="Receipt" colspan=3>            <b>{{deposit.customer.name}}        </b> </td>        
+				<td></td>
+              </tr>    
+              <tr>        
+                <td class="Receipt" colspan=3>            <b>{{deposit.customer.address}}        </b> </td>        
+				<td></td>
+              </tr>    			  
+              <tr>        
+                <td colspan=4>&nbsp;</td>    
+              </tr>   			  
+              <tr>        
+                <td class="Receipt label">            ATTN<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{deposit.customer.contact_person}}        </b></td>    
+                <td class="Receipt label">            Deposit No<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{deposit.pk}}        </b></td>    
+              </tr>    
+              <tr>        
+                <td class="Receipt label">            TEL<span>:</span>          </td>        
+                <td class="Receipt">            <b>{{deposit.customer.phone}}        </b></td>        
+                <td class="Receipt label">            Date<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{deposit.create_at}}</b>        </td>    				
+              </tr>    
+              <tr>        
+                <td class="Receipt label">            FAX<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{deposit.customer.fax}}                    </b></td>        
+                <td class="Receipt label" >            <b></b>         </td>        
+                <td class="Receipt" >             <b></b>          </td>    				
+              </tr>    
+			  {% endblock %}			
+            {% block bill_summary%}
+            <tfoot>
+              <tr id="bill_summary">        
+				<td class="summary Receipt" id="total_word" colspan=3></td>        
+                <td  align="right" class="summary" >            Received Amount         </td>        
+                <td align="right" class="summary"  id="total_amount">              {{deposit.price}}       </td>    
+              </tr>            
+              <tr>        
+				<td  align="right" class="summary" >            </td>        			  
+				<td  align="right" class="summary" >            </td>        
+				<td  align="right" class="summary" >            </td>        
+                <td  align="right" class="summary" >                     </td>        
+                <td align="right" class="summary" >                   </td>    
+              </tr>            
+              <tr>        
+				<td  align="right" class="summary" >            </td>        			  
+				<td  align="right" class="summary" >            </td>        
+				<td  align="right" class="summary" >            </td>        
+                <td  align="right" class="summary" >                    </td>        
+                <td align="right" class="summary" >                   </td>    
+              </tr>                          
+              <tr>        
+				<td  align="right" class="summary" >            </td>        			  
+                <td align="right" class="summary" >                    </td>        
+                <td align="right" class="summary" >            </td>    
+                <td  align="right" class="summary " >                     </td>        
+                <td align="right" class="summary "></td>    
+              </tr>                          
+
+              <tr>        
+				<td class="signature"> ____________________         </td>
+                <td class="signature"> ____________________         </td>
+                <td align="right" class="summary" >            </td>    
+                <td align="right" class="summary" >            </td>        
+                <td align="right" class="summary" >                                </td>    			  
+			  </tr>                          
+			  
+              <tr>        
+				<td class="signature">                 Customer Signature         </td>        
+                <td class="signature">                 Authorised By         </td>    
+                <td align="right" class="summary" >            </td>    
+                <td align="right" class="summary" >               </td>        
+                <td align="right" class="summary" >                    </td>    
+			  </tr>                          
+				
+              <tr>        
+                <td colspan="10">            
+                  <hr>        </td>    
+              </tr>        
+            </tfoot>
+            {% endblock %}              
+            
+                {% block bill_detail %}
+					<table>   
+                        <thead>
+						  <tr>        
+							<td colspan="5" class="border-bottom"></td>    
+						  </tr>   
+						  <tr>        
+							<td class="Receipt itemno">            ITEM NO.         </td>        
+							<td class="Receipt">            DESCRIPTION         </td>        
+							<td class="right qty">            QTY         </td>        
+							<td align="right" class="price">            U.PRICE         </td>        
+							<td align="right" class="price">            AMOUNT         </td>    
+						  </tr>    
+						  <tr>        
+							<td colspan="5" class="border-top"></td>    
+						  </tr>   
+                        </thead>                          
+                        <tbody>
+							<tr>
+							<td class="Receipt itemno"> </td>
+							<td class="Receipt">{{deposit.description}} </td>
+							<td class="right qty"></td>
+							<td align="right" class="price"></td>
+							<td align="right" class="price">{{deposit.price}}</td>
+							</tr>
+                        </tbody>
+					</table>				
+                {% endblock %}            
+                
+                    {% block paging%}
+	
+                    {% endblock %}                

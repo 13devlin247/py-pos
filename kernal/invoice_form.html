@@ -1,7 +1,7 @@
 {% extends "sales_base.html" %}
 
 {% block hiddenValue %}
-    <input type="hidden" name="salesMode" value="invoice"/>
+    <input type="hidden" name="mode" value="invoice"/>
 {% endblock %}
 
 {% block title %}
@@ -40,7 +40,7 @@
                         });            
                 });              
             </script>
-            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		
+            <div style="margin-top:5px;text-align:center;" id="supplierDetail">  		</div>
 			{% endblock %}
 
 {% block mode_form %}

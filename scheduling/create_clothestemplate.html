@@ -1,0 +1,24 @@
+{% extends "product.php.html" %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>Clothes Template</h1>
+        </div>  
+        <div id="table_holder">  	
+        	<form enctype="multipart/form-data" action="{{action}}" method="post" id="company_form">
+            {{csrf}}
+	          <table id="sortable_table">
+	          {{form}}  		
+	          	<tr><th></th><td><input type="submit" value="submit"/></td></tr>
+	          </table>  
+          	</form>
+        </div>  
+      </div>  
+    </div>
+{% endblock %}

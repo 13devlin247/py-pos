@@ -12,6 +12,10 @@
               <tr>  
                 <th style="width:auto">Sale ID
                 </th>  
+                <th style="width:auto">Customer Name
+                </th>  
+                <th style="width:auto">Amount
+                </th>  
                 <th style="width:auto">Date
                 </th>  
                 <th style="width:15%;">Type
@@ -26,9 +30,11 @@
 				{% for result in object_list %}
                 <tr>
                 <td><a href="/sales/{{display}}/{{result.pk}}">{{result.pk}}</a></td>
+                <td>{{result.bill.customer.name}}</td>
+                <td>{{result.bill.total_price}}</td>                
                 <td>{{result.create_at}}</td>
                 <td>{{result.type}}</td>
-                <td>{{result.status}}</td>
+                <td><a href='/sales/invoice/completed/{{result.pk}}'>{{result.status}}</a></td>
                 </tr>					
 				{% endfor %}
 			{% endif %}
@@ -78,9 +84,11 @@
         row = ""+
                 "<tr>"+
                 "<td><a href=\"/sales/{{display}}/"+data.pk+"\">"+data.pk+"</a></td>"+
+                "<td>"+data.fields.bill[0]+"</td>"+
+                "<td>"+data.fields.bill[1]+"</td>"+                
                 "<td>"+data.fields.create_at+"</td>"+
                 "<td>"+data.fields.type+"</td>"+
-                "<td>"+data.fields.status+"</td>"+
+                "<td><a href='/sales/invoice/completed/"+data.pk+"'>"+data.fields.status+"</a></td>"+
                 "</tr>"
         ;    
         return row;

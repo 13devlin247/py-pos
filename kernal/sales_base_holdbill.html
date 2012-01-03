@@ -1,0 +1,29 @@
+{% extends "sales_base.html" %}
+
+{% block ajax_completed %}
+    {% for key,value in details.items %}
+        pk = "{{value.pk}}"
+        {% if "imei" in value %}
+            pk = "{{value.imei}}"
+        {% endif %}
+        $("#" + pk + "_price").val("{{value.price}}")
+        $("#" + pk + "_quantity").val("{{value.quantity}}")    
+    {% endfor %}    
+{% endblock %}  
+
+{% block autocomplete_search %}  
+	$("#item").autocomplete ("/sales/product/ajax/", {
+		width: 260,
+        selectFirst: false,
+        extraParams: {
+                    mode: function(){ return $("#mode").attr('value'); }
+                }
+    });      
+
+    {% for key,value in details.items %}
+        query_product_info("{{key}}".split("RANDOM")[0])
+    {% endfor %}
+
+    
+    // query_product_info(name)
+{% endblock %}  

@@ -1,0 +1,95 @@
+{% extends "bill.html" %}
+
+{% block extra_cost%}
+							<tr>
+							<td class="Receipt itemno"> Binding Extra Cost : </td>
+							<td class="Receipt"><input type="text" name="extraCost" id="extraCost"/></td>
+							<td class="right qty"></td>
+							<td align="right" class="price"></td>
+							<td align="right" class="price"></td>
+							</tr>                            
+{% endblock %}                                                
+
+{% block extra_cost_detail%}
+							<tr>
+                                        <tr>
+                                            <td colspan=5> 
+                                                  <tr>        
+                                                    <th colspan="5">Extra Cost</th>    
+                                                  </tr>   
+                                                  <tr>        
+                                                    <td colspan="5" class="border-bottom"></td>    
+                                                  </tr>   
+                                                  <tr>        
+                                                    <td class="Receipt itemno">            IMEI.         </td>        
+                                                    <td class="Receipt">            DESCRIPTION         </td>        
+                                                    <td class="right qty">            </td>        
+                                                    <td align="right" class="price">            Extra Cost         </td>        
+                                                    <td align="right" class="price">            </td>    
+                                                  </tr>    
+                                                  <tr>        
+                                                    <td colspan="5" class="border-top"></td>    
+                                                  </tr>                            
+                                            </td>          
+                                        </tr>                            
+							</tr>                            
+                                    <tfoot id="extra_cost_area">
+                                    </tfoot>                                                                    
+{% endblock %}                                 
+
+{% block javascript%}
+                                                    $.ajax({
+                                                        url: "/extra/list/"+{{bill.pk}},
+                                                        type: "JSON",
+                                                        success: function(data){  
+                                                            for( i = 0; i < data.length; i++){
+                                                            var customerShow = '<tr>';
+                                                            customerShow += "<td class=\"Receipt itemno\"> "+data[i].fields.key+"</td>";
+                                                            customerShow += "<td class=\"Receipt\">"+data[i].fields.mode+": "+data[i].fields.description+"</td>";
+                                                            customerShow += "<td class=\"right qty\"> </td>";
+                                                            customerShow += "<td align=\"right\" class=\"price\">"+data[i].fields.price+"</td>";
+                                                            customerShow += "</tr>";
+                                                            $("#extra_cost_area").append(customerShow);                                                            
+                                                            }
+                                                        },
+                                                        error: function(data){ alert("Product Not found! please check your barcode: " + $("#extraCost").val()) },
+                                                        complete: function(data){},
+                                                    });            
+                                            $("#extraCost").autocomplete("/repair/ajax/", {
+                                                width: 260,
+                                                selectFirst: false
+                                            });
+                                            $("#extraCost").result(function(event, data, formatted)
+                                            {
+                                                extraCostID = $("#extraCost").val();
+                                                
+                                                    // find Repair info and show
+                                                    $.ajax({
+                                                        url: "/repair/info/"+extraCostID,
+                                                        type: "JSON",
+                                                        success: function(data){  
+                                                            var customerShow = '<tr>';
+                                                            customerShow += "<td class=\"Receipt itemno\"> "+data[0].fields.key+"</td>";
+                                                            customerShow += "<td class=\"Receipt\">"+data[0].fields.mode+": "+data[0].fields.description+"</td>";
+                                                            customerShow += "<td class=\"right qty\"> </td>";
+                                                            customerShow += "<td align=\"right\" class=\"price\">"+data[0].fields.price+"</td>";
+                                                            customerShow += "</tr>";
+                                                            $("#extra_cost_area").append(customerShow);
+                                                        },
+                                                        error: function(data){ alert("Product Not found! please check your barcode: " + $("#extraCost").val()) },
+                                                        complete: function(data){},
+                                                    });            
+                                                    
+                                                    // Binding Extra Cost and Bill
+                                                    $.ajax({
+                                                        url: "/repair/binding/"+extraCostID+"/"+{{bill.pk}},
+                                                        type: "JSON",
+                                                        success: function(data){  
+                                                            
+                                                        },
+                                                        error: function(data){ alert("Product Not found! please check your barcode: " + $("#extraCost").val()) },
+                                                        complete: function(data){},
+                                                    });                                                                
+                                            });              
+                            </script>                             
+{% endblock %}                            
