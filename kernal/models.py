@@ -262,7 +262,7 @@ class Bill(models.Model):
         return str(self.pk).zfill(6)
 
     def natural_key(self):
-        return self.customer.name, self.total_price
+        return self.customer.name, self.total_price, self.pk
 
 
 class ExtraCost(models.Model):
