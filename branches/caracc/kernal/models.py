@@ -353,6 +353,7 @@ class ConsignmentOutDetail(models.Model):
     reason = models.CharField(max_length=100, null=True)
 
 class HoldBill(models.Model):
+    customer = models.CharField(max_length=100, null=True)
     keyword = models.TextField(blank=True)
     bill = models.TextField(blank=True) 
     detail = models.TextField(blank=True) 

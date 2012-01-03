@@ -967,16 +967,30 @@ def HoldBillDelete(request, holdbill_pk):
 def HoldBillResume(request, holdbill_pk):
     holdbill = HoldBill.objects.get(pk = int(holdbill_pk))
     details = ast.literal_eval(holdbill.detail)
-    
-    return render_to_response('sales_base_holdbill.html', { 'details': details, 'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/', 'holdbill_pk': holdbill_pk}, context_instance=RequestContext(request))
+    customer = holdbill.customer
+    return render_to_response('sales_base_holdbill.html', { 'customer': customer, 
+                                                            'details': details, 
+                                                            'title':'Sales Register', 
+                                                            'currentUser': None  , 
+                                                            'users':User.objects.all(), 
+                                                            'action':'/sales/confirm/', 
+                                                            'holdbill_pk': holdbill_pk}, 
+                                                            context_instance=RequestContext(request))
     
 def SalesConfirm(request):
     salesDict = {}
     if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
+        if "holdbillpk" in bill_dict:
+            hold_bill = HoldBill.objects.get(pk=int(bill_dict['holdbillpk']))
+            hold_bill.active = False
+            hold_bill.reason = request.user.username
+            hold_bill.save()
+            logger.debug("Build bill, hold bill: %s remove" % bill_dict['holdbillpk'])
         if bill_dict['holdbill'] == "True":
             keyword = ''
+            customer = bill_dict['customer']
             for salesDict_key,salesDict_instance in salesDict.items():
                 template = "Item: %s, Price: %s, QTY: %s \n"
                 if 'imei' in salesDict_instance:
@@ -997,6 +1011,7 @@ def SalesConfirm(request):
                 
                 
             hold_bill = HoldBill()
+            hold_bill.customer = customer
             hold_bill.keyword = keyword
             hold_bill.bill = str(bill_dict)
             hold_bill.detail = str(salesDict)
@@ -1462,6 +1477,14 @@ def ServiceList(request):
     list = __autocomplete_wrapper__(querySet, lambda model: str(model.pk))    
     return HttpResponse(list, mimetype="text/plain")
 
+def HoldBillList(request):
+    keyword = request.GET.get('q', "")
+    logger.debug("search Hold Bill list by keyword: %s", keyword)
+
+    querySet = __search__(HoldBill, Q(active = True) & (Q(customer__contains=keyword)|Q(keyword=keyword)))
+    list = __autocomplete_wrapper__(querySet, lambda model: str(model.customer))    
+    return HttpResponse(list, mimetype="text/plain")
+    
 def RepairList(request):
     keyword = request.GET.get('q', "")
     logger.debug("search Repair list by keyword: %s", keyword)
@@ -1747,6 +1770,12 @@ def VoidBillInfo(request,query):
     logger.debug("voidbill : %s",query)
     void_bill = __search__(Bill, (Q(active = False)&Q(reason__contains = query)))
     json = __json_wrapper__(void_bill.order_by("-create_at"))
+    return HttpResponse(json, mimetype="application/json")
+
+def HoldBillInfo(request,query):
+    logger.debug("holdbill : %s",query)
+    hold_bill = __search__(HoldBill, (Q(active = True)&Q(customer__contains = query)))
+    json = __json_wrapper__(hold_bill.order_by("-create_at"))
     return HttpResponse(json, mimetype="application/json")
 	
 def CloseCounterList(request):

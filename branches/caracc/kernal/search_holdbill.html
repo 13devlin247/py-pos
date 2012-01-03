@@ -12,6 +12,8 @@
               <tr>  
                 <th style="width:auto">Action
                 </th>  
+               <th style="width:auto">Customer
+                </th>				  
                 <th style="width:auto">Detail
                 </th>				  
                 <th style="width:auto">Date
@@ -24,6 +26,7 @@
 				{% for result in object_list %}
                 <tr>
                 <td><a href='/holdbill/remove/{{result.pk}}'><img width="16" height="16" src='/static/images/delete.png' /></a><a href='/holdbill/resume/{{result.pk}}'><img style="margin-left: 1em" width="16" height="16" src='/static/images/edit.gif'/></a></td>
+                <td style="text-align: left, padding-left: 1em">{{result.customer}}</td>
                 <td style="text-align: left, padding-left: 1em">{{result.keyword|linebreaksbr}}</td>
                 <td>{{result.create_at}}</td>
                 </tr>					
@@ -74,12 +77,10 @@
     function _genRowByPK(data){
         row = ""+
                 "<tr>"+
-                "<td>"+data.fields.key+"</td>"+
-                "<td>"+data.fields.refBill+"</td>"+
+                "<td><a href='/holdbill/remove/"+data.pk+"'><img width='16' height='16' src='/static/images/delete.png' /></a><a href='/holdbill/resume/"+data.pk+"'><img style='margin-left: 1em' width='16' height='16' src='/static/images/edit.gif'/></a></td>"+
+                "<td>"+data.fields.customer+"</td>"+
+                "<td>"+data.fields.keyword.replace("\n", "</br>")+"</td>"+
                 "<td>"+data.fields.create_at+"</td>"+
-                "<td>"+data.fields.price+"</td>"+
-                "<td>"+data.fields.description+"</td>"+                
-		"<td><a href=\"/salary/complete/"+data.pk+"\">"+data.fields.status+"</td>"+    
                 "</tr>"
         ;    
         return row;
