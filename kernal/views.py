@@ -26,6 +26,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template import RequestContext
 from barn import BarnOwl 
 import serial
+import ast
 # import the logging library
 
 import logging
@@ -954,35 +955,79 @@ def __convert_sales_URL_2_bill_dict__(request):
     dict [u'_auth_user_id'] = request.session.get('_auth_user_id')
     logger.debug("Bill Dict: %s", dict)        
     return dict
+    
+def HoldBillDelete(request, holdbill_pk):
+    holdbill = HoldBill.objects.get(pk = int(holdbill_pk))
+    holdbill.active = False
+    holdbill.reason = request.user.username
+    holdbill.save()
+    logger.debug("disable hold bill : %s", holdbill_pk)        
+    return HttpResponseRedirect('/search/holdbill/')
 
+def HoldBillResume(request, holdbill_pk):
+    holdbill = HoldBill.objects.get(pk = int(holdbill_pk))
+    details = ast.literal_eval(holdbill.detail)
+    
+    return render_to_response('sales_base_holdbill.html', { 'details': details, 'title':'Sales Register', 'currentUser': None  , 'users':User.objects.all(), 'action':'/sales/confirm/', 'holdbill_pk': holdbill_pk}, context_instance=RequestContext(request))
+    
 def SalesConfirm(request):
     salesDict = {}
     if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
         salesDict = __convert_sales_URL_2_dict__(request)
-        owl = BarnOwl()
-        try:
-            bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
-            hermes = Hermes()
-            payment = bills_and_payments[1]
-            outStockRecords = bills_and_payments[2]
-            hermes.ConsignmentOut(payment, outStockRecords)
-            hermes.BalanceConsignmentIN(outStockRecords)
-        except CounterNotReadyException as e:
-            logger.warn("Can not found 'OPEN' Counter, direct to open page")
-            return HttpResponseRedirect('/admin/kernal/counter/add/')    
-        # process Request parameter
-        bill = bills_and_payments[0]
-        payment = bills_and_payments[1]
-        if payment.type == 'Invoice':
-            logger.debug("Invoice bill, direct to invoice interface")
-            return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
-        elif payment.type == 'Consignment':
-            logger.debug("Consignment bill, direct to Consignment interface")
-            return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+        if bill_dict['holdbill'] == "True":
+            keyword = ''
+            for salesDict_key,salesDict_instance in salesDict.items():
+                template = "Item: %s, Price: %s, QTY: %s \n"
+                if 'imei' in salesDict_instance:
+                    name = str(salesDict_instance['imei'])
+                    price = str(salesDict_instance['price'])
+                    quantity = str(salesDict_instance['quantity'])
+                    keyword += template % (name, price, quantity)
+                else:
+                    product = Product.objects.get(pk=int(salesDict_instance['pk'])) 
+                    name = product.name
+                    price = str(salesDict_instance['price'])
+                    quantity = str(salesDict_instance['quantity'])
+                    keyword += template % (name, price, quantity)
+                    prev_key = salesDict_key
+                    salesDict_key = name
+                    salesDict[salesDict_key] = salesDict_instance
+                    del salesDict[prev_key]
+                
+                
+            hold_bill = HoldBill()
+            hold_bill.keyword = keyword
+            hold_bill.bill = str(bill_dict)
+            hold_bill.detail = str(salesDict)
+            hold_bill.active = True
+            hold_bill.save()
+            logger.debug("Hold bill: %s" % hold_bill.pk)
+            return HttpResponseRedirect('/sales/list/')    
         else:
-            logger.debug("Cash sales bill, direct to Recept interface")
-            return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
+            owl = BarnOwl()
+            try:
+                bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
+                hermes = Hermes()
+                payment = bills_and_payments[1]
+                outStockRecords = bills_and_payments[2]
+                hermes.ConsignmentOut(payment, outStockRecords)
+                hermes.BalanceConsignmentIN(outStockRecords)
+            except CounterNotReadyException as e:
+                logger.warn("Can not found 'OPEN' Counter, direct to open page")
+                return HttpResponseRedirect('/admin/kernal/counter/add/')    
+            # process Request parameter
+            bill = bills_and_payments[0]
+            payment = bills_and_payments[1]
+            if payment.type == 'Invoice':
+                logger.debug("Invoice bill, direct to invoice interface")
+                return HttpResponseRedirect('/sales/invoice/'+str(bill.pk))        
+            elif payment.type == 'Consignment':
+                logger.debug("Consignment bill, direct to Consignment interface")
+                return HttpResponseRedirect('/sales/consignment/'+str(bill.pk))                    
+            else:
+                logger.debug("Cash sales bill, direct to Recept interface")
+                return HttpResponseRedirect('/sales/bill/'+str(bill.pk))        
 #    return HttpResponseRedirect('/sales/list/')
 
 def ConsignmentOutSalesConfirm(request):
@@ -1822,9 +1867,7 @@ def SupplierSave(request, supplierID=None):
         else:
             return HttpResponseRedirect('/supplier/create/')
 
-@permission_required('kernal.add_product', login_url='/accounts/login/')
-@permission_required('kernal.change_product', login_url='/accounts/login/')
-def ProductSave(request, productID=None):
+def _product_save_instance(request, productID):
     product = None
     if productID is not None:
         product = Product.objects.get(pk=productID)
@@ -1844,10 +1887,10 @@ def ProductSave(request, productID=None):
 #                type = Type.objects.get(pk=int(type_pk))
             except Category.DoesNotExist:
                 logger.error("ProductSave fail: Category.DoesNotExist")
-                return HttpResponseRedirect('/product/search/')    
+                return False, "ProductSave fail: Category.DoesNotExist"
             except Brand.DoesNotExist:
                 logger.error("ProductSave fail: Brand.DoesNotExist")
-                return HttpResponseRedirect('/product/search/')    
+                return False, "ProductSave fail: Brand.DoesNotExist"
 #            except Type.DoesNotExist:
 #                logger.error("ProductSave fail: Type.DoesNotExist")
                 #return HttpResponseRedirect('/product/search/')
@@ -1858,11 +1901,29 @@ def ProductSave(request, productID=None):
             product.active=True
             product.save()
             logger.info("ProductSave success")
-            return HttpResponseRedirect('/product/search/')
+            return True, "ProductSave success"
         else:
             logger.error("ProductSave fail: Form Validate faile")
-            return HttpResponseRedirect('/product/search/')
+            return False, "ProductSave fail: Form Validate faile"
+            
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')
+def ProductSave(request, productID=None):
+    result, msg = _product_save_instance(request, productID)
+    if result:
+        return HttpResponseRedirect('/product/search/')
+    else: 
+        return HttpResponseRedirect('/product/search/')
 
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+@permission_required('kernal.change_product', login_url='/accounts/login/')
+def ProductSaveAjax(request):
+    result, msg = _product_save_instance(request, None)
+    if result:
+        return HttpResponse(msg, mimetype="text/plain")
+    else: 
+        return HttpResponse(msg, mimetype="text/plain")
+            
 def ProductTraceView(request, productID):
     product = Product.objects.get(pk = productID)
     serials = SerialNo.objects.filter(Q(inStockRecord__product = product)).order_by('active')

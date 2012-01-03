@@ -178,18 +178,9 @@
                 }
     });      
 {% endblock %}  
-	function _checkInputData(){
-		{% block ajaxSubmitCheck %}
-			return true;
-		{% endblock %}
-	}
-    $("#item").keydown(function(event){
-        if(event.keyCode != '13'){ return; }
-            /**
-                query product infor by ajax
-            **/
+    function query_product_info(name){
             $.ajax({
-                url: "/product/info/"+$("#item").val(),
+                url: "/product/info/"+name,
                 type: "JSON",
                 success: function(data){  
                     if(data.length == 0){   // if product not found in server, entry foc process
@@ -214,8 +205,22 @@
                     calcSubTotalPrice();
                     calcTotalPrice();
                     $("#item").attr('value','')
+                    {% block ajax_completed %}
+                    {% endblock %}  
                 },
-            });            
+            });      
+    };
+	function _checkInputData(){
+		{% block ajaxSubmitCheck %}
+			return true;
+		{% endblock %}
+	};
+    $("#item").keydown(function(event){
+        if(event.keyCode != '13'){ return; }
+            /**
+                query product infor by ajax
+            **/
+        query_product_info($("#item").val())
     });                	
  
 {% block product_append_algo %}        
@@ -361,7 +366,7 @@
         total = parseFloat($("#total").val());
         amount_tendered = parseFloat($("#amount_tendered").val());
         amount_credit_card = parseFloat($("#amount_credit_card").val());
-        $("#change").attr("value", ((amount_tendered+amount_credit_card) - total));
+        $("#change").attr("value", ((amount_tendered+amount_credit_card) - total).toFixed(2));
     }
 
     function calcItemSum(){
@@ -484,6 +489,10 @@ function send_command(){
     }
 
 $("#confirm").click(send_command);    
+$("#hold_bill").click(function() {
+    $("#holdbill").val('True')
+    $("#sales").submit();
+});    
     
 $("#amount_tendered").keydown(function(event){
         if(event.keyCode != '13'){ return; }

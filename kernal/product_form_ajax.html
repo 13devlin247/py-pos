@@ -1,0 +1,11 @@
+{% extends "product_form.html" %}
+    {% block product_create_ajax %}
+            $('form').submit(function() {
+              $.get("{{submit_form}}", $("form").serialize(), function(data){
+                alert(data);
+              });
+              $("#dialog").css('display', 'none');
+              $("#mask").css('display', 'none');
+              return false;
+            });        
+    {% endblock %}        

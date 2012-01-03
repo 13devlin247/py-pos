@@ -33,7 +33,11 @@
 {% block search_bar %}
             <label id="item_label" for="item">    Find/Scan Item
             </label>  
-            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/> 
+            <div>
+                <a href="/product/create/ajax/" name="modal" id="modal">New Product</a>
+            </div>
+            
 {% endblock %}
 
 {% block table_header %}

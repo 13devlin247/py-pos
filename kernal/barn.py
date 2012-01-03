@@ -7,12 +7,12 @@ import logging
 from django.db.models.query_utils import Q
 
 logging.basicConfig(
-    level = logging.DEBUG,
+    level = logging.INFO,
     format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
 )
 # Get an instance of a logger
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 #hdlr = logging.FileHandler('d:/django_project/pos/barn.log')
 #format = '%(asctime)s %(levelname)s %(module)s.%(funcName)s():%(lineno)s %(message)s',
