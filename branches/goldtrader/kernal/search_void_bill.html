@@ -1,0 +1,84 @@
+{% extends "search.html" %}
+
+{% block searchField %}		  		
+			<div><span class="date"><label for="id_start_date">Start Date: </label> </span><span class="date"> <input id="id_start_date" type="text" class="vDateField" name="start_date" size="10"/> </span><span class="date"> <label for="id_end_date">End Date: </label> </span><span class="date"> <input id="id_end_date" type="text" class="vDateField" name="end_date" size="10"/></span></div> 		
+            <label id="item_label" for="item">    Customer Name: 
+            </label>  
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+{% endblock %}		  			
+
+{% block table_head %}		  
+            <thead>  
+              <tr>  
+                <th style="width:auto">Bill ID
+                </th>  
+                <th style="width:auto">Date
+                </th>  
+                <th style="width:15%;">Reason
+                </th>  
+              </tr>  
+            </thead>  
+{% endblock %}	
+{% block sell_detail %}
+			{% if object_list %}
+				{% for result in object_list %}
+                <tr>
+                <td><a href="/sales/{{display}}/{{result.pk}}">{{result.pk}}</a></td>
+                <td>{{result.create_at}}</td>
+                <td>{{result.reason}}</td>
+                </tr>					
+				{% endfor %}
+			{% endif %}
+{% endblock %}
+{% block table_script %}		
+    $("#id_start_date").datepicker({dateFormat: 'yy-mm-dd'});
+	$("#id_start_date").change( function() {
+		$('#sell_detail').empty();
+		var start = $.datepicker.parseDate('yy-mm-dd', $("#id_start_date").val());
+		var end = '';
+		if($("#id_end_date").val() == ''){
+			end = $.datepicker.parseDate('yy-mm-dd', $("#id_start_date").val());
+		}else{
+			end = $.datepicker.parseDate('yy-mm-dd', $("#id_end_date").val());
+		}
+		
+		filterByDate(start, end);
+	  }
+	);
+	$("#id_end_date").datepicker({dateFormat: 'yy-mm-dd'});
+	$("#id_end_date").change( function() {
+	  $('#sell_detail').empty();
+		var start = '';
+		var end = $.datepicker.parseDate('yy-mm-dd', $("#id_end_date").val());
+		if($("#id_start_date").val() == ''){
+			start = $.datepicker.parseDate('yy-mm-dd', $("#id_end_date").val());
+		}else{
+			start = $.datepicker.parseDate('yy-mm-dd', $("#id_start_date").val());
+		}
+	  filterByDate(start, end);
+	});	
+
+	function filterByDate(start, end){
+	  for(var i = 0 ; i < dataTable.length; i++){
+		var date = $.datepicker.parseDate('yy-mm-dd', dataTable[i].fields.create_at);
+		if(date >= start && date <= end){
+			row = _genRowByPK(dataTable[i]);
+			$('#sell_detail').append(row);				
+		}
+	  }	
+	}
+{% endblock %}	
+
+
+{% block table_content %}	
+    function _genRowByPK(data){
+        row = ""+
+                "<tr>"+
+                "<td><a href=\"/sales/{{display}}/"+data.pk+"\">"+data.pk+"</a></td>"+
+                "<td>"+data.fields.create_at+"</td>"+
+                "<td>"+data.fields.reason+"</td>"+
+                "</tr>"
+        ;    
+        return row;
+    }
+{% endblock %}

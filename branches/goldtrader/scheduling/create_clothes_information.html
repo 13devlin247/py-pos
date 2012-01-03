@@ -1,0 +1,85 @@
+{% extends "search.html" %}
+
+{% block searchField %}		  
+        <div id="boxes">
+            <!-- #customize your modal window here -->
+
+            <div id="dialog" class="window">
+				<!-- put overlap content here -->
+            </div>
+        </div>		
+			<div><span class="date"><label for="id_start_date">Start Date: </label> </span><span class="date"> <input id="id_start_date" type="text" class="vDateField" name="start_date" size="10"/> </span><span class="date"> <label for="id_end_date">End Date: </label> </span><span class="date"> <input id="id_end_date" type="text" class="vDateField" name="end_date" size="10"/></span></div> 		
+            <label id="item_label" for="item">    Name: 
+            </label>  
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
+{% endblock %}	
+{% block table_head %}		  
+            <thead>  
+                <tr><th colspan = 3> Confirm Template </th></tr>
+                {% for clothesChoosed in clothesChooseds %}
+                    <tr><td style="vertical-align: top; padding: 2em 0 0 0"><a href="/workflow/clothes/information/remove/choosed_clothes/{{job.pk}}/{{clothesChoosed.pk}}"><img src="/static/images/delete.png"></a> {{clothesChoosed.clothesTemplate.name}}</td><td><textarea style="border:none;background-color: transparent;">{{clothesChoosed.fields_values}}</textarea></td><td><a href='/{{clothesChoosed.clothesTemplate.draft}}' name="modal"><img class="show_template" src="/{{clothesChoosed.clothesTemplate.draft}}" /></a></td></tr>
+                {% endfor %}
+                <tr><th>Name</th><th>Fields</th><th>View</th></tr>
+            </thead>  
+{% endblock %}	
+{% block sell_detail %}	 
+<style type="text/css">
+.innertable {
+	display: none;
+}
+
+.show_template{
+    height: 300px;
+    width: 250px;
+}
+
+.thunmail img{
+    display: none;
+    float: right;    
+    height: 300px;
+    width: 250px;
+}
+.block_textarea {
+    display: none;
+}
+
+</style> 
+        	<form action="{{action}}" method="get" id="company_form">
+              <input type=hidden name="jobid" value="{{job.pk}}"/>
+                {% for clothes_template in clothes_templates %}
+	            <tr><td width="30%" style="vertical-align:top;text-align: left;padding: 1em 0 1em 1em "><input type=checkbox name="clothes_template_pk_{{clothes_template.pk}}" value='{{clothes_template.pk}}' class='checkbox'/> {{clothes_template.name}}</td><td style="text-align: left; padding-left: 1em" id="clothes_template_pk_{{clothes_template.pk}}"><div class="inline_textarea">{{clothes_template.fields}}</div><textarea class="block_textarea" name="{{clothes_template.pk}}_fields">{{clothes_template.fields}}</textarea></td><td><a class="thunmail" href='/{{clothes_template.draft}}' target="_blank" name="image_{{clothes_template.pk}}" id="image_{{clothes_template.pk}}"><img src='#'/></a></td></tr> 		
+                {% endfor %}
+	          	<tr><td></td><td></td><td><input type="submit" value="submit"/></td></tr>
+          	</form>
+{% endblock %}
+
+{% block jquery_ready %}      
+    $('.checkbox').change(function(event) {
+      checkbox_id = "#"+event.currentTarget.name;
+      if(event.currentTarget.checked){
+        $(checkbox_id+" .block_textarea").css("display", "inline");
+        $(checkbox_id+" .inline_textarea").css("display", "none");
+        pk = event.currentTarget.name.replace("clothes_template_pk_", "");
+        image_id = "#image_"+pk;
+        src_link = $(image_id).attr("href");
+        $(image_id+" img").css("display", "inline");
+        $(image_id+" img").attr("src", src_link);        
+      }else{
+        $(checkbox_id+" .block_textarea").css("display", "none");
+        $(checkbox_id+" .inline_textarea").css("display", "inline");
+        pk = event.currentTarget.name.replace("clothes_template_pk_", "");
+        image_id = "#image_"+pk;
+        $(image_id+" img").css("display", "none");
+      }
+      
+    });    
+    
+    $('.thunmail').mouseover(function(event) {
+
+    });
+    
+    $('.thunmail').mouseout(function(event) {
+
+    });    
+    
+{% endblock %}

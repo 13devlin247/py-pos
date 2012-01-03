@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block left_link %}
+{% for name,link in main_link.items %}
+		<div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+{% endfor%}
+{% endblock %}
+
+{% block content %}
+Session: {{sessionid}} <br/>
+Uid: {{user.pk}}<br/>
+name: {{user.username}}<br/>
+{% for key, value in session.items%}
+    {{key}} : {{value}} <br/>
+{% endfor %}
+<form action='{{submit_form}}' method='GET'>
+<table>
+{{ form }}    
+</table>
+<div class='span-18'><input type='submit' value='Add'></div>
+</form>
+<div class='span-18' id="msg_board"></div>
+<script>
+    $('#id_barcode').blur(function(){
+        $.ajax({
+            url: "/product/search/"+$('#id_barcode').val(),
+            success: function(html){
+                $('#msg_board').html(html);
+            },
+        });
+    });
+</script>
+
+{% endblock %}

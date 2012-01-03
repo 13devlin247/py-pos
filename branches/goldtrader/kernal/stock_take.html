@@ -1,0 +1,62 @@
+{% extends "product.php.html" %}
+
+{% block content %}   
+<style type="text/css">
+.innertable {
+	display: none;
+}
+</style> 
+	<div id="content_area_wrapper">  
+      <div id="content_area">  
+        <div id="page_title" style="margin-bottom:8px;"><h1>STOCK BALANCE</h1>
+        </div>  
+        <div id="page_subtitle" style="margin-bottom:8px;">{{dateRange}}
+        </div>  
+        <div id="table_holder">  	
+          <table class="tablesorter report" id="sortable_table">  		
+            <thead>  			
+              <tr>  				
+                <th>ITEM NO.
+                </th>  								
+                <th>ITEM DESP
+                </th>  								
+                <th>B/F
+                </th>  								
+                <th>IN
+                </th>  								
+                <th>OUT
+                </th>  								
+                <th>ON HAND UNIT
+                </th>  								                
+                <th>ON HAND Values
+                </th>  								                                
+              </tr>  		
+            </thead>  		
+            <tbody>
+			{% for value in stockList %}
+              <tr>
+                  <td>{{value.0}}</td>
+                  <td>{{value.1}}</td>
+                  <td>{{value.2}}</td>
+                  <td>{{value.3}}</td>
+                  <td>{{value.4}}</td>
+                  <td>{{value.5}}</td>
+                  <td>{{value.6}}</td>
+              </tr>  			
+			{%endfor%}
+              <tr>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td></td>
+                  <td>{{total_qty}}</td>
+                  <td>{{total_on_hand_value}}</td>
+              </tr>  			            
+            </tbody>  	
+          </table>  
+        </div>  
+      </div>  
+    </div>
+
+{% endblock %}

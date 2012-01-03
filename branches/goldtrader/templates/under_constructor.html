@@ -1,0 +1,14 @@
+{% extends "product.php.html" %}
+
+{% block left_link %}
+    {% for name,link in main_link.items %}
+            <div class='span-6 last'><a href='{{link}}'>{{name|upper}}</a></div>
+    {% endfor%}
+{% endblock %}
+
+{% block content %}
+	<div style="color: red; text-align: center"> {{msg}} </div>
+{% endblock %}
+
+
+

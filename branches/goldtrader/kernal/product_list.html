@@ -1,0 +1,225 @@
+{% extends "product.php.html" %}
+
+{% block content %}
+
+        <div class="span-24">
+            <div class="span-20">
+                Product List
+            </div>
+
+            <div class="span-4 last">
+                <a href="/product/create/" name="modal" id="modal">New Product</a>
+            </div>        
+            
+            
+            <div class="prepend-11 span-3 last">
+                        <input type="text" id="item" >
+                    </div>
+        <form id="deleteForm" action="/product/delete/" method="get">
+            <div class="span-24" style="border-top:1px solid gray">
+                    <div class="prepend-1 span-3">
+                        <div id="button_style">
+                            Delete
+                        </div>
+                    </div>
+
+            
+            </div>
+            
+            <div class="span-24" class="paging">
+                <div class="span-24">
+					{% for p in page_range %}
+						{% if p == page %}
+							<b>[{{p}}]</b>
+						{% else %}
+							<a href="/product/search/?page={{p}}">[{{p}}]</a>
+						{% endif %}
+					{% endfor %}
+                </div>
+            </div>			
+            <div class="span-24" id="updown">
+                <div class="span-5">
+                    <input type="checkbox" id="clickAll">Product Name
+                </div>
+
+                <div class="span-3">
+                    Category
+                </div>
+
+                <div class="span-3">
+                    Brand
+                </div>
+
+                <div class="span-3">
+                    Type
+                </div>
+
+                <div class="span-3">
+                    Price
+                </div>
+
+                <div class="span-3">
+                    Bar Code
+                </div>
+
+                <div class="span-2">
+                    Action
+                </div>
+            </div>
+
+
+<script type="text/javascript">
+	var dataTable = new Array();
+	
+	
+  $("#item").autocomplete ("{{autocomplete_url}}", {
+		width: 260,
+		selectFirst: false
+	});
+
+    $("#item").keydown(function(event){
+        if(event.keyCode != '13'){
+            return;
+        }
+		
+            /**
+                query product infor by ajax
+            **/
+            
+            $.ajax({
+                url: "{{json_url}}"+$("#item").val(),
+                type: "JSON",
+                success: function(data){  
+					$('#sell_detail').empty();
+					dataTable = data
+                    if(data.length == 0){   // if product not found in server, entry foc process
+                        return;
+                    } // foc process leave
+                    for (var i = 0; i < data.length; i++){
+						row = _genRowByPK(data[i]);
+						
+						$('#sell_detail').append(row);						
+                    }
+                            
+            $('a[name=modal]').click(function(e) {
+                //Cancel the link behavior
+                e.preventDefault();
+                //Get the A tag
+                var id = "#dialog";
+                var link = $(this).attr('href');
+                
+                $.ajax({
+                    url: link,
+                    success: function(html){
+                        $("#dialog").html(html);
+                    },
+                });
+
+                
+                //Get the screen height and width
+                //var maskHeight = $(document).height();
+                var maskHeight =1000;
+                        var maskWidth = $(window).width();
+             
+                //Set height and width to mask to fill up the whole screen
+                $('#mask').css({'width':maskWidth,'height':maskHeight});
+                 
+                //transition effect     
+                $('#mask').fadeIn(100);    
+                $('#mask').fadeTo("slow",0.8);  
+             
+                //Get the window height and width
+                var winH = $(window).height();
+                var winW = $(window).width();
+                       
+                //Set the popup window to center
+               // $(id).css('top',  winH/2-$(id).height()/2);
+               // $(id).css('left', winW/2-$(id).width()/2);
+                                $(id).css('top');
+                                $(id).css('left');
+                //transition effect
+                $(id).fadeIn(200); 
+             
+            });                    
+                        },
+                        error: function(data){ alert("Product Not found! please check your query: " + $("#item").val()) },
+                        complete: function(data){ 
+                        },
+                    });            
+            });
+
+    function _genRowByPK(data){
+		var pk = "x";
+        var IMEI_str = "";
+
+        row = ""+
+                "<div class='span-24' id=\""+pk+"\">"+
+                "<div class='span-5'><a href='#' id='removeItem' onclick=\"removeItem('"+pk+"')\"><img src='/static/images/delete.png' /></a> "+
+                "<a href='/product/trace/"+data.pk+"'>"+data.fields.name +""+"</a></div>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch sales only-->
+                "<div class='span-3'>"+data.fields.category+"</div>"+ 
+                "<div class='span-3'>"+data.fields.brand+"</div>"+   
+                "<div class='span-3'>"+data.fields.type+"</div>"+  
+                "<div class='span-3'>"+data.fields.retail_price+"</div>"+  
+                "<div class='span-3'>&nbsp;"+data.fields.barcode+"</div>"+                  
+                "<div class='span-2'><a name=\"modal\" href='/product/update/"+data.pk+"'>Edit</a></div>"+  
+                "</div>"
+        ;    
+        return row;
+    }
+    </script>
+    </table>  		
+    
+    	
+    	
+    	
+    	<div id="sell_detail">
+    {% for product in object_list %}
+  
+    
+            <div id="" class="span-24" style="border-bottom:1px solid gray;">
+                <div class="span-5">
+                    <input name="delete_product[]" value="{{product.name}}" type="checkbox"/>{{product.name}}
+                </div>
+
+                <div class="span-3">
+                    {{product.category}}
+                </div>
+
+                <div class="span-3">
+                    {{product.brand}}
+                </div>
+
+                <div class="span-3">
+                    {{product.type}}
+                </div>
+
+                <div class="span-3">$ {{product.retail_price}}</div>
+
+                <div class="span-3">{{product.barcode}}&nbsp;</div>
+
+                <div class="span-2">
+                    <a name="modal" href="/product/update/{{product.pk}}">Edit</a>
+                </div>
+            </div>
+           
+    {% endfor %} 
+    </div>
+	            </form>
+            </div>				
+
+	 
+            <div class="span-24" class="paging">
+                <div class="span-24">
+					{% for p in page_range %}
+						{% if p == page %}
+							<b>[{{p}}]</b>
+						{% else %}
+							<a href="/product/search/?page={{p}}">[{{p}}]</a>
+						{% endif %}
+					{% endfor %}
+                </div>
+            </div>				
+{% endblock %}
+
+
+
