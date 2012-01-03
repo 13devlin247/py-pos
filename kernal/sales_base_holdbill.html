@@ -8,6 +8,7 @@
         {% endif %}
         $("#" + pk + "_price").val("{{value.price}}")
         $("#" + pk + "_quantity").val("{{value.quantity}}")    
+        recalcAll(pk)
     {% endfor %}    
 {% endblock %}  
 
@@ -23,7 +24,6 @@
     {% for key,value in details.items %}
         query_product_info("{{key}}".split("RANDOM")[0])
     {% endfor %}
-
-    
-    // query_product_info(name)
+    $("#customer").val("{{customer}}")
+    $("#sales").append("<input type=hidden name=holdbillpk value={{holdbill_pk}} />")
 {% endblock %}  

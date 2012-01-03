@@ -142,7 +142,7 @@ hold_bill_view = {
     'queryset': HoldBill.objects.filter(active = True).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_holdbill.html', 
-    'extra_context': {'autocomplete_url': '/salary/ajax/','json_url': '/salary/info/', 'display':'bill', 'default_result': __json_wrapper__(ExtraCost.objects.filter(Q(active = True) & Q(mode = 'salary')).order_by('-create_at'))}
+    'extra_context': {'autocomplete_url': '/holdbill/ajax/','json_url': '/holdbill/info/', 'display':'bill', 'default_result': '{}'}
 }
 
 
@@ -259,6 +259,7 @@ urlpatterns = patterns('',
     url(r'^payment/info/(?P<pk>[\x20-\x7E]+)', login_required(PaymentInfoByPK)),    # payment info json    
     url(r'^imei/info/(?P<imei>[\x20-\x7E]+)', login_required(ImeiInfo)),    # imei info json
     url(r'^gadai/info/(?P<query>[\x20-\x7E]+)', login_required(GadaiInfo)),
+    url(r'^holdbill/info/(?P<query>[\x20-\x7E]+)', login_required(HoldBillInfo)),
     url(r'^void_bill/info/(?P<query>[\x20-\x7E]+)', login_required(VoidBillInfo)),
     url(r'^adjust_stock/info/(?P<query>[\x20-\x7E]+)', login_required(AdjustStockInfo)),
     url(r'^close_counter/info/(?P<query>[\x20-\x7E]+)', login_required(CloseCounterInfo)),	
@@ -275,6 +276,7 @@ urlpatterns = patterns('',
     url(r'^service/ajax/$', login_required(ServiceList)),
     url(r'^repair/ajax/$', login_required(RepairList)),
     url(r'^salary/ajax/$', login_required(SalaryList)),
+    url(r'^holdbill/ajax/$', login_required(HoldBillList)),
 	url(r'^gadai/ajax/$', login_required(GadaiList)),
     url(r'^void_bill/ajax/$',login_required(VoidBillList)),
     url(r'^adjust_stock/ajax/$',login_required(AdjustStockList)),
