@@ -65,6 +65,12 @@ product_form = {
     'template_name': 'product_form.html', 
 }
 
+product_form_ajax = {
+    'model': Product, 
+    'extra_context': {'form': ProductForm, 'submit_form':'/product/save/ajax/', 'form_title': 'New Product'},    
+    'template_name': 'product_form_ajax.html', 
+}
+
 supplier_form = {
     'model': Supplier, 
     'extra_context': {'form': SupplierForm, 'submit_form':'/supplier/save/', 'form_title': 'New Supplier'},    
@@ -129,6 +135,13 @@ salary_list_view = {
     'queryset': ExtraCost.objects.filter(Q(active = True) & Q(mode = 'salary')).order_by('-create_at'),                      
     'allow_empty': True,                      
     'template_name': 'search_salary.html', 
+    'extra_context': {'autocomplete_url': '/salary/ajax/','json_url': '/salary/info/', 'display':'bill', 'default_result': __json_wrapper__(ExtraCost.objects.filter(Q(active = True) & Q(mode = 'salary')).order_by('-create_at'))}
+}
+
+hold_bill_view = {
+    'queryset': HoldBill.objects.filter(active = True).order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_holdbill.html', 
     'extra_context': {'autocomplete_url': '/salary/ajax/','json_url': '/salary/info/', 'display':'bill', 'default_result': __json_wrapper__(ExtraCost.objects.filter(Q(active = True) & Q(mode = 'salary')).order_by('-create_at'))}
 }
 
@@ -213,10 +226,12 @@ urlpatterns = patterns('',
     url(r'^$', login_required(list_detail.object_list), product_list_view),
     
     url(r'^product/create/$', login_required(create_update.create_object), product_form), 
+    url(r'^product/create/ajax/$', login_required(create_update.create_object), product_form_ajax), 
     url(r'^product/search/$', login_required(list_detail.object_list), product_list_view),
     url(r'^product/update/(?P<productID>[\x20-\x7E]+)', login_required(ProductUpdateView)), 
     url(r'^product/delete/$', login_required(ProductDelete)),
     url(r'^product/save/$', login_required(ProductSave)), # controller
+    url(r'^product/save/ajax/$', login_required(ProductSaveAjax)), # controller    
     url(r'^product/save/(?P<productID>[\x20-\x7E]*)$', login_required(ProductSave)), # controller    
     url(r'^product/info/(?P<query>[\x20-\x7E]+)', login_required(ProductInfo)), # controller
     url(r'^product/inventory/delete/', login_required(InStockBatchDelete)), # controller
@@ -386,11 +401,16 @@ urlpatterns = patterns('',
     url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
     url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
     url(r'^search/salary/$', login_required(list_detail.object_list), salary_list_view),
+    url(r'^search/holdbill/$', login_required(list_detail.object_list), hold_bill_view),
     url(r'^search/gadai/$', login_required(list_detail.object_list), gadai_status_view),
     url(r'^search/void_bill/$',login_required(list_detail.object_list),void_bill_report_view),
     url(r'^search/adjust_stock/$',login_required(list_detail.object_list),adjust_stock_report_view),
     url(r'^search/close_counter/$',login_required(list_detail.object_list),close_counter_view),
 
+    
+    url(r'^holdbill/remove/(?P<holdbill_pk>[\x20-\x7E]+)$', login_required(HoldBillDelete)),
+    url(r'^holdbill/resume/(?P<holdbill_pk>[\x20-\x7E]+)$', login_required(HoldBillResume)),
+    
     url(r'^counter/close/$', login_required(list_detail.object_list), counter_list_view),
     url(r'^counter/save/$', login_required(CounterUpdate)),
     url(r'^sales/(?P<displayPage>[\x20-\x7E]+)*/(?P<billID>[\x20-\x7E]+)', login_required(QueryBill)),
