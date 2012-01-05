@@ -978,6 +978,15 @@ def HoldBillResume(request, holdbill_pk):
                                                             context_instance=RequestContext(request))
     
 def SalesConfirm(request):
+    for i in xrange(20):
+		ser = None
+		try:
+			ser = serial.Serial(i)
+			ser.write('go')
+			ser.close()
+		except Exception:
+			continue
+	
     salesDict = {}
     if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
@@ -1046,10 +1055,7 @@ def SalesConfirm(request):
 #    return HttpResponseRedirect('/sales/list/')
 
 def ConsignmentOutSalesConfirm(request):
-    ser = serial.Serial(0)
-    ser.write('go')
-    ser.close()
-    
+   
     salesDict = {}
     if request.method == 'POST':
         bill_dict = __convert_sales_URL_2_bill_dict__(request)
