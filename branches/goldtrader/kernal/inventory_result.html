@@ -1,4 +1,4 @@
-{% extends "bill.html" %}
+{% extends "instock_bill.html" %}
 {% block CompanyProfile %}
 {% endblock %}
 
@@ -85,7 +85,7 @@
 						  <tr>        
 							<td class="Receipt itemno">            ITEM NO.         </td>        
 							<td class="Receipt">            DESCRIPTION         </td>        
-							<td class="right qty">            QTY         </td>        
+							<td class="right qty">            WEIGHT (gram)         </td>        
 							<td align="right" class="price">            U.PRICE         </td>        
 							<td align="right" class="price">            AMOUNT         </td>    
 						  </tr>    
@@ -115,9 +115,9 @@
 							<tr>
                             {% if inStockRecord.serialnomapping_set.select_related %}
 							<td class="Receipt itemno" style="padding: 0 0 0 4em" colspan = "5">
-                                <u> IMEI: </u> </br>
+                                <u> SN: </u> </br>
                                 {% for serial in inStockRecord.serialnomapping_set.select_related %}
-                                    {{serial.serial_no.serial_no|IMEIOnly}} </br>
+                                    {{serial.serial_no.serial_no}} </br>
                                 {% endfor %}
                             </td>
                             {% endif %}

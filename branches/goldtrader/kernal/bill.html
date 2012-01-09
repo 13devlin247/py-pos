@@ -251,8 +251,8 @@ th,td{
 							<td class="Receipt">{{outStockRecord.product.description|FOCHidden}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> (GOLDTYPE:{{outStockRecord.product.category.category_name}})</span>{% endif %}</td>
 							<td class="right qty">{{outStockRecord.unit_sell_price}}</td>
 							<td align="right" class="price">{{outStockRecord.quantity}}</td>
-							<td align="right" class="price"></td>
-							<td align="right" class="price"></td>
+							<td align="right" class="price"><script type="text/javascript">document.write(({{outStockRecord.unit_sell_price}}*{{outStockRecord.quantity}}));</script></td>
+							<td align="right" class="price">{{outStockRecord.workman_ship}}</td>
 							<td align="right" class="price">{{outStockRecord.amount}}</td>
 							</tr>
 						{% endfor %}
@@ -347,6 +347,11 @@ th,td{
           </tbody></table>
 		 
 <script type="text/javascript">
+
+function xx(){
+    return "xx";
+}
+
 var ones = new Array(
 
  '',

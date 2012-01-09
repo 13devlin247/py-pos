@@ -53,8 +53,10 @@
                 </th>                  
                 <th style="width:10%;">Price
                 </th>  
-                <th style="width:5%;">Qty.
+                <th style="width:5%;">Weight (gram)
                 </th>  
+                <th style="width:5%;">Workman Ship.
+                </th>                  
                 <th style="width:10%;">Amount
                 </th>  
               </tr>  
@@ -74,6 +76,8 @@
                 </td>  
                 <td style="widtd:5%;" id="quantity_total">0
                 </td>  
+                <td style="widtd:5%;">
+                </td>                  
                 <td style="widtd:15%;">
                 </td>
   
@@ -267,7 +271,7 @@
 {% block ajaxGenTableBody %}
 			var IMEI_str = "";
 			if (data.imei != undefined){
-				IMEI_str =  " <br/> IMEI:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
+				IMEI_str =  " <br/> SN:  <input type=text name=\""+pk+"_imei\" id=\""+pk+"_imei\" value=\""+data.imei+"\" readonly=true size=\"18\" style=\"border: none; background: transparent;\"/>";
 			}
             
             
@@ -279,6 +283,7 @@
 					"<td id=\""+pk+"_avgcost\">"+data.fields.cost+"</td>"+
                     "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
 					"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
+                    "<td><input type=\"text\" name=\""+pk+"_workman\" id=\""+pk+"_workman\" value=\"0.00\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
 					"<td>$<span id=\""+pk+"_amount\" class='totalPrice'>"+data.fields.retail_price+"</span><input type=\"hidden\" name=\""+pk+"_pk\" id=\""+pk+"_pk\" value=\""+data.pk+"\" /></td>"+
 					"</tr>"
 			;    

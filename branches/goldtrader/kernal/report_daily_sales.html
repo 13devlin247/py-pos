@@ -68,7 +68,7 @@
                 {% else %}
               <tr class="detail">  				
                 <td>
-                  <a href="/sales/bill/{{outstock.bill.pk}}" target="_blank">{{outstock.pk}}</a></td>  <td>{{outstock.product}}</td>  <td></td>  <td>{{outstock.tt}}</td> <td></td>  <td></td>  <td></td>
+                  <a href="/sales/bill/{{outstock.bill.pk}}" target="_blank">{{outstock.pk}}</a></td>  <td>{{outstock.product}}</td>  <td></td>  <td>{{outstock.tt}} ({{outstock.workman_ship}})</td> <td></td>  <td></td>  <td></td>
               </tr>                  
                 {% endif %}
 			{%endfor%}

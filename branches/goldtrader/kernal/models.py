@@ -70,8 +70,8 @@ class PaymentManager(models.Manager):
         return self.get(bill=bill.total_price)
         
 class Product(models.Model):
-    barcode = models.CharField(max_length=100, blank=True)
     name = models.CharField("code", max_length=100)
+    barcode = models.CharField(max_length=100, blank=True)
     description = models.TextField(blank=True)
     category = models.ForeignKey(Category)
     brand = models.ForeignKey(Brand)
@@ -289,6 +289,7 @@ class OutStockRecord(models.Model):
     sell_index = models.IntegerField(blank=True)
     serial_no = models.ForeignKey(SerialNo, blank=True, null=True)
     profit = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
+    workman_ship = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
     type = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(True)

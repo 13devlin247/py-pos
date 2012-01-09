@@ -267,7 +267,7 @@
                 }else{
                     productTable[pk].fields["stockCount"] = data[0].inventory;
                 }
-                
+                $("#"+pk+"_quantity").val(data[0].inventory)
                 //alert(productTable[data.pk].fields["stockCount"]);
             },
             error: function(data){ 
@@ -343,8 +343,9 @@
     function calcAmount(pk){
         value = $("#"+pk+"_quantity").val()
         var currentQuantity = parseInt($("#"+pk+"_quantity").val());
+        var workman_ship = parseInt($("#"+pk+"_workman").val());
         var price = $("#"+pk+"_price").val();
-        $("#"+pk+"_amount").html(currentQuantity* price);
+        $("#"+pk+"_amount").html(currentQuantity* price + workman_ship);
     }
     function calcSubTotalPrice(){
         var total = 0;
