@@ -1,7 +1,7 @@
 {% extends "product_form.html" %}
     {% block product_create_ajax %}
-            $('form').submit(function() {
-              $.get("{{submit_form}}", $("form").serialize(), function(data){
+            $('#new_product').submit(function() {
+              $.get("{{submit_form}}", $("#new_product").serialize(), function(data){
                 alert(data);
               });
               $("#dialog").css('display', 'none');

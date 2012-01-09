@@ -291,7 +291,7 @@ class BarnMouse:
             return serial_no.inStockRecord
         return self.last_inStockRecord
 
-    def OutStock(self, bill, qty, price, reason, serials):
+    def OutStock(self, bill, qty, price, reason, serials, workman_ship = 0.0):
         outStockRecord = OutStockRecord()
         outStockRecord.bill = bill
         outStockRecord.product = self.product
@@ -300,10 +300,11 @@ class BarnMouse:
         outStockRecord.serial_no = serial_no
         outStockRecord.unit_sell_price = price
         outStockRecord.quantity = qty
-        outStockRecord.amount = price * qty 
+        outStockRecord.amount = price * qty + float(workman_ship)
         outStockRecord.sell_index = 0;
         outStockRecord.cost = self.Cost(serial_no) * qty;
         outStockRecord.profit = float(outStockRecord.amount) - float(outStockRecord.cost);
+        outStockRecord.workman_ship = workman_ship
         outStockRecord.type = reason
         outStockRecord.active = True
         outStockRecord.save()
@@ -744,6 +745,7 @@ class BarnOwl:
             product_dict[barcode]['qty'] = int(dict[barcode]['quantity'])
             product_dict[barcode]['unit_sell_price'] = float(dict[barcode]['price'])
             product_dict[barcode]['extracost'] = float(dict[barcode].get('extracost', '0.0'))
+            product_dict[barcode]['workman'] = float(dict[barcode].get('workman', '0.0'))
             try:
                 product_dict[barcode]['cost'] = float(dict[barcode]['cost'])
             except Exception:
@@ -775,6 +777,7 @@ class BarnOwl:
             qty = int(product_dict["qty"])
             unit_sell_price = float(product_dict["unit_sell_price"])
             serial = product_dict["serial"]
+            workman_ship = int(product_dict["workman"])
             if product.algo.name == Algo.PERCENTAGE:
                 logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)
                 mouse = MickyMouse(product)
@@ -784,7 +787,7 @@ class BarnOwl:
             else:
                 logger.debug("Build outstockrecord by algo: '%s'", product.algo.name)            
                 mouse = BarnMouse(product)
-            outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial)
+            outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial, workman_ship)
             outStockRecords.append(outStockRecord)
         return outStockRecords
 

@@ -234,8 +234,10 @@ def _filter_outStockRecords(bills):
     total_amount = 0
     for bill in bills:
         outstock = OutStockRecord()
+        outstock.pk = bill.pk
         outstock.bill = bill
         outstock.tt = bill.total_price
+        outstock.workman_ship = 0
         outstock.user = bill.sales_by.username
         outstock.deposit = bill.deposit_price
         outstock.create_at = bill.create_at
@@ -244,6 +246,7 @@ def _filter_outStockRecords(bills):
         
         outstocks = OutStockRecord.objects.all().filter(bill=bill).filter(active=True)
         for outstock in outstocks:
+            outstock.is_bill = False
             outstock.tt = outstock.unit_sell_price * outstock.quantity
             outstock.user = outstock.bill.sales_by.username
             outstock.deposit = 0
@@ -262,19 +265,35 @@ def ReportDailySalesExcel(request):
     if startDate == '' or endDate == '':
         startDate = str(date.min)
         endDate = str(date.max)
-    
-    total_amount = 0
-    
-    outstocks = OutStockRecord.objects.filter(create_at__range=(startDate,endDate)).filter(active=True)
-    headers = ['Inv No', 'Product', 'Cashier', 'Total', 'Type', 'Date']
+    bills = _filter_bills(startDate, endDate)
+    total_out_amount, outstocks_summary = _filter_outStockRecords(bills)
+    headers = ['Inv No', 'Product', 'Cashier', 'Total', 'Deposit', 'Type', 'Date']
     contents = []
-    for outstock in outstocks:
-        outstock.tt = outstock.unit_sell_price * outstock.quantity
-        outstock.user = outstock.bill.sales_by.username
-        total_amount = total_amount + (outstock.unit_sell_price * outstock.quantity)
-        contents.append(';'.join([str(outstock.pk),outstock.product.name,outstock.user,str(outstock.tt),outstock.bill.mode,str(outstock.create_at)]))
+    for outstock in outstocks_summary:
+        data = []
+        if outstock.is_bill:
+            data = [
+                    str(outstock.pk), 
+                    '', 
+                    outstock.user, 
+                    str(outstock.tt),
+                    str(outstock.bill.deposit_price),
+                    outstock.bill.mode,
+                    str(outstock.create_at)
+                   ]
+        else: 
+            data = [
+                    str(outstock.pk), 
+                    outstock.product.name, 
+                    '', 
+                    str(outstock.tt) + "("+str(outstock.workman_ship)+")",
+                    '',                    
+                    outstock.bill.mode,
+                    ''
+                   ]
+        contents.append(';'.join(data))
     
-    contents.append(';;Total:;'+str(total_amount)+';;;')
+    contents.append(';;Total:;'+str(total_out_amount)+';;;')
     filename = "report.xls"
     ExcelWriter(filename).export(headers, contents)
     return _wrapper_download_file(open(filename, 'rb'), filename)
