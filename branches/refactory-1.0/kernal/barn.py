@@ -148,7 +148,7 @@ class BarnMouse:
         result = []
 
         inStockRecords = InStockRecord.objects.filter(product = product).filter(active = True)
-        outStockRecords = OutStockRecord.objects.filter(product = product).filter(active = True)
+        outStockRecords = OutStockRecord.objects.filter(product = product).filter(active = True).exclude(type = "service")
         inStockSummary = self.__count_product_stock__(starttime, endtime, inStockRecords, product)
         outStockSummary = self.__count_product_stock__(starttime, endtime, outStockRecords, product)
         # count old stock record
