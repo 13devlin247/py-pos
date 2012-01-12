@@ -8,6 +8,8 @@ from pos.kernal.models import *
 from django.db.models import Q
 from datetime import date
 from pos.kernal import filters
+from pos.scheduling.views import NextStep
+
 #from pos.kernal.views import ajaxProductDetailView
 
 # Uncomment the next two lines to enable the admin:
@@ -414,6 +416,7 @@ urlpatterns = patterns('',
     
     url(r'^category/info/$', login_required(CategoryInfo)),
     url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)', login_required(PrintBarcode)),
-    
+
     url(r'^workflow/', include('pos.scheduling.urls')),
+	
 )

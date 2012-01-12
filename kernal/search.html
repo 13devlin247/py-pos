@@ -1,9 +1,20 @@
 {% extends "product.php.html" %}
 
 {% block content %}
+
+
+
+
+    <script type="text/javascript" language="javascript" src="/static/DataTables/media/js/jquery.js"></script>
+    <script class="jsbin" src="http://datatables.net/download/build/jquery.dataTables.nightly.js"></script>
+ 
     <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos.css" />  	
     <link rel="stylesheet" rev="stylesheet" href="/static/css/phppos_print.css"  media="print"/>
 <style type=text/css">
+
+      @import "/media/css/demo_page.css";
+      @import "/media/css/demo_table.css";
+
 .displayCustomer{
  text-align: left;
 }
@@ -33,11 +44,16 @@
             <label id="item_label" for="item">    Find/Scan Item
             </label>  
             <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>
-{% endblock %}		  			
-          <table id="register" style="width: 800px">  
-{% block table_head %}		  
+			
+{% endblock %}
+<div>
+   <a href="javascript: history.go(-1)"><img src="/static/images/back_to_back.png" width="35" height="30"></a>	</div>
+          <table id="register" style="width: 800px" class="dat">  
+{% block table_head %}		
+  
+
             <thead>  
-              <tr>  
+              <tr class="">  <a href="javascript: history.go(-1)"><img src="/static/images/back_to_back.png" width="35" height="30"></a>
                 <th style="width:auto">Item #
                 </th>  
                 <th style="width:auto">Item Name
@@ -79,7 +95,22 @@
           </table>  
         </div>      
 <script type="text/javascript">
-    
+var j = jQuery.noConflict();
+	
+j(document).ready(function() {
+	j(".dat").dataTable( {
+		"aaSorting": [[ 4, "desc" ]],
+		"aoColumns": [
+			null,
+			null,
+			null,
+			null,
+			null
+		]
+	} );
+} );
+	
+	
 	var dataTable = new Array();
 	dataTable = $.parseJSON("{{default_result}}".replace(/&quot;/g, '\"'));  
   

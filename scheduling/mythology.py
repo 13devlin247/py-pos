@@ -17,6 +17,9 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 INCOMPLETE = 'incomplete'
+WORKING = 'Working'
+PENDING = 'Pending'
+COMPLETE = 'Complete'
 
 class SchedulerFactory(object):
     '''
@@ -125,6 +128,7 @@ class JobAgent(object):
         self.description = instance.description
         self.start_at = instance.start_at
         self.end_at = instance.end_at
+        self.status = instance.status
     
     def _recal_job_cost(self):
         steps = Step.objects.filter(job = self.instance).filter(active = True)
@@ -189,7 +193,7 @@ class JobAgent(object):
         step.task = task
         step.worker = worker
         step.cost = cost
-        step.status = INCOMPLETE
+        step.status = PENDING
         step.start_at = start_at
         step.end_at = end_at
         step.active = True
@@ -198,6 +202,65 @@ class JobAgent(object):
         self._recal_job_cost()
         return step
 
+
+# change the next step to complete		
+    def next_step(self):
+        steps = Step.objects.filter(active=True).filter(job=self.instance).order_by('create_at')
+
+        for step in steps:
+            if step.status == WORKING:
+                step.status = COMPLETE                
+                logger.debug("%s",step.status)
+                step.save()	
+            elif step.status == PENDING:
+                step.status = WORKING
+                step.save()	
+                break		         
+        return step
+		
+# change the prev step to working		
+    def prev_step(self):
+        steps = Step.objects.filter(active=True).filter(job=self.instance).order_by('-create_at')
+        
+        for step in steps:
+
+            if step.status == WORKING:
+                step.status = PENDING
+                step.save()
+            elif step.status == COMPLETE:
+                step.status = WORKING
+                step.save()
+                break                 
+        return step		
+
+    def progress(self):
+        steps = Step.objects.filter(active=True).filter(job=self.instance).order_by('-create_at')
+        cal_progress = 0.0
+        total_progress =len(steps)
+
+        for step in steps:
+            if step.status == COMPLETE:
+                cal_progress = cal_progress + 1
+        
+        if total_progress == 0:
+            percent = 0
+        elif cal_progress == 0:
+            percent = 0	
+        else:
+            percent = float(cal_progress/total_progress)
+	    
+        self.instance.status = int(percent*100)
+        self.instance.save()
+        logger.debug("Progress-----> %s / %s ",cal_progress,total_progress)	    
+        logger.debug("here is the percent-> %s",percent)	    	    
+        return percent
+
+    def Overdue_step(self,duedate):
+        step = Step.objects.filter(active=True).filter(end_at__lt = duedate).filter(Q(status__exact=WORKING)|Q(status__exact=PENDING))
+        logger.debug("Duedate--->%s",duedate)
+        logger.debug("Step--->%s",step)
+        return step
+        
 class ClothesAgent(object):
 
     def __init__(self, job):
@@ -253,6 +316,10 @@ class ClothesChoosedAgent(object):
 class Supervisor(object):
     def __init__(self):
         pass
+
+    def get_worker(self,workerid):
+        worker = Worker.objects.get(pk=int(workerid))
+        return worker
     
     def worker_loading(self, startDate, endDate):
         logger.debug("calc workers loading")
@@ -304,7 +371,13 @@ class Supervisor(object):
                 workers.append(workers_ability.worker)
         logger.debug('Supervisor filter worker success: %s '% len(workers))
         return workers
-    
+
+    def worker_steps(self, workerid):
+        #workertask = Step.objects.filter(worker=workerid).filter(active=True).exclude(status="Complete")
+        workertask = Step.objects.filter(worker=workerid).filter(active=True)     
+        return workertask
+	
+		
 class WorkerAgent(object):
     def __init__(self, instance):
         self.worker = instance
