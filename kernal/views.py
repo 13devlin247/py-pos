@@ -1310,7 +1310,7 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
 
 
 def _show_stock_cost_table(startDate, endDate):
-    products = Product.objects.all().order_by("name")
+    products = Product.objects.all().order_by("name").exclude(name__contains = "-foc-product")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -1339,7 +1339,7 @@ def _show_stock_cost_table(startDate, endDate):
 
 
 def _count_all_inventory_stock(startDate, endDate):
-    products = Product.objects.filter(Q(active=True)).order_by("name")
+    products = Product.objects.filter(Q(active=True)).exclude(name__contains = "-foc-product").order_by("name")
     list = []
     total_qty = 0
     total_on_hand_value = 0
