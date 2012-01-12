@@ -23,11 +23,14 @@
          <ol>
             <li><a href="/workflow/job/add/">Create Jobs</a></li>
             <li><a href="/workflow/job/report/">Jobs report</a></li>
-            <li><a href="/inventory/list/">Delay Alert</a></li>
+            <li><a id="overdue_alert" href="#">Overdue Alert</a></li>
+			<li><a id="overdue_7days_alert" href="#">Next 7 days OverDue Alert</a></li>
          </ol>
       </li>
       <li>Others
-         <ol>
+         <ol> 
+
+     		<li><a href="/workflow/worker_job/">Worker Jobs</a></li>
             <li><a href="/admin/scheduling/workerability/">Worker Ability Management</a></li>
             <li><a href="/admin/scheduling/worker/">Worker Management</a></li>
             <li><a href="/admin/scheduling/task/">Task Management</a></li>
@@ -37,4 +40,20 @@
    </ol>
 </div>
 </div>
+
+<script>
+var currentTime = new Date()
+var month = currentTime.getMonth() + 1
+var day = currentTime.getDate()
+var year = currentTime.getFullYear()
+var today = year+"-"+month+"-"+day
+var day7 = currentTime.getDate()+7
+
+var sevenday= year+"-"+month+"-"+day7
+
+$("a#overdue_alert").attr("href","/workflow/overdue/"+today+"/")
+
+$("a#overdue_7days_alert").attr("href","/workflow/overdue/"+sevenday+"/")
+
+</script>
 {% endblock %}	

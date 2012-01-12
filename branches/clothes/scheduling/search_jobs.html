@@ -12,7 +12,7 @@
               <tr>  
                 <th style="width:auto">Job ID
                 </th>  
-                <th style="width:auto">Name
+                <th style="width:auto">Job Name
                 </th>				  
                 <th style="width:30%">Desc
                 </th>  
@@ -29,12 +29,12 @@
 			{% if object_list %}
 				{% for result in object_list %}
                 <tr>
-                <td><a href="/sales/bill/{{result.pk}}">{{result.pk}}</a></td>
+                <td> <a href="/workflow/step/add/{{result.pk}}">{{result.pk}}</a></td>
                 <td>{{result.name}}</td>
                 <td>{{result.description}}</td>
                 <td>{{result.cost}}</td>
-                <td>{{result.status}}</td>
-                <td><a href="/workflow/clothes/information/add/{{result.pk}}">[ Clothes Detail ]</a> <a href="/workflow/step/add/{{result.pk}}">[ Step ]</a></td>
+                <td>{{result.status}}%</td>
+                <td><a href="/workflow/clothes/information/add/{{result.pk}}"><img src="/static/images/t-shirt.png" height="32" width="32"></a> <a href="/workflow/step/add/{{result.pk}}"><img style="padding-left:10px;" src="/static/images/calendar.png" height="26" width="26"></a></td>
                 </tr>					
 				{% endfor %}
 			{% endif %}

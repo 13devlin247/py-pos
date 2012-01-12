@@ -1,0 +1,111 @@
+{% extends "search.html" %}
+
+{% block searchField %}		  		
+			<!-- <div><span class="date"><label for="id_start_date">Start Date: </label> </span><span class="date"> <input id="id_start_date" type="text" class="vDateField" name="start_date" size="10"/> </span><span class="date"> <label for="id_end_date">End Date: </label> </span><span class="date"> <input id="id_end_date" type="text" class="vDateField" name="end_date" size="10"/></span></div> 		
+            <label id="item_label" for="item">    Name: 
+            </label>  
+            <input type="text" name="item" value="" id="item" size="40" onclick="return false;"/>-->
+			<div style="padding-top:15px;">
+{% endblock %}		  			
+
+{% block table_head %}	
+
+            <thead>  
+               <tr class="gradeA">  
+                <th style="width:auto">Job ID
+                </th>  
+                <th style="width:auto">Name
+                </th>				  
+                <th style="width:30%">Task Name
+                </th>  
+                <th style="width:auto;">Cost
+                </th>  
+                <th style="width:auto;">Due Date
+                </th>  				
+                <th style="width:auto;">Job Progress
+                </th>  
+                <th style="width:auto">Action
+                </th>                  
+              </tr>  
+            </thead>  
+{% endblock %}	
+{% block sell_detail %}
+			{% if totaloverdue %}
+				{% for result in totaloverdue %}
+               <tr class="gradeA">  
+                <td><a href="/workflow/step/add/{{result.job.pk}}">{{result.job.pk}}</a></td>
+                <td>{{result.job.name}}</td>
+                <td>{{result.task.name}}</td>
+                <td>{{result.worker.name}}<br>({{result.cost}})</td>
+                <td>
+				<div>
+				
+				<div style="font-size:11px;float:left;width:60px;background-color:#C3272B;color:white;border-radius:5px;height:15px;padding-right:2px;margin-right:2px;">Job Due</div><div style="float:left;font-size:11px;">{{result.job.end_at}}</div>
+				</div>
+				<div>
+				<div style="font-size:11px;float:left;width:60px;background-color:#C3272B;color:white;border-radius:5px;height:15px;padding-right:2px;margin-right:2px;">Task Due</div><div style="float:left;font-size:11px;">{{result.end_at}}</div>
+				
+				</div>
+				</td>
+			    <td>{{result.job.status}}%</td>
+                <td><a href="/workflow/clothes/information/add/{{result.job.pk}}"><img src="/static/images/t-shirt.png" height="32" width="32"></a> <a href="/workflow/step/add/{{result.job.pk}}"><img style="padding-left:10px;" src="/static/images/calendar.png" height="26" width="26"></a></td>
+                </tr>					
+				{% endfor %}
+			{% endif %}
+{% endblock %}
+{% block table_script %}		
+    $("#id_start_date").datepicker({dateFormat: 'yy-mm-dd'});
+	$("#id_start_date").change( function() {
+		$('#sell_detail').empty();
+		var start = $.datepicker.parseDate('yy-mm-dd', $("#id_start_date").val());
+		var end = '';
+		if($("#id_end_date").val() == ''){
+			end = $.datepicker.parseDate('yy-mm-dd', $("#id_start_date").val());
+		}else{
+			end = $.datepicker.parseDate('yy-mm-dd', $("#id_end_date").val());
+		}
+		
+		filterByDate(start, end);
+	  }
+	);
+	$("#id_end_date").datepicker({dateFormat: 'yy-mm-dd'});
+	$("#id_end_date").change( function() {
+	  $('#sell_detail').empty();
+		var start = '';
+		var end = $.datepicker.parseDate('yy-mm-dd', $("#id_end_date").val());
+		if($("#id_start_date").val() == ''){
+			start = $.datepicker.parseDate('yy-mm-dd', $("#id_end_date").val());
+		}else{
+			start = $.datepicker.parseDate('yy-mm-dd', $("#id_start_date").val());
+		}
+	  filterByDate(start, end);
+	});	
+
+	function filterByDate(start, end){
+	  for(var i = 0 ; i < dataTable.length; i++){
+		var date = $.datepicker.parseDate('yy-mm-dd', dataTable[i].fields.create_at);
+		if(date >= start && date <= end){
+			row = _genRowByPK(dataTable[i]);
+			$('#sell_detail').append(row);				
+		}
+	  }	
+	}
+{% endblock %}	
+
+
+{% block table_content %}	
+    function _genRowByPK(data){
+        row = ""+
+                "<tr>"+
+                "<td><a href='/sales/bill/"+data.pk+"'>"+data.pk+"</a></td>"+
+                "<td>"+data.fields.refbill+"</td>"+
+                "<td>"+data.fields.create_at+"</td>"+
+                "<td>"+data.fields.customer+"</td>"+
+                "<td>"+data.fields.total_price+"</td>"+
+                "<td>"+data.fields.profit+"</td>"+
+                "<td>"+data.fields.description+"</td>"+                
+                "</tr>"
+        ;    
+        return row;
+    }
+{% endblock %}

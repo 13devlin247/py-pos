@@ -20,7 +20,7 @@ from pos.kernal.models import Company
 from pos.kernal.models import Algo
 from pos.kernal.models import Deposit
 from scheduling.models import ClothesTemplate, Worker, WorkerAbility, Task,\
-    ClothesChoosed
+    ClothesChoosed,Step,Job
 
 admin.site.register(Product, ProductAdmin)
 admin.site.register(InStockRecord)
@@ -45,7 +45,7 @@ admin.site.register(Worker)
 admin.site.register(WorkerAbility)
 admin.site.register(Task)
 admin.site.register(ClothesChoosed)
-
-
+admin.site.register(Step)
+admin.site.register(Job)
 
 

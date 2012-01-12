@@ -5,6 +5,38 @@
 {% endblock %}		  			
 
 {% block table_head %}		  
+<style>
+#working{
+
+color:white;
+background-color:#7A942E;
+border-radius: 5px;
+box-shadow: 1px 1px 1px #888;
+	font-family:Helvetica, sans-serif;
+	font-size:11px;
+}
+
+#pending{
+
+color:white;
+background-color:#857C55;
+border-radius: 5px;
+box-shadow: 1px 1px 1px #888;
+	font-family:Helvetica, sans-serif;
+	font-size:11px;	
+	
+}
+
+#complete{
+background-color:#317589;
+color:white;
+box-shadow: 1px 1px 1px #888;
+border-radius: 5px;
+	font-family:Helvetica, sans-serif;
+	font-size:11px;	
+}
+
+</style>
             <thead>  
               <tr>
                 <td colspan=6>
@@ -17,12 +49,18 @@
               </tr>
               <tr>
                 <td colspan=6>
-                Jobs: {{job.name}}: {{job.description}}<br/>
-                {{job.start_at|date:"Y/m/d"}} - {{job.end_at|date:"Y/m/d"}}
+                Jobs: {{job.name}}: {{job.description}}   					<a target="_blank" href="/admin/scheduling/job/{{job.pk}}/"><img style="padding-right:10px" src="/static/images/edit.png" width="20" height="20"></a>
+<br/>
+                {{job.start_at|date:"Y/m/d"}} - {{job.end_at|date:"Y/m/d"}} <br/>
+		<h1>{{progress}}%</h1>
+                                           
+                <div id=""><a href="/workflow/step/prevstep/{{job.pk}}/"><img src="/static/images/arrow_left.png" ></a>{{step.status}}<a href="/workflow/step/nextstep/{{job.pk}}/"><img src="/static/images/arrow_down.png"></a></div>
+                		
+		
                 </td>
               </tr>              
               <tr>  
-                <th style="width:auto">Task ID
+                <th style="width:100px;">Status
                 </th>  
                 <th style="width:auto">Task
                 </th>				  
@@ -35,21 +73,53 @@
                 <th style="width:auto">Action
                 </th>                  
               </tr>  
-                
-                {% for step in job.steps %}
-                    <tr><td>{{step.task.pk}} </td><td>{{step.task}}<br/>{{step.start_at|date:"Y/m/d"}} - {{step.end_at|date:"Y/m/d"}} </td><td> {{step.worker}} </td><td class="cost"> {{step.cost}} </td><td class="loading" id="{{step.worker.pk}}_loading_confirm">0</td><td><a href="/workflow/step/remove/{{job.pk}}/{{step.pk}}/">Delete</a></td></tr>
+	      {% for step in job.steps %}
+
+                    <tr><td>
+					{%ifequal step.status "Working"%}
+						<div id="working">{{step.status}}</div> 
+					{%endifequal%}	
+					
+					{%ifequal step.status "Complete"%}				
+						 <div id="complete"> {{step.status}} </div></div>
+					{%endifequal%}
+					
+
+					{%ifequal step.status "Pending"%}				
+						 <div id="pending">{{step.status}}</div></div>
+					{%endifequal%}
+					
+
+					
+					</td><td>{{step.task}}<br/>{{step.start_at|date:"Y/m/d"}} - {{step.end_at|date:"Y/m/d"}} </td><td> {{step.worker}} </td><td class="cost"> {{step.cost}} </td><td class="loading" id="{{step.worker.pk}}_loading_confirm">0</td><td>
+					
+					<a target="_blank" href="/admin/scheduling/step/{{step.pk}}/"><img style="padding-right:10px" src="/static/images/edit.png" width="20" height="20"></a>
+					
+					<a href="/workflow/step/remove/{{job.pk}}/{{step.pk}}/"><img src="/static/images/delete_task.png" width="20" height="20"></a></td></tr>
                 {% endfor %}
                     <tr><td></td><td></td><td style="font-weight: bolder">Total Cost:</td><td id="summary_cost"> 0 </td><td id="summary_loading"></td><td></td></tr>              
                 <tr><th colspan=6> Available Worker </th></tr>
-            </thead>  
+            </thead>
+	
+			<div>
+			
+
+		
+			
 {% endblock %}	
 {% block sell_detail %}
 
 {% endblock %}
-{% block table_script %}	
-    $("#task_pk").click(function(){
+{% block table_script %}
+
+
+
+
+
+	
+    $("#task_pk,#id_start_date,#id_end_date").change(function(){
                         $.ajax({
-                            url: "/workflow/task/worker/list/"+$(this).val()+ "?start_date=" + $("#id_start_date").val()+ "&end_date=" + $("#id_end_date").val(),
+                            url: "/workflow/task/worker/list/"+$("#task_pk").val()+ "?start_date=" + $("#id_start_date").val()+ "&end_date=" + $("#id_end_date").val(),
                             type: "JSON",
                             success: function(data){  
                                 row = '';
@@ -59,10 +129,13 @@
                                 
                                 $('#sell_detail').html(row);	
                             },
-                            error: function(data){ alert("Product Not found! please check your barcode: " + $("#customer").val()) },
+                            error: function(data){ },
                             complete: function(data){},
                         });       
                         
+						
+						
+						
                         $.ajax({
                             url: "/workflow/worker/loading?start_date=" + $("#id_start_date").val()+ "&end_date=" + $("#id_end_date").val(),
                             type: "JSON",
@@ -145,7 +218,7 @@
                 "<td>"+data.fields.worker.split("@")[0]+"</td>"+
                 "<td><input type=text size=3 id='"+ worker_cost_id +"' value="+ cost +" /></td>"+
                 "<td id='"+data.fields.worker.split("@")[1]+"_loading'>0</td>"+
-                "<td><a id='choosed_worker_" + worker_pk + "' href='' onClick='_submit(" + job_pk + "," + task_pk + "," + worker_pk + ")'>choose</a></td>"+                
+                "<td><a id='choosed_worker_" + worker_pk + "' href='' onClick='_submit(" + job_pk + "," + task_pk + "," + worker_pk + ")'><img src='/static/images/choose.png' width='20' height='20'></a></td>"+                
                 "</tr>";    
                 
         return row;

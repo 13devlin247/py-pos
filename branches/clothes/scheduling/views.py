@@ -1,10 +1,11 @@
 from django.http import HttpResponseRedirect, HttpResponse
+import datetime
 from django.shortcuts import render_to_response
 from scheduling.mythology import Supervisor, SchedulerFactory, JobAgent,\
     ClothesAgent
 from kernal.views import __json_wrapper__
 from scheduling.models import JobForm, ClothesTemplateForm, ClothesTemplate,\
-    Task, Worker, WorkerAbility, ClothesChoosed
+    Task, Worker, WorkerAbility, ClothesChoosed, Step, Job 
 from datetime import date    
 import logging
 # Create your views here.
@@ -125,7 +126,13 @@ def CreateStep(request, jobid):
     factory = SchedulerFactory()
     job = factory.jobs(jobid)
     tasks = Task.objects.filter(active = True)
-    return render_to_response('create_step.html',{'job': JobAgent(job), 'tasks': tasks, 'action': '/workflow/step/add/done/'})
+
+    factory = SchedulerFactory()	
+    stepnow = JobAgent(factory.jobs(jobid))
+    progress = stepnow.progress()
+    progress = int(progress * 100)    
+    
+    return render_to_response('create_step.html',{'job': JobAgent(job), 'tasks': tasks, 'action': '/workflow/step/add/done/', 'progress':progress})
      
 def CreateClothesTemplate(request):
     form = ClothesTemplateForm(request.POST)
@@ -142,4 +149,52 @@ def CreateJob(request):
     job_agent = factory.register_job(name = job.name, desc = job.description, start_at = job.start_at, end_at = job.end_at, creator = user)
     logger.debug('Job %s created' % job.name)
     return HttpResponseRedirect('/workflow/job/report/')
+
+def NextStep(request,jobid):
+    factory = SchedulerFactory()	
+    stepnow = JobAgent(factory.jobs(jobid))
+    nextone = stepnow.next_step()
+    progress = stepnow.progress()
+    logger.debug("%s",nextone)
+
+    return HttpResponseRedirect('/workflow/step/add/'+str(jobid))          
+
+def PrevStep(request,jobid):
+    factory = SchedulerFactory()	
+    stepnow = JobAgent(factory.jobs(jobid))
+    prevone = stepnow.prev_step()
+    progress = stepnow.progress()   
+    logger.debug("%s",prevone)
+
+    return HttpResponseRedirect('/workflow/step/add/'+str(jobid))    	
+
+
+def OverdueStep(request,duedate):
+    factory = SchedulerFactory()	
+    jobs = factory.jobs()
+    for job in jobs:
+        stepnow = JobAgent(factory.jobs(job.pk))
+        totaloverdue = stepnow.Overdue_step(duedate)
+        logger.debug("%s",totaloverdue)		
+	return render_to_response('report_overdue_today.html',{'totaloverdue':totaloverdue})
+  	    
+def Overdue(request, jobid, date):
+    factory = SchedulerFactory()	
+    stepnow = JobAgent(factory.jobs(jobid))
+    totaloverdue = stepnow.Overdue_step(date)
+    json = __json_wrapper__(totaloverdue)
+    return HttpResponse(json, mimetype="application/json")  
+	
+def WorkerJob(request):
+    worker = Worker.objects.filter(active=True).order_by('name')
+    return render_to_response('report_worker.html',{'worker':worker})
+
+def WorkerTask(request,workerid):
+    supervisor = Supervisor()
+    workertask = supervisor.worker_steps(workerid)
+    workername = supervisor.get_worker(workerid)
+    return render_to_response('report_worker_task.html',{'workertask':workertask,'workername':workername})
+	
+
+	
     
