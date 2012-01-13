@@ -2,6 +2,35 @@
 
 {% block content %}   
 <style type="text/css">
+
+#CompanyProfile{
+	text-align: left;
+}
+
+#CompanyProfile .logo{
+	float: left;
+    margin: 0 2em 0 0;    
+}
+.logo img{
+	width: 150px;
+	height:  150px;
+}
+
+
+
+
+#CompanyProfile .company{
+	font-size: 22pt;
+}
+
+#CompanyProfile .address{
+	font-size: 12pt;
+}
+
+#CompanyProfile .contect span{
+	font-size: 12pt;
+	margin: 0 1.5em 0 0;
+}
 .innertable {
 	display: none;
 }
@@ -28,6 +57,13 @@
 }
 </style> 
 	<div id="content_area_wrapper">  
+						<div id="CompanyProfile">
+							<div class="logo"><img src="/{{company.logo}}"/></div>
+							<div class="company">{{company.name}}</div>
+							<div class="address">{{company.address}}</div>
+							<div class="contect"><span>TEL: {{company.phone_office}}</span><span> FAX: {{company.fax}} </span><span>EMAIL: {{company.email}}</span></div>
+						</div>
+             <hr/>
       <div id="content_area">  
         <div id="page_title" style="margin-bottom:8px;"><h1>Item Sales Summary Report</h1>
         </div>
