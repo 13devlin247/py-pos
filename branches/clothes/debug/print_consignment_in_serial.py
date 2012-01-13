@@ -19,8 +19,9 @@ if __name__ == "__main__":
     for inStockRecord in inStockRecords:
         stock[inStockRecord] = None
     
-    outstocks = OutStockRecord.objects.filter(active=True)
+    outstocks = OutStockRecord.objects.filter(active=True).exclude(inStockRecord__pk = 0).exclude(type = "service")
     for outstock in outstocks:
+        print outstock.pk
         if outstock.inStockRecord in stock:
             del stock[outstock.inStockRecord]
             print "Consignment record %s out" % outstock.inStockRecord.pk

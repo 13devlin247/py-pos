@@ -74,7 +74,7 @@ class SchedulerFactory(object):
         job.creator = creator
         job.active = True
         job.save()
-        logger.debug('Job %s created' % job.pk)
+        logger.info('Job %s created' % job.pk)
         return job
 
 class TaskAgent(object):

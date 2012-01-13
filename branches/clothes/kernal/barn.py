@@ -5,6 +5,8 @@ from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product,
     ExtraCost, SerialNoMapping
 import logging
 from django.db.models.query_utils import Q
+from scheduling.models import Job
+from scheduling.mythology import SchedulerFactory
 
 logging.basicConfig(
     level = logging.WARN,
@@ -787,8 +789,6 @@ class BarnOwl:
             outStockRecord = mouse.OutStock(bill, qty, unit_sell_price, reason, serial)
             outStockRecords.append(outStockRecord)
         return outStockRecords
-
-    
     
     def __build_instock_records__(self, inStockBatch, inventoryDict, reason):
         logger.debug("build InStock records")
