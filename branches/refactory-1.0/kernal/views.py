@@ -2109,7 +2109,8 @@ def ReportSalesItem(request):
             continue
         group[product] = outstocks
 
-    return render_to_response('report_item_sales.html',{'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+    company = Company.objects.all()[0]
+    return render_to_response('report_item_sales.html',{'company': company,'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
 
 def StockTitle(search):
     #title = "aaa"
