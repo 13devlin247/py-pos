@@ -111,13 +111,12 @@ border-radius: 5px;
 
 {% endblock %}
 {% block table_script %}
-
-
-
-
-
+    var myDate = new Date();
+    var prettyDate = myDate.getFullYear() + '-' +(myDate.getMonth()+1) + '-' + myDate.getDate();
+    $("#id_start_date").val(prettyDate);
+    $("#id_end_date").val(prettyDate);
 	
-    $("#task_pk,#id_start_date,#id_end_date").change(function(){
+    $("#task_pk,#id_start_date,#id_end_date").click(function(){
                         $.ajax({
                             url: "/workflow/task/worker/list/"+$("#task_pk").val()+ "?start_date=" + $("#id_start_date").val()+ "&end_date=" + $("#id_end_date").val(),
                             type: "JSON",
@@ -158,7 +157,7 @@ border-radius: 5px;
     });
     
     $("#id_start_date").datepicker({dateFormat: 'yy-mm-dd'});
-	$("#id_start_date").change( function() {
+	$("#id_start_date").click( function() {
 		$('#sell_detail').empty();
 		var start = $.datepicker.parseDate('yy-mm-dd', $("#id_start_date").val());
 		var end = '';
@@ -172,7 +171,7 @@ border-radius: 5px;
 	  }
 	);
 	$("#id_end_date").datepicker({dateFormat: 'yy-mm-dd'});
-	$("#id_end_date").change( function() {
+	$("#id_end_date").click( function() {
 	  $('#sell_detail').empty();
 		var start = '';
 		var end = $.datepicker.parseDate('yy-mm-dd', $("#id_end_date").val());
@@ -185,13 +184,6 @@ border-radius: 5px;
 	});	
 
 	function filterByDate(start, end){
-	  for(var i = 0 ; i < dataTable.length; i++){
-		var date = $.datepicker.parseDate('yy-mm-dd', dataTable[i].fields.create_at);
-		if(date >= start && date <= end){
-			row = _genRowByPK(dataTable[i]);
-			$('#sell_detail').append(row);				
-		}
-	  }	
 	}
 {% endblock %}	
 

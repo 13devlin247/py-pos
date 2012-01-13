@@ -33,6 +33,7 @@ from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
 from pos.kernal.excel import ExcelWriter
 from django.utils.datastructures import MultiValueDictKeyError
 from kernal.models import InStockBatch, Company
+from scheduling.mythology import SchedulerFactory
 
 
 logging.basicConfig(
@@ -953,6 +954,14 @@ def __convert_sales_URL_2_bill_dict__(request):
     logger.debug("Bill Dict: %s", dict)        
     return dict
 
+def _build_jobs(user, outStockRecords):
+    for outStockRecord in outStockRecords:
+        if outStockRecord.product.category.category_name != "Jobs":
+            logger.debug("%s not need to create job" % outStockRecord.product.name) 
+            continue 
+        scheduler_factory = SchedulerFactory()
+        scheduler_factory.register_job(outStockRecord.product.name, datetime.today(), datetime.today(), user)
+
 def SalesConfirm(request):
     salesDict = {}
     if request.method == 'POST':
@@ -964,6 +973,7 @@ def SalesConfirm(request):
             hermes = Hermes()
             payment = bills_and_payments[1]
             outStockRecords = bills_and_payments[2]
+            _build_jobs(request.user, outStockRecords)
             hermes.ConsignmentOut(payment, outStockRecords)
             hermes.BalanceConsignmentIN(outStockRecords)
         except CounterNotReadyException as e:
@@ -2100,8 +2110,8 @@ def ReportSalesItem(request):
         if len(outstocks)==0:
             continue
         group[product] = outstocks
-
-    return render_to_response('report_item_sales.html',{'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+    company = Company.objects.all()[0]
+    return render_to_response('report_item_sales.html',{'company': company,'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
 
 def StockTitle(search):
     #title = "aaa"

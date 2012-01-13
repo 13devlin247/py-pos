@@ -84,9 +84,6 @@ background-color:white;
 }
 
 body {
-
-background-image: url("images/background.jpg");
-
 }
 /* height of center row*/
 
@@ -124,8 +121,6 @@ height:auto;
 
 
 #m1{
-
-background-image: url('images/background.jpg');
 }
 
 #gray{
