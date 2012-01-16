@@ -21,6 +21,7 @@ tfoot td {
 
 #CompanyProfile{
 	text-align: left;
+	width: 200px;
 }
 
 
@@ -44,11 +45,11 @@ tfoot td {
 }
 
 #CompanyProfile .address{
-	font-size: 12pt;
+	font-size: 8pt;
 }
 
 #CompanyProfile .contect span{
-	font-size: 12pt;
+	font-size: 8pt;
 	margin: 0 1.5em 0 0;
 }
 
@@ -136,7 +137,7 @@ th,td{
                 <td colspan="4">            
                   <p align="center">
 					
-						</p><div id="CompanyProfile" style="text-align:center">
+						</p><div id="CompanyProfile">
 							<div class="logo" style="width: 100%"><img src="/static/images/GT.png" style="height:60%"></div>
 							<div class="company"></div>
 							<div class="address">{{company.address}}</div>
@@ -151,25 +152,30 @@ th,td{
                   <p></p>
 				</td>    
               </tr>    
-			  
               <tr>        
+                <td class="Receipt label">            CUSTOMER<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{bill.customer}}</b></td>    
+                <td class="Receipt label">            <span></span>         </td>        
+                <td class="Receipt">            <b>{{bill.payment_set.select_related.0.term|upper}} BILL</b>        </td>    				
+              </tr>    			  
+              <tr>        
+                <td class="Receipt label">            <span></span>         </td>        
+                <td class="Receipt">            <b>   </b></td>    
                 <td class="Receipt label">            Bill No<span>:</span>         </td>        
-                <td class="Receipt">            <b>{{bill}}    </b></td>    
-                <td class="Receipt label">            Date<span>:</span>         </td>        
-                <td class="Receipt">            <b>{{bill.create_at}}</b>        </td>    				
+                <td class="Receipt">            <b>{{bill}}</b>        </td>    				
               </tr>    
               <tr>        
-                <td class="Receipt label">            Cashier<span>:</span>          </td>        
-                <td class="Receipt">            <b>{{bill.sales_by.username}}               </b></td>        
+                <td class="Receipt label">            <span></span>          </td>        
+                <td class="Receipt">            <b></b></td>        
                 <!---->        
-                <td class="Receipt label">            Paid By<span>:</span>         </td>        
-                <td class="Receipt">             <b>{{bill.payment_set.select_related.0.term}} {{bill.payment_set.select_related.0.transaction_no}} </b>          </td>    				
+                <td class="Receipt label">            Date<span>:</span>         </td>        
+                <td class="Receipt">             <b>{{bill.create_at}}</b>          </td>    				
               </tr>    
               <tr>        
-                <td class="Receipt label">            TO<span>:</span>         </td>        
-                <td class="Receipt">            <b>{{bill.customer}}                    </b></td>        
-                <td class="Receipt label">          <span></span>         </td>        
-                <td class="Receipt">           <b></b>         </td>    
+                <td class="Receipt label">            <span></span>         </td>        
+                <td class="Receipt">            <b></b></td>        
+                <td class="Receipt label">          SALES PERSON<span>:</span>         </td>        
+                <td class="Receipt">           <b>{{bill.sales_by.username}}</b>         </td>    
               </tr>    
               
 			  
@@ -218,10 +224,10 @@ th,td{
 						  <tr>        
 							<td class="Receipt itemno">            ITEM NO.         </td>        
 							<td class="Receipt">            DESCRIPTION         </td>        
-                            <td class="right qty">            Per Gram Price         </td>        
+                            <td class="right qty">            Per Gram (RM)         </td>        
 							<td class="right qty">            Weight         </td>        
 							<td align="right" class="price">            Gold Price         </td>        
-							<td align="right" class="price">            Workman Ship         </td>    
+							<td align="right" class="price">            W/Ship         </td>    
                             <td align="right" class="price">            Amount        </td>    
 						  </tr>    
 						  <tr>        
@@ -248,7 +254,7 @@ th,td{
 							{{record}}
 							<tr>
 							<td class="Receipt itemno"> {{forloop.counter}} {{outStockRecord.product.name|FOCHidden}}</td>
-							<td class="Receipt">{{outStockRecord.product.description|FOCHidden}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> (GOLDTYPE:{{outStockRecord.product.category.category_name}})</span>{% endif %}</td>
+							<td class="Receipt">{{outStockRecord.product.description|FOCHidden}} {% if  outStockRecord.serial_no.serial_no %}<span style="font-weight: bolder; padding: 0 0 0 1em"> (GOLDTYPE : {{outStockRecord.product.category.category_name}})</span>{% endif %}</td>
 							<td class="right qty">{{outStockRecord.unit_sell_price}}</td>
 							<td align="right" class="price">{{outStockRecord.quantity}}</td>
 							<td align="right" class="price"><script type="text/javascript">document.write(({{outStockRecord.unit_sell_price}}*{{outStockRecord.quantity}}));</script></td>
@@ -314,8 +320,8 @@ th,td{
 			  </tr>                          
 			  
               <tr>        
-				<td class="signature">                 Customer Signature         </td>        
-                <td class="signature">                 Authorised By         </td>    
+				<td class="signature">                 ISSUE BY         </td>        
+                <td class="signature">                 CUSTOMER SIGNATURE </td>    
                 <td align="right" class="summary">            </td>    
                 <td align="right" class="summary">            Change         </td>        
                 <td align="right" class="summary">           {{bill.change}}     </td>    
