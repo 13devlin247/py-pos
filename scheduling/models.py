@@ -29,7 +29,7 @@ class Job(models.Model):
     creator = models.ForeignKey(User, related_name="create_by")
     create_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(True)
-    reason = models.CharField(max_length=100, null=True)
+    reason = models.CharField(max_length=100, null=True, blank=True)
 
     def __unicode__(self):
         return self.name
@@ -47,7 +47,7 @@ class ClothesChoosed(models.Model):
     fields_values = models.TextField(null=True)
     create_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(True)
-    reason = models.CharField(max_length=100, null=True)    
+    reason = models.CharField(max_length=100, null=True, blank=True)
 
 class Task(models.Model):
     name = models.CharField(max_length=100, null=True)
@@ -101,7 +101,7 @@ class Step(models.Model):
     start_at = models.DateTimeField(auto_now_add=False)
     end_at = models.DateTimeField(auto_now_add=False)
     active = models.BooleanField(True)
-    reason = models.CharField(max_length=100, null=True)
+    reason = models.CharField(max_length=100, null=True, blank=True)
     create_at = models.DateTimeField(auto_now_add=True)
                         
                         
