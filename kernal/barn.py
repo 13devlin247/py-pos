@@ -438,11 +438,16 @@ class BarnMouse:
         except InStockRecord.DoesNotExist:
             logger.warn("instance '%s' , Cost: '%s' does NOT update correctly", pk, cost)
     
+    def RecalcCost(self, outStockRecord):
+        logger.debug("Recalc cost, OutStockRecord: '%s'", outStockRecord.pk)
+        totalCost = self.Cost(outStockRecord.serial_no) * outStockRecord.quantity 
+        outStockRecord.cost = totalCost
+        self.UpdateProfit(outStockRecord)
+        
+            
     def UpdateProfit(self, outStockRecord):
         logger.debug("Update profit, OutStockRecord: '%s'", outStockRecord.pk)
-        totalCost = self.Cost(outStockRecord.serial_no) * outStockRecord.quantity 
-        outStockRecord.profit = outStockRecord.amount - totalCost
-        outStockRecord.cost = totalCost
+        outStockRecord.profit = outStockRecord.amount - outStockRecord.cost
         outStockRecord.save()
 
     
@@ -1187,6 +1192,7 @@ class Hermes:
         return True
     
     def __init__(self):
+        self.recalc_cost = False
         self.is_all_close = self._counter_check()
         
     def _recalc_bill_profit(self, bill):
@@ -1198,7 +1204,10 @@ class Hermes:
                 mouse = MickyMouse(outStockRecord.product)
             else:
                 mouse = BarnMouse(outStockRecord.product)
-            mouse.UpdateProfit(outStockRecord)
+            if self.recalc_cost == True:
+                mouse.RecalcCost(outStockRecord)
+            else:
+                mouse.UpdateProfit(outStockRecord)
             totalProfit = totalProfit + outStockRecord.profit
             logger.info("OutStockRecord: %s profit: %s, product: %s, sales index: %s" , outStockRecord.pk , outStockRecord.profit, outStockRecord.product.name, outStockRecord.sell_index)
         bill.profit = totalProfit
@@ -1262,7 +1271,9 @@ class Hermes:
             counter.active = True
             counter.save()
             logger.debug("Counter '%s': '%s' reopen for re-calc.", counter.pk, counter.create_at)
+            self.recalc_cost = True
             self.ReCalcCounterByPK(counter.pk, recalc_bill_profit=True)
+            self.recalc_cost = False
 
     def ConsignmentOut(self, payment, outStockRecords):
             if payment.type != self.CONSIGNMENT_OUT:

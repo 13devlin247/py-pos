@@ -2,12 +2,14 @@ from django.http import HttpResponseRedirect, HttpResponse
 import datetime
 from django.shortcuts import render_to_response
 from scheduling.mythology import Supervisor, SchedulerFactory, JobAgent,\
-    ClothesAgent
+    ClothesAgent, TaskAgent
 from kernal.views import __json_wrapper__
 from scheduling.models import JobForm, ClothesTemplateForm, ClothesTemplate,\
     Task, Worker, WorkerAbility, ClothesChoosed, Step, Job 
 from datetime import date    
 import logging
+from kernal.models import JobResponse
+from kernal.barn import Hermes
 # Create your views here.
 logging.basicConfig(
     level = logging.WARN,
@@ -100,6 +102,18 @@ def CreateClothesInformationDone(request):
     clothes_agent.choose_clothes(clothes_templates, None)
     return HttpResponseRedirect('/workflow/clothes/information/add/%s' % jobid)
 
+def _response_job_cost(job_agent):
+    job_response = JobResponse.objects.get(job = job_agent.instance)
+    outStockRecord = job_response.outStockRecord
+    outStockRecord.cost = job_agent.cost()
+    outStockRecord.save()
+    job_response.active = False
+    job_response.reason = 'Completed'
+    job_response.save()
+    hermes = Hermes()
+    hermes.recalc_cost = False
+    hermes.ReCalcCounterByPK(outStockRecord.bill.counter.pk, recalc_bill_profit = True)
+
 def CreateStepDone(request, jobid, taskid, workerid, cost):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -108,18 +122,18 @@ def CreateStepDone(request, jobid, taskid, workerid, cost):
         endDate = str(date.max)
     startDate = startDate+" 00:00:00"
     endDate = endDate+" 23:59:59"
-    
-    factory = SchedulerFactory()
-    job_agent = JobAgent(factory.jobs(jobid))
-    task = Task.objects.get(pk=int(taskid))
-    worker_ability = WorkerAbility.objects.get(pk=int(workerid))
-    job_agent.create_step(task = task, worker = worker_ability.worker, cost = cost, start_at = startDate, end_at = endDate)
+    worker = Supervisor().get_worker(workerid)
+    job_agent = JobAgent(SchedulerFactory().jobs(jobid))
+    task = TaskAgent(pk = taskid)
+    job_agent.create_step(task = task.instance, worker = worker, cost = cost, start_at = startDate, end_at = endDate)
+    _response_job_cost(job_agent)
     return HttpResponseRedirect('/workflow/step/add/'+str(job_agent.pk))
      
 def RemoveStep(request, jobid, stepid):
     factory = SchedulerFactory()
     job_agent = JobAgent(factory.jobs(jobid))
     job_agent.remove_step(stepid, 'assign error')
+    _response_job_cost(job_agent)
     return HttpResponseRedirect('/workflow/step/add/'+str(job_agent.pk))
 
 def CreateStep(request, jobid):
@@ -156,7 +170,6 @@ def NextStep(request,jobid):
     nextone = stepnow.next_step()
     progress = stepnow.progress()
     logger.debug("%s",nextone)
-
     return HttpResponseRedirect('/workflow/step/add/'+str(jobid))          
 
 def PrevStep(request,jobid):
@@ -165,7 +178,6 @@ def PrevStep(request,jobid):
     prevone = stepnow.prev_step()
     progress = stepnow.progress()   
     logger.debug("%s",prevone)
-
     return HttpResponseRedirect('/workflow/step/add/'+str(jobid))    	
 
 

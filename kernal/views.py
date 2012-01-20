@@ -1,4 +1,5 @@
 from pos.kernal.models import *
+from pos.scheduling.models import *
 from pos.kernal.consignment_tool import __query_consignment_cost_qty__
 from pos.kernal.consignment_tool import __close_consignment__
 from pos.kernal.consignment_tool import __query_customer__
@@ -960,7 +961,11 @@ def _build_jobs(user, outStockRecords):
             logger.debug("%s not need to create job" % outStockRecord.product.name) 
             continue 
         scheduler_factory = SchedulerFactory()
-        scheduler_factory.register_job(outStockRecord.product.name, datetime.today(), datetime.today(), user)
+        job = scheduler_factory.register_job(outStockRecord.product.name, datetime.today(), datetime.today(), user)
+        job_response = JobResponse()
+        job_response.outStockRecord = outStockRecord
+        job_response.job = job
+        job_response.save()
 
 def SalesConfirm(request):
     salesDict = {}
@@ -2025,7 +2030,7 @@ def DeleteBill(request):
     delete_bill = owl.RecalcBill(pk)
     relc_counter = delete_bill.counter
     hermes = Hermes()
-    hermes.ReCalcCounterByPK(relc_counter.pk, recalc_bill_profit = True)
+    hermes.ReCalcCounterByPK(relc_counter.pk, recalc_bill_profit = False)
     return HttpResponseRedirect('/counter/close/') 
     
 def DeleteInStockBatch(request):
