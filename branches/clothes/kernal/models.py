@@ -9,6 +9,7 @@ from django.contrib.auth.models import User
 from django.contrib import admin
 from django.core.files.storage import FileSystemStorage
 from django.conf.locale import tr
+from pos.scheduling.models import *
 
 CHOICES_ITEM = (
     ('Motorola', 'Motorola'),
@@ -473,4 +474,13 @@ class ProductAdmin(admin.ModelAdmin):
     list_per_page = 25
     search_fields = ['name', 'description', 'category__category_name', 'brand__brand_name']
     
-
+class JobResponse(models.Model):
+    outStockRecord = models.ForeignKey(OutStockRecord)
+    job = models.ForeignKey(Job, primary_key=True)
+    active = models.BooleanField("actived product", True)
+    create_at = models.DateTimeField(auto_now_add=True)        
+    reason = models.CharField(max_length=100, null=True)
+    
+    def __unicode__(self):
+        return self.job
+        

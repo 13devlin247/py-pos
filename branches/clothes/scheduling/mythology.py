@@ -78,8 +78,12 @@ class SchedulerFactory(object):
         return job
 
 class TaskAgent(object):
-    def __init__(self, instance):
-        self.instance = instance
+    def __init__(self, instance = None, pk = None):
+        if instance:
+            self.instance = instance
+            return
+        self.instance = Task.objects.get(pk=pk)
+        return
     
     def update(self, name, desc):
         self.instance.name = name
@@ -139,6 +143,9 @@ class JobAgent(object):
         self.instance.save()
         logger.info("Job: %s cost :%s " %(self.instance.pk, total_cost))
             
+    
+    def cost(self):
+        return self.instance.cost
     
     def update(self, name = None, cost = None, desc = None, start_at = None, end_at = None, status = None):
         if name:
@@ -217,7 +224,7 @@ class JobAgent(object):
                 step.save()	
                 break		         
         return step
-		
+
 # change the prev step to working		
     def prev_step(self):
         steps = Step.objects.filter(active=True).filter(job=self.instance).order_by('-create_at')
@@ -248,7 +255,7 @@ class JobAgent(object):
             percent = 0	
         else:
             percent = float(cal_progress/total_progress)
-	    
+    
         self.instance.status = int(percent*100)
         self.instance.save()
         logger.debug("Progress-----> %s / %s ",cal_progress,total_progress)	    
@@ -376,8 +383,7 @@ class Supervisor(object):
         #workertask = Step.objects.filter(worker=workerid).filter(active=True).exclude(status="Complete")
         workertask = Step.objects.filter(worker=workerid).filter(active=True)     
         return workertask
-	
-		
+
 class WorkerAgent(object):
     def __init__(self, instance):
         self.worker = instance
