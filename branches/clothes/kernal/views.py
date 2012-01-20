@@ -961,7 +961,7 @@ def _build_jobs(user, outStockRecords):
             logger.debug("%s not need to create job" % outStockRecord.product.name) 
             continue 
         scheduler_factory = SchedulerFactory()
-        job = scheduler_factory.register_job(outStockRecord.product.name, datetime.today(), datetime.today(), user)
+        job = scheduler_factory.register_job(outStockRecord.bill.customer.name, datetime.today(), datetime.today(), user)
         job_response = JobResponse()
         job_response.outStockRecord = outStockRecord
         job_response.job = job

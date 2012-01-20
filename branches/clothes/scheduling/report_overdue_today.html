@@ -15,7 +15,7 @@
                 </th>  
                 <th style="width:auto">Name
                 </th>				  
-                <th style="width:30%">Task Name
+                <th style="width:20%">Task Name
                 </th>  
                 <th style="width:auto;">Cost
                 </th>  
@@ -39,10 +39,10 @@
                 <td>
 				<div>
 				
-				<div style="font-size:11px;float:left;width:60px;background-color:#C3272B;color:white;border-radius:5px;height:15px;padding-right:2px;margin-right:2px;">Job Due</div><div style="float:left;font-size:11px;">{{result.job.end_at}}</div>
+				<div style="font-size:11px;float:left;width:60px;background-color:#C3272B;color:white;border-radius:5px;height:15px;padding-right:2px;margin-right:2px;">Job Due</div><div style="float:left;font-size:11px;padding-left: 1em">{{result.job.end_at|date:"(D) d M Y"}}</div>
 				</div>
 				<div>
-				<div style="font-size:11px;float:left;width:60px;background-color:#C3272B;color:white;border-radius:5px;height:15px;padding-right:2px;margin-right:2px;">Task Due</div><div style="float:left;font-size:11px;">{{result.end_at}}</div>
+				<div style="font-size:11px;float:left;width:60px;background-color:#C3272B;color:white;border-radius:5px;height:15px;padding-right:2px;margin-right:2px;">Task Due</div><div style="float:left;font-size:11px;padding-left: 1em">{{result.end_at|date:"(D) d M Y"}}</div>
 				
 				</div>
 				</td>

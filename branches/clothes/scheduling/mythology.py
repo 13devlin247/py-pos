@@ -263,7 +263,7 @@ class JobAgent(object):
         return percent
 
     def Overdue_step(self,duedate):
-        step = Step.objects.filter(active=True).filter(end_at__lt = duedate).filter(Q(status__exact=WORKING)|Q(status__exact=PENDING))
+        step = Step.objects.filter(job=self.instance).filter(active=True).filter(end_at__lt = duedate).filter(Q(status__exact=WORKING)|Q(status__exact=PENDING))
         logger.debug("Duedate--->%s",duedate)
         logger.debug("Step--->%s",step)
         return step

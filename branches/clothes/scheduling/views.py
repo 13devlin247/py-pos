@@ -184,12 +184,13 @@ def PrevStep(request,jobid):
 def OverdueStep(request,duedate):
     factory = SchedulerFactory()	
     jobs = factory.jobs()
+    totaloverdue = []
     for job in jobs:
         stepnow = JobAgent(factory.jobs(job.pk))
-        totaloverdue = stepnow.Overdue_step(duedate)
+        totaloverdue.extend(stepnow.Overdue_step(duedate))
         logger.debug("%s",totaloverdue)		
-	return render_to_response('report_overdue_today.html',{'totaloverdue':totaloverdue})
-  	    
+    return render_to_response('report_overdue_today.html',{'totaloverdue':totaloverdue})
+
 def Overdue(request, jobid, date):
     factory = SchedulerFactory()	
     stepnow = JobAgent(factory.jobs(jobid))

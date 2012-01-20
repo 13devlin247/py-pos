@@ -26,7 +26,7 @@ clothes_template_report_view = {
 }
 
 jobs_report_view = {
-    'queryset': Job.objects.filter(active=True),                      
+    'queryset': Job.objects.filter(active=True).exclude(status="100"),                      
     'allow_empty': True,   
     'template_name': 'search_jobs.html', 
     'extra_context': {'submit_form':'/counter/save/'},    
