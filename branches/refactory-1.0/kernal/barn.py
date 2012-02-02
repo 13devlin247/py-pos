@@ -225,8 +225,8 @@ class BarnMouse:
         starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
         endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
         inventory_summary = self.Count_inventory_stock(starttime, endtime, self.product)
-        qty = inventory_summary[5]
-        cost = inventory_summary[6]
+        qty = float(inventory_summary[5])
+        cost = float(inventory_summary[6])
         avg_cost = 0
         if qty != 0:
             avg_cost = cost / qty
