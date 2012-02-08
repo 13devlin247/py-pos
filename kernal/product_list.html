@@ -59,7 +59,7 @@
                 </div>
 
                 <div class="span-3">
-                    Bar Code
+                    Desp.
                 </div>
 
                 <div class="span-2">
@@ -160,7 +160,7 @@
                 "<div class='span-3'>"+data.fields.brand+"</div>"+   
                 "<div class='span-3'>"+data.fields.type+"</div>"+  
                 "<div class='span-3'>"+data.fields.retail_price+"</div>"+  
-                "<div class='span-3'>&nbsp;"+data.fields.barcode+"</div>"+                  
+                "<div class='span-3'>&nbsp;"+data.fields.description+"</div>"+                  
                 "<div class='span-2'><a name=\"modal\" href='/product/update/"+data.pk+"'>Edit</a></div>"+  
                 "</div>"
         ;    
@@ -195,7 +195,7 @@
 
                 <div class="span-3">$ {{product.retail_price}}</div>
 
-                <div class="span-3">{{product.barcode}}&nbsp;</div>
+                <div class="span-3">{{product.description}}&nbsp;</div>
 
                 <div class="span-2">
                     <a name="modal" href="/product/update/{{product.pk}}">Edit</a>
