@@ -54,7 +54,7 @@ a:link:after, a:visited:after {font-size:10%;}
 table{
 	margin: 0;
 	padding:0;
-	width: 95%;
+	width: 100%;
 }
 tr{
 	margin: 0;
@@ -73,6 +73,12 @@ td{
 
 #AppendExtraCost{
 	display: none;
+}
+
+.container {
+    box-shadow: none;
+    margin: 0 auto;
+    width: 950px;
 }
 
 input[type=text]{
