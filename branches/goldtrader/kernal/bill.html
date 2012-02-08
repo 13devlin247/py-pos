@@ -153,22 +153,22 @@ th,td{
 				</td>    
               </tr>    
               <tr>        
-                <td class="Receipt label">            CUSTOMER<span>:</span>         </td>        
-                <td class="Receipt">            <b>{{bill.customer}}</b></td>    
+                <td class="Receipt label">            <span></span>         </td>        
+                <td class="Receipt">            <b>   </b></td>    
                 <td class="Receipt label">            <span></span>         </td>        
                 <td class="Receipt">            <b>{{bill.payment_set.select_related.0.term|upper}} BILL</b>        </td>    				
               </tr>    			  
               <tr>        
-                <td class="Receipt label">            <span></span>         </td>        
-                <td class="Receipt">            <b>   </b></td>    
-                <td class="Receipt label">            Bill No<span>:</span>         </td>        
+                <td class="Receipt label">            CUSTOMER<span>:</span>         </td>        
+                <td class="Receipt">            <b>{{bill.customer}}</b></td>                    
+                <td class="Receipt label">            BILL NO<span>:</span>         </td>        
                 <td class="Receipt">            <b>{{bill}}</b>        </td>    				
               </tr>    
               <tr>        
                 <td class="Receipt label">            <span></span>          </td>        
                 <td class="Receipt">            <b></b></td>        
                 <!---->        
-                <td class="Receipt label">            Date<span>:</span>         </td>        
+                <td class="Receipt label">            DATE<span>:</span>         </td>        
                 <td class="Receipt">             <b>{{bill.create_at}}</b>          </td>    				
               </tr>    
               <tr>        
