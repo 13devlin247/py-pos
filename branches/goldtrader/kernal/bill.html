@@ -120,6 +120,11 @@ th,td{
     display: inline;
  
  }
+ 
+ .spacify_right{
+    width: 400px; 
+    test-align: right;
+ }
 </style>
 <!-----------------------edit part ----->
 
@@ -154,9 +159,9 @@ th,td{
               </tr>    
               <tr>        
                 <td class="Receipt label">            <span></span>         </td>        
-                <td class="Receipt">            <b>   </b></td>    
+                <td class="Receipt spacify_right">            <b>   </b></td>    
                 <td class="Receipt label">            <span></span>         </td>        
-                <td class="Receipt">            <b>{{bill.payment_set.select_related.0.term|upper}} BILL</b>        </td>    				
+                <td class="Receipt" style="font-size: 14pt">            <u><b>{{bill.payment_set.select_related.0.term|upper}} BILL</b></u>        </td>    				
               </tr>    			  
               <tr>        
                 <td class="Receipt label">            CUSTOMER<span>:</span>         </td>        
@@ -174,7 +179,7 @@ th,td{
               <tr>        
                 <td class="Receipt label">            <span></span>         </td>        
                 <td class="Receipt">            <b></b></td>        
-                <td class="Receipt label">          SALES PERSON<span>:</span>         </td>        
+                <td class="Receipt label" style="width: 150px">          SALES PERSON<span>:</span>         </td>        
                 <td class="Receipt">           <b>{{bill.sales_by.username}}</b>         </td>    
               </tr>    
               
