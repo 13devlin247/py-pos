@@ -1500,7 +1500,7 @@ def CounterAmount(request, counter_pk):
 
 def ProductNameInfo(request,query):
     logger.debug(" search product name by keyword: %s",query)    
-    productSet = __search__(Product, Q(name__contains= query))
+    productSet = __search__(Product, Q(name__contains= query) & Q(active = True))
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
    
