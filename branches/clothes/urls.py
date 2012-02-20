@@ -416,6 +416,7 @@ urlpatterns = patterns('',
     
     url(r'^category/info/$', login_required(CategoryInfo)),
     url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)', login_required(PrintBarcode)),
+    url(r'^tools/recalc/all_counter/$', login_required(RecalcAllCounter)),
 
     url(r'^workflow/', include('pos.scheduling.urls')),
 	

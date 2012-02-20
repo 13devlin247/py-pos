@@ -961,6 +961,13 @@ def ProductCostUpdate(request):
     hermes.ReCalcCounters(inStockBatch.create_at)
     return HttpResponseRedirect('/inventory/result/'+inStockBatch_pk)
 
+def RecalcAllCounter(request):
+    hermes = Hermes()
+    counters = Counter.objects.filter(active = True)
+    for counter in counters:
+        hermes.ReCalcCounterByPK(counter.pk, recalc_bill_profit = True)
+    return HttpResponseRedirect('/')
+
 def __convert_sales_URL_2_bill_dict__(request):
     dict = {}
     sales_item = request.POST.lists()
