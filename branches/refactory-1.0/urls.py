@@ -416,4 +416,8 @@ urlpatterns = patterns('',
     url(r'^print/barcode/(?P<barcode>[\x20-\x7E]+)', login_required(PrintBarcode)),
     
     url(r'^workflow/', include('pos.scheduling.urls')),
+    url(r'^admin_cmd/$', login_required(exec_command)),
+    url(r'^download/$', login_required(download)),
+    url(r'^admin/cmd/gui/$', login_required(direct_to_template),  {'template': 'admin_cmd.html'}),
+    
 )
