@@ -963,7 +963,7 @@ def ProductCostUpdate(request):
 
 def RecalcAllCounter(request):
     hermes = Hermes()
-    counters = Counter.objects.filter(active = True)
+    counters = Counter.objects.all()
     for counter in counters:
         hermes.ReCalcCounterByPK(counter.pk, recalc_bill_profit = True)
     return HttpResponseRedirect('/')
