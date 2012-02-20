@@ -1234,9 +1234,9 @@ class Hermes:
         cost = 0
         qty = 0
         for record in all_sorted:
-            if record.bill.mode == "service":
-                continue            
             if "OutStockRecord" == record.__class__.__name__:
+                if record.bill.mode == "service":
+                    continue                        
                 if record.serial_no:
                     record.cost = barnMouse.Cost(record.serial_no) * record.quantity
                     record.save()
