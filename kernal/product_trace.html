@@ -7,6 +7,9 @@
 {% endblock %}
 
 {% block content %}
+    <style type="text/css">
+        .service { background-color: #CCC; }
+    </style>
         <div align="center"><h1>Product Trace</h1></div>
         <div class="span-21">
         <div style="font-size: 16pt">Product Info</div>
@@ -168,7 +171,7 @@
             </div>
 
     {% for outStockRecord in outStockRecords %}
-            <div class="span-24" style="border-bottom:1px solid gray;{% if not outStockRecord.active %} color: red {% endif %}">
+            <div class="span-24 {{outStockRecord.type}}" style="border-bottom:1px solid gray;{% if not outStockRecord.active %} color: red {% endif %}">
                 <div class="span-5">
                     {{outStockRecord.create_at}}
                 </div>

@@ -11,6 +11,16 @@
         </div>  
 {% endblock %}
 
+{% block autocomplete_search %}  
+	$("#item").autocomplete ("", {
+		width: 260,
+        selectFirst: false,
+        extraParams: {
+                    mode: function(){ return $("#mode").attr('value'); }
+                }
+    });      
+{% endblock %} 
+
 {% block foc_algo %}
     var foc = $("#item").val().split("<")[0];
     var foc_pk = foc.replace(/\s/g,"-")+"-foc-product";
