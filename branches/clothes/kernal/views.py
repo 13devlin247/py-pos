@@ -1337,7 +1337,7 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
 
 
 def _show_stock_cost_table(startDate, endDate):
-    products = Product.objects.all().order_by("name")
+    products = Product.objects.all().order_by("name").exclude(name__contains = "-foc-product")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -1366,7 +1366,7 @@ def _show_stock_cost_table(startDate, endDate):
 
 
 def _count_all_inventory_stock(startDate, endDate):
-    products = Product.objects.filter(Q(active=True)).order_by("name")
+    products = Product.objects.filter(Q(active=True)).exclude(name__contains = "-foc-product").order_by("name")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -1527,7 +1527,7 @@ def CounterAmount(request, counter_pk):
 
 def ProductNameInfo(request,query):
     logger.debug(" search product name by keyword: %s",query)    
-    productSet = __search__(Product, Q(name__contains= query))
+    productSet = __search__(Product, Q(name__contains= query) & Q(active = True))
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
    
