@@ -1249,7 +1249,7 @@ class Hermes:
                     cost = 0 
             else:
                 total_cost = cost * qty
-                avg_cost = (total_cost + record.cost) / (qty + record.quantity)  
+                avg_cost = (total_cost + (record.cost * record.quantity)) / (qty + record.quantity)  
                 cost = avg_cost
                 qty = qty + record.quantity
 
