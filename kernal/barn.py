@@ -253,10 +253,13 @@ class BarnMouse:
         serial_no = None
         try:
             serial_no = SerialNo.objects.get(serial_no = imei)
-            if (serial_no.balance + qty) > serial_no.quantity:
+            logger.error(serial_no.balance)
+            logger.error(qty)
+            logger.error(serial_no.quantity)
+            if abs(float(qty) - float(serial_no.quantity)) > 0.00001:
                 raise OutofStockException("Requered: '%s' qty: '%s', stock:'%s' ", serial_no, qty, serial_no.balance)   
             serial_no.balance = serial_no.balance + qty 
-            if serial_no.balance == serial_no.quantity:
+            if (float(serial_no.balance) - float(serial_no.quantity)) < 0.00001:
                 logger.debug("Serial '%s' sold out", serial_no.serial_no)
                 serial_no.active = False
             serial_no.save()
@@ -302,7 +305,7 @@ class BarnMouse:
         outStockRecord.quantity = qty
         outStockRecord.amount = price * qty + float(workman_ship)
         outStockRecord.sell_index = 0;
-        outStockRecord.cost = self.Cost(serial_no) * qty;
+        outStockRecord.cost = float(self.Cost(serial_no)) * qty;
         outStockRecord.profit = float(outStockRecord.amount) - float(outStockRecord.cost);
         outStockRecord.workman_ship = workman_ship
         outStockRecord.type = reason
