@@ -360,6 +360,9 @@ class HoldBill(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(True)
     reason = models.CharField(max_length=100, null=True)
+
+class IDGenerator(models.Model):
+    serial = models.DecimalField(max_digits=100, decimal_places=0)
     
 class ProductForm(ModelForm):
     class Meta:

@@ -2631,3 +2631,22 @@ def SalaryComplete(request, id):
     extraCost.status = "Complete"
     extraCost.save()
     return HttpResponseRedirect('/search/salary/')
+
+def QuerySerialID(request, brand):
+    serial = 1
+    id = None
+    try:
+        id = IDGenerator.objects.latest('pk')
+        serial = id.serial
+    except IDGenerator.DoesNotExist:
+        serial = 1
+        id = IDGenerator()
+        id.serial = serial
+    id.serial += 1
+    id.save()
+    
+    brand = brand[0]
+    serial = brand + str(serial).zfill(8)
+    return HttpResponse(serial, mimetype="text/plain")    
+    
+        
