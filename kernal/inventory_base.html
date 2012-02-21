@@ -128,6 +128,17 @@
 {% endblock %}
 
 {% block ajaxGenTableBody %}
+        values = ''
+                    $.ajax({
+                        url: "/query/SerialID/"+data.fields.brand,
+                        type: "GET",
+                        success: function(data){  
+                            $("#" + pk + "_serial-1").val(data)
+                        },
+                        error: function(data){ alert("Serial Generated error") },
+                        complete: function(data){},
+                    });   
+
 							row = ""+
 									"<tr id=\""+pk+"_tr\">"+
 									"<td><a href='#' id='removeItem' onclick=removeItem('"+pk+"')><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
@@ -135,7 +146,7 @@
 									"<td><input type=\"text\" name=\""+pk+"_cost\" id=\""+pk+"_cost\" value=\""+data.fields.cost+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onChange=checkInput('"+pk+"') /></td>"+
 									"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+
 									/* "<td><a href=\"#\" class='totalPrice' onclick=\"buildSerialNo('"+pk+"');return false;\">optional</a></td>"+ */
-                                    "<td><input name="+pk+"_serial-1></input></td>"+
+                                    "<td><input id="+pk+"_serial-1 name="+pk+"_serial-1></input></td>"+
 									"</tr>"+
 									"<tr id=\""+pk+"_serial_tr\" >"+
 									"<td colspan=5 id=\""+pk+"_serial_td\" style='display: none'><div id=\""+pk+"_serial\" ></div></td>"+
@@ -145,6 +156,15 @@
 {% endblock %}
 
 {% block extendJavascript %}
+    function zeroFill( number, width )
+    {
+      width -= number.toString().length;
+      if ( width > 0 )
+      {
+        return new Array( width + (/\./.test( number ) ? 2 : 1) ).join( '0' ) + number;
+      }
+      return number;
+    }
     function buildSerialNo(pk){
 		// if input box not exist, build it
 		if($("#"+pk+"_serial").html() == ''){
@@ -163,7 +183,7 @@
 	function _build_serial_input_textfield_by_pk_and_quantity(pk, quantity){
 		var inputField = '';
         for (var i = 0 ; i < quantity ; i ++){
-            inputField += "<input name="+pk+"_serial-"+i+"></input> <br/>";
+            inputField += "<input name="+pk+"_serial-"+i+" value = " + values + "></input> <br/>";
         }
 		return inputField;
 	}
