@@ -148,7 +148,7 @@ class BarnMouse:
         result = []
 
         inStockRecords = InStockRecord.objects.filter(product = product).filter(active = True)
-        outStockRecords = OutStockRecord.objects.filter(product = product).filter(active = True)
+        outStockRecords = OutStockRecord.objects.filter(product = product).filter(active = True).exclude(type = "service")
         inStockSummary = self.__count_product_stock__(starttime, endtime, inStockRecords, product)
         outStockSummary = self.__count_product_stock__(starttime, endtime, outStockRecords, product)
         # count old stock record
@@ -348,7 +348,7 @@ class BarnMouse:
         return inStockRecord
         
     def _serial_validation(self, qty, serials):
-        qty = int(qty)
+        qty = float(qty)
         serialSet = set(serials)
         if len(serialSet) == qty:
             return 1
@@ -742,7 +742,7 @@ class BarnOwl:
             if barcode not in product_dict:
                 product_dict[barcode] = {}
             product_dict[barcode]['product'] = self._query_product(pk)
-            product_dict[barcode]['qty'] = int(dict[barcode]['quantity'])
+            product_dict[barcode]['qty'] = float(dict[barcode]['quantity'])
             product_dict[barcode]['unit_sell_price'] = float(dict[barcode]['price'])
             product_dict[barcode]['extracost'] = float(dict[barcode].get('extracost', '0.0'))
             product_dict[barcode]['workman'] = float(dict[barcode].get('workman', '0.0'))
@@ -762,7 +762,7 @@ class BarnOwl:
             for product_dict in product_dict.itervalues():
                 logger.debug("build Service OutStockRecord by: '%s'", product_dict)
                 product = product_dict["product"]
-                qty = int(product_dict["qty"])
+                qty = float(product_dict["qty"])
                 cost = int(product_dict["cost"])
                 unit_sell_price = float(product_dict["unit_sell_price"])
                 serial = product_dict["serial"]
@@ -774,7 +774,7 @@ class BarnOwl:
         for product_dict in product_dict.itervalues():
             logger.debug("build OutStockRecord by: '%s'", product_dict)
             product = product_dict["product"]
-            qty = int(product_dict["qty"])
+            qty = float(product_dict["qty"])
             unit_sell_price = float(product_dict["unit_sell_price"])
             serial = product_dict["serial"]
             workman_ship = int(product_dict["workman"])

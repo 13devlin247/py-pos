@@ -50,6 +50,14 @@ Below function for ajax use
 #def ajaxProductDetailView(request):
    # if request.method == 'GET':
 
+   
+def GetLogo(request):
+    company = Company.objects.get(pk=1)
+    #companySet = __search__(Company, (Q(pk__exact=1)))
+    companySet = Company.objects.all()
+    json = __json_wrapper__(companySet)
+    return HttpResponse(json, mimetype="application/json")
+	
 def InventoryReturnReport(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -1372,7 +1380,7 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
 
 
 def _show_stock_cost_table(startDate, endDate):
-    products = Product.objects.all().order_by("name")
+    products = Product.objects.all().order_by("name").exclude(name__contains = "-foc-product")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -1401,7 +1409,7 @@ def _show_stock_cost_table(startDate, endDate):
 
 
 def _count_all_inventory_stock(startDate, endDate):
-    products = Product.objects.filter(Q(active=True)).order_by("name")
+    products = Product.objects.filter(Q(active=True)).exclude(name__contains = "-foc-product").order_by("name")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -2187,7 +2195,8 @@ def ReportSalesItem(request):
             continue
         group[product] = outstocks
 
-    return render_to_response('report_item_sales.html',{'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+    company = Company.objects.all()[0]
+    return render_to_response('report_item_sales.html',{'company': company,'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
 
 def StockTitle(search):
     #title = "aaa"
@@ -2420,7 +2429,7 @@ def _build_stock_sold_dict(productg, startDate, endDate,search):
         productno = StockCost.objects.get(product =inStockRecord.product)
         qty = productno.qty
           
-        products[product][0].cost = products[product][0].cost + (inStockRecord.cost * inStockRecord.quantity)
+        products[product][0].cost = products[product][0].cost + (inStockRecord.cost * inStockRecord.total_available)
         #products[product][0].quantity = qty
         products[product][0].quantity = products[product][0].quantity + inStockRecord.total_available
         products[product].append(inStockRecord)
@@ -2622,4 +2631,6 @@ def SalaryComplete(request, id):
     extraCost.status = "Complete"
     extraCost.save()
     return HttpResponseRedirect('/search/salary/')
-     
+
+def GenProxy(request, product_pk):
+    
