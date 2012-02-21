@@ -2631,6 +2631,3 @@ def SalaryComplete(request, id):
     extraCost.status = "Complete"
     extraCost.save()
     return HttpResponseRedirect('/search/salary/')
-
-def GenProxy(request, product_pk):
-    

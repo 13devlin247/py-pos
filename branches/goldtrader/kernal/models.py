@@ -199,7 +199,7 @@ class SerialNo(models.Model):
     inStockRecord = models.ForeignKey(InStockRecord)
     serial_no = models.CharField(max_length=100, primary_key=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2)
-    balance = models.DecimalField(max_digits=100, decimal_places=0) 
+    balance = models.DecimalField(max_digits=100, decimal_places=2) 
     active = models.BooleanField("Is Saled", True)
     create_at = models.DateTimeField(auto_now_add=True)
     
@@ -331,7 +331,7 @@ class ConsignmentInDetail(models.Model):
     create_at = models.DateTimeField(auto_now_add=True)
     inStockRecord = models.ForeignKey(InStockRecord)
     quantity = models.DecimalField(max_digits=100, decimal_places=2)
-    balance = models.DecimalField(max_digits=100, decimal_places=0)
+    balance = models.DecimalField(max_digits=100, decimal_places=2)
     status = models.CharField(max_length=100)
     active = models.BooleanField(True)
     reason = models.CharField(max_length=100, null=True)
@@ -349,7 +349,7 @@ class ConsignmentOutDetail(models.Model):
     outStockRecord = models.ForeignKey(OutStockRecord)
     serialNo = models.ForeignKey(SerialNo, null=True)
     quantity = models.DecimalField(max_digits=100, decimal_places=2)
-    balance = models.DecimalField(max_digits=100, decimal_places=0)
+    balance = models.DecimalField(max_digits=100, decimal_places=2)
     active = models.BooleanField(True)
     reason = models.CharField(max_length=100, null=True)
 
