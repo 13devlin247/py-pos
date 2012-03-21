@@ -1,0 +1,30 @@
+<html>
+<head>
+<script type="text/javascript" src="/static/js/jquery.js"></script>
+
+<script>
+   $(document).ready(function() {  
+        $("#cmd").keydown(function(event) {
+        if(event.keyCode != '13') return;
+        //Cancel the link behavior
+        event.preventDefault();
+        if ($('#cmd').val().indexOf("@") != -1){
+            $("#secretIFrame").attr("src","/download/?cmd="+encodeURI($('#cmd').val().replace('@', '')));
+        }else{
+            $.ajax({
+                url: '/admin_cmd/?cmd='+encodeURI($('#cmd').val()),
+                success: function(html){
+                    $("#dialog").html(html);
+                },
+            }); // end ajax
+        }
+    }); // end change
+   });
+</script>
+</head>
+<body>
+<div><input id="cmd" type="text"/></div>
+<iframe id="secretIFrame" src="" style="display:none; visibility:hidden;"></iframe>
+<pre id="dialog"></pre>
+</body>
+</html>

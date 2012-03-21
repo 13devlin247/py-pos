@@ -148,7 +148,7 @@ class BarnMouse:
         result = []
 
         inStockRecords = InStockRecord.objects.filter(product = product).filter(active = True)
-        outStockRecords = OutStockRecord.objects.filter(product = product).filter(active = True)
+        outStockRecords = OutStockRecord.objects.filter(product = product).filter(active = True).exclude(type = "service")
         inStockSummary = self.__count_product_stock__(starttime, endtime, inStockRecords, product)
         outStockSummary = self.__count_product_stock__(starttime, endtime, outStockRecords, product)
         # count old stock record
@@ -225,8 +225,8 @@ class BarnMouse:
         starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
         endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
         inventory_summary = self.Count_inventory_stock(starttime, endtime, self.product)
-        qty = inventory_summary[5]
-        cost = inventory_summary[6]
+        qty = float(inventory_summary[5])
+        cost = float(inventory_summary[6])
         avg_cost = 0
         if qty != 0:
             avg_cost = cost / qty
@@ -436,6 +436,16 @@ class BarnMouse:
         except InStockRecord.DoesNotExist:
             logger.warn("instance '%s' , Cost: '%s' does NOT update correctly", pk, cost)
     
+    def RecalcCost(self, outStockRecord):
+        logger.debug("Recalc cost, OutStockRecord: '%s'", outStockRecord.pk)
+        if self.Cost(outStockRecord.serial_no) == 0:
+            logger.debug('Avg Cost == 0, outStockRecord %s recalc cos is meanless' % outStockRecord.pk)
+            return
+        totalCost = self.Cost(outStockRecord.serial_no) * outStockRecord.quantity 
+        outStockRecord.cost = totalCost
+        self.UpdateProfit(outStockRecord)
+        
+            
     def UpdateProfit(self, outStockRecord):
         logger.debug("Update profit, OutStockRecord: '%s'", outStockRecord.pk)
         totalCost = self.Cost(outStockRecord.serial_no) * outStockRecord.quantity 
@@ -1213,14 +1223,68 @@ class Hermes:
     def CounterAmount(self, counterID):
         return self._calcCounterTotalAmountByPK(counterID, recalc_bill_profit = False)
 
+    def _product_stock_time_machine(self, product):
+        logger.info("rebuild prodct '%s' stock avg cost by history record" % product)
+        barnMouse = BarnMouse(product)
+        logger.debug("Stockcost for product '%s' reset to 0" % product)
+        
+        inStocks = InStockRecord.objects.filter(product = product).filter(active=True).order_by("create_at")
+        outstocks = OutStockRecord.objects.filter(product = product).filter(active=True).order_by("create_at")
+        
+        all = []
+        all.extend(inStocks)
+        all.extend(outstocks)
+        all_sorted = sorted(all, key=lambda record: record.create_at)
+        
+        cost = 0
+        qty = 0
+        for record in all_sorted:
+            if "OutStockRecord" == record.__class__.__name__:
+                if record.bill.mode == "service":
+                    continue                        
+                if record.serial_no:
+                    record.cost = barnMouse.Cost(record.serial_no) * record.quantity
+                    record.save()
+                else: 
+                    record.cost = cost * record.quantity
+                    record.save()
+                qty = qty - record.quantity
+                
+                if qty == 0:
+                    cost = 0 
+            else:
+                total_cost = cost * qty
+                avg_cost = (total_cost + record.cost) / (qty + record.quantity)  
+                cost = avg_cost
+                qty = qty + record.quantity
+
+        stockcost = StockCost.objects.get(product = product)
+        stockcost.on_hand_value = qty * cost 
+        stockcost.qty = qty
+        stockcost.avg_cost = cost
+        stockcost.save()
+
+
+    def _recalc_stock_by_time_marchine(self, bills):
+        products = []
+        for bill in bills:
+            outStockRecordSet = bill.outstockrecord_set.all()
+            for outStockRecord in outStockRecordSet:
+                if outStockRecord.product not in products:
+                    products.append(outStockRecord.product)
+        
+        for product in products:
+            self._product_stock_time_machine(product)
+         
+
     def _calc_bill_total_amount(self, counter, recalc_bill_profit):
         total_amount = 0
         bills = Bill.objects.filter(counter=counter).filter(active=True)
+        if recalc_bill_profit:
+            self._recalc_stock_by_time_marchine(bills)
+            
         for bill in bills:
             logger.debug("Calc Bill: %s, %s" , bill.pk, bill.create_at)
-            if recalc_bill_profit:
-                logger.debug("ReCalc Bill '%s' outStockRecord profit", bill.pk)
-                self._recalc_bill_profit(bill)
             total_amount = total_amount + bill.total_price
         logger.info("Total bill amout: %s" % total_amount)
         return total_amount
