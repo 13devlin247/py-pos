@@ -1,8 +1,6 @@
 from datetime import date, datetime
 from django.contrib.auth.models import User
-from pos.kernal.models import InStockRecord, OutStockRecord, StockCost, Product, Supplier, Customer, InStockBatch, SerialNo, Bill, Payment, Category, Brand, UOM, ConsignmentOutDetail, Counter,\
-    ConsignmentInDetail, ConsignmentInDetailBalanceHistory, Algo, Deposit,\
-    ExtraCost, SerialNoMapping
+from pos.kernal.models import *
 import logging
 from django.db.models.query_utils import Q
 
@@ -222,8 +220,8 @@ class BarnMouse:
     def _recalc_cost(self):
         startDate = str(date.min)+" 00:00:00"
         endDate = str(date.max)+" 23:59:59"
-        starttime = datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
-        endtime = datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
+        starttime = datetime.datetime.strptime(startDate, '%Y-%m-%d %H:%M:%S')
+        endtime = datetime.datetime.strptime(endDate, '%Y-%m-%d %H:%M:%S')
         inventory_summary = self.Count_inventory_stock(starttime, endtime, self.product)
         qty = inventory_summary[5]
         cost = inventory_summary[6]
@@ -306,20 +304,23 @@ class BarnMouse:
         outStockRecord.amount = price * qty + float(workman_ship)
         outStockRecord.sell_index = 0;
         outStockRecord.cost = float(self.Cost(serial_no)) * qty;
-        outStockRecord.profit = float(outStockRecord.amount) - float(outStockRecord.cost);
-        outStockRecord.workman_ship = workman_ship
+        outStockRecord.profit = float(outStockRecord.amount) - float(outStockRecord.cost) - float(workman_ship);
         outStockRecord.type = reason
         outStockRecord.active = True
         outStockRecord.save()
         logger.info("Product: '%s' OutStockRecord build: '%s' , bill pk: '%s', qty: '%s', price: '%s', reason: '%s', serials: '%s' ", self.product.name, outStockRecord.pk, bill.pk, qty, price, reason, serials)
-        
+            
+        workmanship = WorkmanShip.objects.get(serial_no = serial_no)
+        workmanship.price = workman_ship
+        workmanship.save()
+            
         self._recalc_cost()
         #stockCost = StockCost.objects.get(product = self.product)
         #stockCost.qty = stockCost.qty - qty 
         #stockCost.save()
         return outStockRecord
     
-    def InStock(self, inStockBatch, qty, cost, reason, serials):
+    def InStock(self, inStockBatch, qty, cost, reason, serials, workman_ship = 0.0):
         if cost == "":
             logger.debug("Cost not define, use avg cost") 
             cost = self.Cost()
@@ -344,6 +345,14 @@ class BarnMouse:
         if serials:
             logger.debug("Product: '%s' build serial numbers", self.product)
             self.__build_serial_no__(inStockRecord, serials)
+            
+        # build workmanship_record
+        for serial in serials:
+            workmanship = WorkmanShip()
+            workmanship.serial_no = SerialNo.objects.get(serial_no = inStockRecord.product.name +"-"+ serial)
+            workmanship.cost = workman_ship
+            workmanship.save()
+            logger.debug("%s workman ship $ %s" % (serial, workman_ship))
             
         self._recalc_cost()
         
@@ -812,6 +821,7 @@ class BarnOwl:
                 continue        
             cost = inventoryDict [pk]['cost']
             qty = inventoryDict [pk]['quantity']
+            workman_ship = inventoryDict [pk]['workmanship']
             mouse = None
             if product.algo.name == Algo.PERCENTAGE:
                 logger.debug("Build instockrecord by algo: '%s'", product.algo.name)
@@ -832,7 +842,7 @@ class BarnOwl:
                         logger.error("Product: '%s' is NOT serial product, please DONT input serial no.", product.name)
                         raise SerialRejectException(product.name)
             
-            inStockRecord = mouse.InStock(inStockBatch, qty, cost, reason, serials)
+            inStockRecord = mouse.InStock(inStockBatch, qty, cost, reason, serials, workman_ship)
             inStockRecords.append(inStockRecord)
         return inStockRecords
     
