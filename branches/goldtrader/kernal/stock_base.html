@@ -62,12 +62,13 @@
               <tr><td style="widtd:auto">
                 </td>    
                 <td style="widtd:auto">
-                              
+                </td>              
                 <td style="widtd:10%;" id="cost_total">0
                 </td>  
                 <td style="widtd:5%;" id="quantity_total">0
                 </td>
-                </td>
+                <td style="widtd:auto">
+                </td>                    
                 <td style="widtd:auto">
                 </td>    
               
@@ -257,6 +258,7 @@
         if("imei" in product){
             queryStr += "/"+product.imei
         }
+        {% block query_inventory %}
         $.ajax({
             url: "/product/inventory/"+queryStr,
             type: "JSON",
@@ -275,6 +277,7 @@
             },
             complete: function(data){},
         });
+        {% endblock %}
         $.ajax({
             url: "/product/returncost/"+queryStr,
             type: "JSON",

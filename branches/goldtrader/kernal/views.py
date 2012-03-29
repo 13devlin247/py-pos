@@ -79,7 +79,16 @@ def SalesReturnReport(request):
     endDate = endDate+" 23:59:59"
     bills = Bill.objects.filter(mode='return').filter(active=True).filter(create_at__range=(startDate,endDate)).order_by('-create_at')
     return render_to_response('sales_return_list.html',{'bills': bills, 'dateRange': str(startDate)+" to "+str(endDate)}, )
-   
+
+def _count_workmanship_by_bill(bill):
+    outStockRecords = OutStockRecord.objects.filter(bill = bill).filter(active = True)
+    total_profit = 0
+    for outStockRecord in outStockRecords:
+        serial_no = outStockRecord.serial_no
+        workmanship = WorkmanShip.objects.get(serial_no = serial_no)
+        total_profit += workmanship.price - workmanship.cost
+    return total_profit
+    
 def CashSalesReport(request):
     startDate = request.GET.get('start_date','')
     endDate = request.GET.get('end_date','')
@@ -90,9 +99,15 @@ def CashSalesReport(request):
     endDate = endDate+" 23:59:59"
     payments = Payment.objects.filter(active=True).filter(create_at__range=(startDate,endDate)).filter(Q(type='Cash Sales')|Q(type='Consignment_OUT')).order_by('-create_at')
     total = 0
+    total_workmanship_profit = 0
+    total_profit = 0
     for payment in payments:
         total += payment.bill.total_price
-    return render_to_response('cash_sales_list.html',{'payments': payments, 'total': total, 'dateRange': str(startDate)+" to "+str(endDate)}, )
+        profit = _count_workmanship_by_bill(payment.bill)
+        payment.bill.workmanship_profit = profit
+        total_profit += payment.bill.profit
+        total_workmanship_profit += profit
+    return render_to_response('cash_sales_list.html',{'payments': payments, 'total_profit': total_profit, 'total_workmanship_profit':total_workmanship_profit, 'total': total, 'dateRange': str(startDate)+" to "+str(endDate)}, )
    
 def InvoiceComplete(request, billID):
     bill = Bill.objects.get(pk = billID)

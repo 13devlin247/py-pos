@@ -28,6 +28,9 @@
                 </th>  								
                 <th>Profit
                 </th>  	                
+                <th>W.Ship Profit
+                </th>  	                
+                
                 <th>Receipts
                 </th>  								
               </tr>  		
@@ -41,6 +44,7 @@
                   <td>{{payment.bill.sales_by.username}}</td>
                   <td>{{payment.bill.total_price}}</td>
                   <td>{{payment.bill.profit}}</td>
+                  <td>{{payment.bill.workmanship_profit}}</td>
                   <td><a href="/sales/bill/{{payment.bill.pk}}" target="_blank">Show</a></td>
               </tr>  			
 			{%endfor%}
@@ -49,7 +53,9 @@
                   <td></td>
                   <td></td>
                   <td>Total Price:</td>
-                  <td>{{total}}</td>
+                  <td style="background-color:yellow; font-weight: bolder">{{total}}</td>
+                  <td>{{total_profit}}</td>
+                  <td>{{total_workmanship_profit}}</td>
                   <td></td>
               </tr>  			            
             </tbody>  	

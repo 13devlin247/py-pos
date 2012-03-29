@@ -289,7 +289,6 @@ class OutStockRecord(models.Model):
     sell_index = models.IntegerField(blank=True)
     serial_no = models.ForeignKey(SerialNo, blank=True, null=True)
     profit = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
-    workman_ship = models.DecimalField(max_digits=100, decimal_places=2, blank=True)
     type = models.CharField(max_length=100)
     create_at = models.DateTimeField(auto_now_add=True)
     active = models.BooleanField(True)
@@ -298,6 +297,11 @@ class OutStockRecord(models.Model):
     def __unicode__(self):
         return "barcode: " + self.barcode + " index: " + str(self.sell_index) + " profit: " + str(self.profit)
 
+class WorkmanShip(models.Model):
+    serial_no = models.ForeignKey(SerialNo, blank=True, primary_key=True)    
+    cost = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null = True)
+    price = models.DecimalField(max_digits=100, decimal_places=2, blank=True, null = True)
+    
 class Payment(models.Model):
     bill = models.ForeignKey(Bill)
     term = models.CharField(max_length=100)
