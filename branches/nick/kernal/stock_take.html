@@ -34,6 +34,15 @@
 	font-size: 12pt;
 	margin: 0 1.5em 0 0;
 }
+
+.header{
+    color: blue;
+    background-color: #FFFF99;
+}
+
+.warn{
+    color: red;
+}
 </style> 
 	<div id="content_area_wrapper">  
       <div id="content_area">
@@ -56,11 +65,7 @@
                 </th>  								
                 <th>ITEM DESP
                 </th>  								
-                <th>B/F
-                </th>  								
-                <th>IN
-                </th>  								
-                <th>OUT
+                <th>AVG. COST
                 </th>  								
                 <th>ON HAND UNIT
                 </th>  								                
@@ -70,25 +75,21 @@
             </thead>  		
             <tbody>
 			{% for value in stockList %}
-              <tr>
+              <tr class="{{value.8}}">
                   <td>{{value.0}}</td>
                   <td>{{value.1}}</td>
-                  <td>{{value.2}}</td>
-                  <td>{{value.3}}</td>
-                  <td>{{value.4}}</td>
+                  <td>{{value.7}}</td>
                   <td>{{value.5}}</td>
                   <td>{{value.6}}</td>
               </tr>  			
 			{%endfor%}
-              <tr>
-                  <td></td>
-                  <td></td>
+              <!-- tr>
                   <td></td>
                   <td></td>
                   <td></td>
                   <td>{{total_qty}}</td>
                   <td>{{total_on_hand_value}}</td>
-              </tr>  			            
+              </tr -->  			            
             </tbody>  	
           </table>  
         </div>  
