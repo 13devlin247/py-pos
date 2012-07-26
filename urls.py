@@ -98,6 +98,13 @@ deposit_list_view = {
     'extra_context': {'autocomplete_url': '/deposit/ajax/','json_url': '/deposit/info/', 'display':'bill', 'default_result': __json_wrapper__(Deposit.objects.filter(active = True).order_by('-create_at'))}
 }
 
+inactive_deposit_list_view = {
+    'queryset': Deposit.objects.filter(active = False).order_by('-create_at'),                      
+    'allow_empty': True,                      
+    'template_name': 'search_deposit.html', 
+    'extra_context': {'autocomplete_url': '/deposit/ajax/','json_url': '/deposit/info/', 'display':'bill', 'default_result': __json_wrapper__(Deposit.objects.filter(active = False).order_by('-create_at'))}
+}
+
 service_list_view = {
     'queryset': Bill.objects.filter(Q(active = True)&Q(mode='service')).order_by('-create_at'),                      
     'allow_empty': True,                      
@@ -389,6 +396,7 @@ urlpatterns = patterns('',
     url(r'^search/imei/$', login_required(list_detail.object_list), imei_list_view),                                        
     url(r'^search/consignment/$', login_required(list_detail.object_list), consignment_list_view),                                        
     url(r'^search/deposit/$', login_required(list_detail.object_list), deposit_list_view),
+    url(r'^search/finish_deposit/$', login_required(list_detail.object_list), inactive_deposit_list_view),
     url(r'^search/service/$', login_required(list_detail.object_list), service_list_view),
     url(r'^search/repair/$', login_required(list_detail.object_list), repair_list_view),
     url(r'^search/salary/$', login_required(list_detail.object_list), salary_list_view),

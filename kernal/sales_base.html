@@ -44,7 +44,7 @@
                 </th>  
                 <th style="width:auto">Item Name
                 </th> 
-                <th style="width:10%;">Cost
+                <th style="display: none">Cost
                 </th>                  
                 <th style="width:10%;">Ext. Cost
                 </th>                                  
@@ -65,7 +65,7 @@
                 </td>              
                 <td style="widtd:auto">
                 </td>
-                <td style="widtd:auto">
+                <td style="widtd:auto;display:none">
                 </td>                  
                 <td style="widtd:auto">
                 </td>                                  
@@ -283,6 +283,11 @@
         alert("Please fulfill customer field.");
 		return false;
     }        
+
+    if($("#amount_tendered").val()=='0.00' || $("#amount_tendered").val()=='0'){
+        alert("Amount Tendered Invalid.");
+		return false;
+    }        
 	return true;
 {% endblock %}
 
@@ -298,7 +303,7 @@
 					"<tr id=\""+pk+"_tr\">"+
 					"<td><a href='#' id='removeItem' onclick=\"removeItem('"+pk+"')\"><img src='/static/images/delete.png' /></a> "+data.fields.barcode+"</td>"+
 					"<td id=\""+pk+"_productName\">["+data.fields.name +"] "+data.fields.description + IMEI_str +" <br/>[<span id=\""+pk+"_stockCount\"></span> in stock]</td>"+    <!-- [<span id=\""+pk+"_stockCount\"></span> in stock]</td>  for batch \ only-->
-					"<td id=\""+pk+"_avgcost\">"+data.fields.cost+"</td>"+
+					"<td style='display:none'>"+data.fields.cost+"</td>"+
                     "<td><input type=\"text\" name=\""+pk+"_extracost\" id=\""+pk+"_extracost\" value=\"0\" size=\"6\" onChange=checkInput('"+pk+"') /></td>"+
                     "<td><input type=\"text\" name=\""+pk+"_price\" id=\""+pk+"_price\" value=\""+data.fields.retail_price+"\" size=\"6\" onkeyup=recalcAll('"+pk+"') onblur=lowerCostDetact('"+pk+"'); /></td>"+
 					"<td><input type=\"text\" name=\""+pk+"_quantity\" id=\""+pk+"_quantity\" value=\"1\" size=\"2\"  onkeyup=recalcAll('"+pk+"') onChange=resetQuantityField('"+pk+"') /></td>"+

@@ -926,6 +926,11 @@ def SalesConfirm(request):
         salesDict = __convert_sales_URL_2_dict__(request)
         owl = BarnOwl()
         try:
+            depositField = request.POST.get('depositField', None)
+            if depositField:
+                deposit = Deposit.objects.get(pk = int(depositField))
+                deposit.active = False
+                deposit.save()
             bills_and_payments = owl.OutStock(request.POST.get('mode', 'sale'), bill_dict, salesDict)
             hermes = Hermes()
             payment = bills_and_payments[1]
@@ -1289,6 +1294,42 @@ def _show_stock_cost_table(startDate, endDate):
         total_on_hand_value += stockCost.on_hand_value         
     return (list, total_qty, total_on_hand_value)
 
+"""
+    build a stock take result by category.
+"""
+def _show_stock_cost_table_by_category(category):
+    products = Product.objects.filter(category = category).filter(active = True).order_by("name")
+    list = []
+    total_qty = 0
+    total_on_hand_value = 0
+    for product in products:
+        stockCost = None
+        try:
+            stockCost = StockCost.objects.get(product=product)
+        except StockCost.DoesNotExist:
+            BarnMouse(product)
+            stockCost = StockCost.objects.get(product=product)
+        if stockCost.qty == 0:
+            continue
+        result = []
+        result.append(product.name)
+        result.append(product.description)
+        result.append(0) #old_Stock
+        result.append(0) #current_inStock
+        result.append(0) # current_outStock
+        result.append(stockCost.qty)
+        result.append(stockCost.on_hand_value)
+        result.append(stockCost.avg_cost)
+        # this colum meas if stock qty low than alert warn
+        if stockCost.qty <= stockCost.product.stockwarn:
+            result.append('warn')
+        else:
+            result.append('ok')
+        list.append(result)
+        total_qty += stockCost.qty
+        total_on_hand_value += stockCost.on_hand_value         
+    return (list, total_qty, total_on_hand_value)
+
 
 def _count_all_inventory_stock(startDate, endDate):
     products = Product.objects.filter(Q(active=True)).order_by("name")
@@ -1325,9 +1366,26 @@ def CountInventory(request):
     list = []
     total_qty = 0 
     total_on_hand_value = 0
+    show_all = True
     if show_all:
         logger.debug("filter StockCost Table, entry high performance algo")
-        list, total_qty, total_on_hand_value = _show_stock_cost_table(startDate, endDate)
+        categorys = Category.objects.all()
+        for category in categorys:
+            product_list, total_qty, total_on_hand_value = _show_stock_cost_table_by_category(category)
+            if len(product_list) == 0:
+                continue
+            result = []
+            result.append(category.category_name)
+            result.append('')
+            result.append('') #old_Stock
+            result.append('') #current_inStock
+            result.append('') # current_outStock
+            result.append('')
+            result.append('')
+            result.append('')
+            result.append('header')
+            list.append(result)
+            list.extend(product_list)
     else:
         logger.debug("filter All relatived Table, entry low performance algo")
         list, total_qty, total_on_hand_value =  _count_all_inventory_stock(startDate, endDate) 
@@ -1360,6 +1418,7 @@ def DepositList(request):
     logger.debug("search Deposit list by keyword: %s", keyword)
     
     querySet = __search__(Deposit, Q(customer__name__contains=keyword)|Q(refBill=keyword)|Q(pk=_str_2_int(keyword)))
+    querySet = querySet.exclude(active = False)
     list = __autocomplete_wrapper__(querySet, lambda model: str(model.pk))    
     return HttpResponse(list.encode("utf-8"), mimetype="text/plain")
 
@@ -1978,7 +2037,7 @@ def DeleteBill(request):
     relc_counter = delete_bill.counter
     hermes = Hermes()
     hermes.ReCalcCounterByPK(relc_counter.pk, recalc_bill_profit = True)
-    return HttpResponseRedirect('/counter/close/') 
+    return HttpResponseRedirect('/sales/list/') 
     
 def DeleteInStockBatch(request):
     logger.info("Void InStockRecord")

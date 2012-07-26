@@ -78,6 +78,7 @@ class Product(models.Model):
     type = models.ForeignKey(Type, null=True)
     retail_price = models.DecimalField(max_digits=100, decimal_places=2)
     cost = models.DecimalField(max_digits=100, decimal_places=2)
+    stockwarn = models.DecimalField(max_digits=100,  decimal_places=4) 
     uom = models.ForeignKey(UOM)
     active = models.BooleanField("actived product", True)
     algo = models.ForeignKey(Algo, null=True, default=Algo.objects.get(pk=1))
